@@ -13,7 +13,7 @@ import Time
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( initialModel, Cmd.none )
+        { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -74,8 +74,19 @@ type alias Model =
     }
 
 
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( initialModel, Cmd.batch [ generateMode, generateRoot ] )
+
+
+allRoots : List Root
 allRoots =
     [ C, G, D, A, F, Bb, Eb ]
+
+
+allModes : List Mode
+allModes =
+    [ Dur, Moll ]
 
 
 initialModel : Model
@@ -103,6 +114,7 @@ type Msg
     | KeyPressed String
     | NewExercise
     | NewRootGenerated ( Maybe Root, List Root )
+    | NewModeGenerated ( Maybe Mode, List Mode )
     | NextTopic
 
 
@@ -137,7 +149,7 @@ update msg model =
                 | completedExercises = model.completedExercises + 1
                 , isRunning = False
               }
-            , generateRoot
+            , Cmd.batch [ generateRoot, generateMode ]
             )
 
         NextTopic ->
@@ -158,6 +170,14 @@ update msg model =
             , Cmd.none
             )
 
+        NewModeGenerated ( maybeMode, _ ) ->
+            case maybeMode of
+                Just mode ->
+                    ( { model | mode = mode }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
         NewRootGenerated ( maybeRoot, _ ) ->
             case maybeRoot of
                 Just root ->
@@ -167,10 +187,12 @@ update msg model =
                     ( model, Cmd.none )
 
 
+clearTimer : Model -> ( Model, Cmd Msg )
 clearTimer model =
     ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
 
 
+toggleTimer : Model -> ( Model, Cmd Msg )
 toggleTimer model =
     if model.isRunning then
         ( { model | isRunning = False }, Cmd.none )
@@ -179,8 +201,14 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
+generateRoot : Cmd Msg
 generateRoot =
     Random.generate NewRootGenerated (Random.List.choose allRoots)
+
+
+generateMode : Cmd Msg
+generateMode =
+    Random.generate NewModeGenerated (Random.List.choose allModes)
 
 
 
