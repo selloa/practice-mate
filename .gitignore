@@ -1,2 +1,6 @@
-# mac specific 
+# mac 
 .DS_Store
+
+/node_modules
+/elm-stuff
+/src/js/main.js
