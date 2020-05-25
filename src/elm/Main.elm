@@ -5,6 +5,8 @@ import Browser.Events exposing (onKeyDown)
 import Html exposing (Html, br, button, div, h1, p, text)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
+import Random
+import Random.List
 import Time
 
 
@@ -72,6 +74,10 @@ type alias Model =
     }
 
 
+allRoots =
+    [ C, G, D, A, F, Bb, Eb ]
+
+
 initialModel : Model
 initialModel =
     { practiceMode = TimeLimit
@@ -96,6 +102,7 @@ type Msg
     | ClearTimer
     | KeyPressed String
     | NewExercise
+    | NewRootGenerated ( Maybe Root, List Root )
     | NextTopic
 
 
@@ -130,7 +137,7 @@ update msg model =
                 | completedExercises = model.completedExercises + 1
                 , isRunning = False
               }
-            , Cmd.none
+            , generateRoot
             )
 
         NextTopic ->
@@ -151,6 +158,14 @@ update msg model =
             , Cmd.none
             )
 
+        NewRootGenerated ( maybeRoot, _ ) ->
+            case maybeRoot of
+                Just root ->
+                    ( { model | root = root }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
 
 clearTimer model =
     ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
@@ -162,6 +177,10 @@ toggleTimer model =
 
     else
         ( { model | isRunning = True }, Cmd.none )
+
+
+generateRoot =
+    Random.generate NewRootGenerated (Random.List.choose allRoots)
 
 
 
