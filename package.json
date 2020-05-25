@@ -1,0 +1,17 @@
+{
+  "name": "rueben",
+  "version": "1.0.0",
+  "main": "main.js",
+  "repository": "git@github.com:mrvary/rueben",
+  "author": "Felix Breitenbach <felix.breitenbach@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "elm make src/elm/Main.elm --output src/js/main.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "^2.0.5",
+    "prettier-plugin-elm": "^0.7.0"
+  }
+}
