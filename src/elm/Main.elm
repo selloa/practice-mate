@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Browser
-import Browser.Events exposing (onKeyPress)
+import Browser.Events exposing (onKeyDown)
 import Html exposing (Html, br, button, div, h1, p, text)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
@@ -39,6 +39,11 @@ type Root
     | Eb
 
 
+type Mode
+    = Dur
+    | Moll
+
+
 type Range
     = OneOctave
     | TwoOctaves
@@ -58,12 +63,12 @@ type alias Model =
     { practiceMode : PracticeMode
     , topic : Topic
     , root : Root
+    , mode : Mode
     , range : Maybe Range
     , pattern : Maybe Pattern
     , elapsedTime : Int
     , completedExercises : Int
     , isRunning : Bool
-    , key : String
     }
 
 
@@ -72,12 +77,12 @@ initialModel =
     { practiceMode = TimeLimit
     , topic = Scales
     , root = C
+    , mode = Dur
     , range = Nothing
     , pattern = Nothing
     , elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
-    , key = ""
     }
 
 
@@ -90,7 +95,8 @@ type Msg
     | ToggleTimer
     | ClearTimer
     | KeyPressed String
-    | NoOp
+    | NewExercise
+    | NextTopic
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -107,17 +113,47 @@ update msg model =
             toggleTimer model
 
         ClearTimer ->
-            ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
+            clearTimer model
 
         KeyPressed key ->
             if key == " " then
                 toggleTimer model
 
+            else if key == "Backspace" then
+                clearTimer model
+
             else
                 ( model, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
+        NewExercise ->
+            ( { model
+                | completedExercises = model.completedExercises + 1
+                , isRunning = False
+              }
+            , Cmd.none
+            )
+
+        NextTopic ->
+            ( { model
+                | completedExercises = model.completedExercises + 1
+                , isRunning = False
+                , topic =
+                    case model.topic of
+                        Scales ->
+                            Chords
+
+                        Chords ->
+                            Doublestops
+
+                        Doublestops ->
+                            Scales
+              }
+            , Cmd.none
+            )
+
+
+clearTimer model =
+    ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
 
 
 toggleTimer model =
@@ -140,7 +176,7 @@ keyDecoder =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ onKeyPress keyDecoder
+        [ onKeyDown keyDecoder
         , Time.every 1000 Tick
         ]
 
@@ -170,7 +206,12 @@ selection model =
         , text "Root:  "
         , text <| Debug.toString model.root
         , br [] []
-        , text model.key
+        , text "Mode:  "
+        , text <| Debug.toString model.mode
+        , br [] []
+        , button [ onClick NewExercise ] [ text "New exercise" ]
+        , br [] []
+        , button [ onClick NextTopic ] [ text "Next topic" ]
         ]
 
 
@@ -195,9 +236,6 @@ header model =
     in
     div []
         [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
-        , br [] []
-        , text <| "finished exercises: " ++ String.fromInt model.completedExercises
-        , br [] []
         , button [ onClick ToggleTimer ]
             [ text <|
                 if model.isRunning then
@@ -207,4 +245,6 @@ header model =
                     "▶ ️ play"
             ]
         , button [ onClick ClearTimer ] [ text "■" ]
+        , br [] []
+        , text <| "finished exercises: " ++ String.fromInt model.completedExercises
         ]
