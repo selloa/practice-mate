@@ -1,8 +1,10 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, br, button, div, p, text)
+import Browser.Events exposing (onKeyPress)
+import Html exposing (Html, br, button, div, h1, p, text)
 import Html.Events exposing (onClick)
+import Json.Decode as Decode
 import Time
 
 
@@ -61,6 +63,7 @@ type alias Model =
     , elapsedTime : Int
     , completedExercises : Int
     , isRunning : Bool
+    , key : String
     }
 
 
@@ -74,6 +77,7 @@ initialModel =
     , elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
+    , key = ""
     }
 
 
@@ -85,6 +89,7 @@ type Msg
     = Tick Time.Posix
     | ToggleTimer
     | ClearTimer
+    | KeyPressed String
     | NoOp
 
 
@@ -99,26 +104,45 @@ update msg model =
                 ( model, Cmd.none )
 
         ToggleTimer ->
-            if model.isRunning then
-                ( { model | isRunning = False }, Cmd.none )
-
-            else
-                ( { model | isRunning = True }, Cmd.none )
+            toggleTimer model
 
         ClearTimer ->
             ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
 
+        KeyPressed key ->
+            if key == " " then
+                toggleTimer model
+
+            else
+                ( model, Cmd.none )
+
         NoOp ->
             ( model, Cmd.none )
+
+
+toggleTimer model =
+    if model.isRunning then
+        ( { model | isRunning = False }, Cmd.none )
+
+    else
+        ( { model | isRunning = True }, Cmd.none )
 
 
 
 -- subscriptions
 
 
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map KeyPressed (Decode.field "key" Decode.string)
+
+
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every 1000 Tick
+    Sub.batch
+        [ onKeyPress keyDecoder
+        , Time.every 1000 Tick
+        ]
 
 
 
@@ -128,10 +152,30 @@ subscriptions _ =
 view : Model -> Html Msg
 view model =
     div []
-        [ Html.h1 [] [ text "Rüben" ]
+        [ h1 [] [ text "Rüben" ]
         , header model
-        , p [] [ text <| Debug.toString model ]
+        , selection model
+        , settings model
         ]
+
+
+selection model =
+    div []
+        [ text "Practice mode: "
+        , text <| Debug.toString model.practiceMode
+        , br [] []
+        , text "Topic: "
+        , text <| Debug.toString model.topic
+        , br [] []
+        , text "Root:  "
+        , text <| Debug.toString model.root
+        , br [] []
+        , text model.key
+        ]
+
+
+settings model =
+    div [] []
 
 
 header model =
