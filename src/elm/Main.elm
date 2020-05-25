@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyDown)
 import Html exposing (Html, br, button, div, h1, p, text)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
 import Random
@@ -234,36 +235,44 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "Rüben" ]
-        , header model
+    div [ class "container mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
+        [ header model
         , selection model
         , settings model
         ]
 
 
 selection model =
-    div []
-        [ text "Practice mode: "
-        , text <| Debug.toString model.practiceMode
-        , br [] []
-        , text "Topic: "
-        , text <| Debug.toString model.topic
-        , br [] []
-        , text "Root:  "
-        , text <| Debug.toString model.root
-        , br [] []
-        , text "Mode:  "
-        , text <| Debug.toString model.mode
-        , br [] []
-        , button [ onClick NewExercise ] [ text "New exercise" ]
-        , br [] []
-        , button [ onClick NextTopic ] [ text "Next topic" ]
+    div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
+        [ div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Practice mode: "
+            , text <| Debug.toString model.practiceMode
+            ]
+        , div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Topic: "
+            , text <| Debug.toString model.topic
+            ]
+        , div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Root:  "
+            , text <| Debug.toString model.root
+            ]
+        , div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Mode:  "
+            , text <| Debug.toString model.mode
+            ]
+        , div [ class "container p-3 flex" ]
+            [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
+            , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
+            ]
         ]
 
 
 settings model =
     div [] []
+
+
+primaryButton =
+    "bg-pink-500 hover:bg-pink-400 cursor-pointer text-white font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"
 
 
 header model =
@@ -280,18 +289,27 @@ header model =
 
             else
                 number
-    in
-    div []
-        [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
-        , button [ onClick ToggleTimer ]
-            [ text <|
-                if model.isRunning then
-                    "▐▐ pause"
 
-                else
-                    "▶ ️ play"
+        elementClass =
+            "m-2 px-2 bg-gray-100"
+    in
+    div [ class "container inline-flex flex flex-row font-mono" ]
+        [ h1 [ class "font-mono text-5xl uppercase" ] [ text "Rüben" ]
+        , div [ class "container flex justify-end items-start" ]
+            [ div [ class elementClass ]
+                [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
+                ]
+            , button [ class elementClass, onClick ToggleTimer ]
+                [ text <|
+                    if model.isRunning then
+                        "pause"
+
+                    else
+                        "start"
+                ]
+            , button [ class elementClass, onClick ClearTimer ] [ text "■" ]
+            , div [ class elementClass ]
+                [ text ("ex. " ++ String.fromInt model.completedExercises)
+                ]
             ]
-        , button [ onClick ClearTimer ] [ text "■" ]
-        , br [] []
-        , text <| "finished exercises: " ++ String.fromInt model.completedExercises
         ]
