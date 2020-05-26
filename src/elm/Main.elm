@@ -50,8 +50,8 @@ type Root
 type
     Mode
     -- chords
-    = Dur
-    | Moll
+    = Major
+    | Minor
     | Dim
     | Augm
     | Sus2
@@ -79,9 +79,9 @@ type Range
 
 
 type Message
-    = Info String
-    | Success String
-    | Error String
+    = Info String Int
+    | Success String Int
+    | Error String Int
 
 
 type Bowing
@@ -184,7 +184,7 @@ allScales =
 
 allChords : List Mode
 allChords =
-    [ Dur, Moll, Dim, Augm, Sus2, Sus4 ]
+    [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
 
 
 practiceModeToString : PracticeMode -> String
@@ -213,11 +213,11 @@ topicToString topic =
 modeToString : Mode -> String
 modeToString mode =
     case mode of
-        Dur ->
-            "Dur"
+        Major ->
+            "Major"
 
-        Moll ->
-            "Moll"
+        Minor ->
+            "Minor"
 
         Dim ->
             "Dim"
@@ -424,14 +424,43 @@ update msg model =
                 ( { model
                     | elapsedTime = newTime
                     , message =
-                        if newTime == timeLimitInSeconds // 2 then
-                            Just (Info "Halftime, keep going!")
+                        if newTime == timeLimitInSeconds // 3 then
+                            Just (Info "Finished 1/3, continue to the next topic if you like" 5)
+
+                        else if newTime == timeLimitInSeconds // 2 then
+                            Just (Info "Halftime, keep going!" 5)
+
+                        else if newTime == 2 * (timeLimitInSeconds // 3) then
+                            Just (Info "Finished 2/3, continue to the next topic if you like" 5)
 
                         else if newTime == timeLimitInSeconds then
-                            Just (Success "Yay, you're awesome!")
+                            Just (Success "Yay, you're awesome!" 5)
 
                         else
-                            model.message
+                            case model.message of
+                                Just (Info text time) ->
+                                    if time == 0 then
+                                        Nothing
+
+                                    else
+                                        Just (Info text (time - 1))
+
+                                Just (Error text time) ->
+                                    if time == 0 then
+                                        Nothing
+
+                                    else
+                                        Just (Error text (time - 1))
+
+                                Just (Success text time) ->
+                                    if time == 0 then
+                                        Nothing
+
+                                    else
+                                        Just (Success text (time - 1))
+
+                                Nothing ->
+                                    Nothing
                   }
                 , Cmd.none
                 )
@@ -533,7 +562,13 @@ update msg model =
 
 clearTimer : Model -> ( Model, Cmd Msg )
 clearTimer model =
-    ( { model | isRunning = False, elapsedTime = 0 }, Cmd.none )
+    ( { model
+        | isRunning = False
+        , elapsedTime = 0
+        , message = Nothing
+      }
+    , Cmd.none
+    )
 
 
 toggleTimer : Model -> ( Model, Cmd Msg )
@@ -655,13 +690,13 @@ infoBox message =
     let
         ( color, content ) =
             case message of
-                Just (Info msg) ->
+                Just (Info msg duration) ->
                     ( "yellow-300", msg )
 
-                Just (Error msg) ->
+                Just (Error msg duration) ->
                     ( "red-300", msg )
 
-                Just (Success msg) ->
+                Just (Success msg duration) ->
                     ( "green-300", msg )
 
                 Nothing ->
