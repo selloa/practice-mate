@@ -51,8 +51,8 @@ type Root
     | B
 
 
-type Key
-    
+type
+    Key
     -- chords
     = Major
     | Minor
@@ -82,6 +82,14 @@ type Range
     | FullRange
 
 
+type Interval
+    = Sixths
+    | Thirds
+    | Octaves
+    | Fourths
+    | Fiths
+
+
 type Message
     = Info String Int
     | Success String Int
@@ -107,7 +115,7 @@ type alias Model =
     , topic : Topic
     , root : Root
     , key : Key
-    , interval : Int
+    , interval : Interval
     , range : Range
     , bowing : Bowing
     , elapsedTime : Int
@@ -300,9 +308,28 @@ bowingToString bowing =
             "Rhythmed"
 
 
-allIntervals : List Int
+intervalToString : Interval -> String
+intervalToString interval =
+    case interval of
+        Sixths ->
+            "6ths"
+
+        Thirds ->
+            "3rds"
+
+        Octaves ->
+            "8ths"
+
+        Fourths ->
+            "4ths"
+
+        Fiths ->
+            "5ths"
+
+
+allIntervals : List Interval
 allIntervals =
-    [ 3, 4, 5, 6 ]
+    [ Sixths, Thirds, Octaves, Fourths, Fiths ]
 
 
 allRanges : List Range
@@ -378,7 +405,7 @@ initialModel =
     , topic = Scales
     , root = C
     , key = Ionian
-    , interval = 3
+    , interval = Thirds
     , range = OneOctave 1
     , bowing = RepeatedStaccato 1
     , elapsedTime = 0
@@ -401,7 +428,7 @@ type Msg
     | NewExercise
     | NewRootGenerated ( Maybe Root, List Root )
     | NewKeyGenerated ( Maybe Key, List Key )
-    | NewIntervalGenerated ( Maybe Int, List Int )
+    | NewIntervalGenerated ( Maybe Interval, List Interval )
     | NewRangeGenerated ( Maybe Range, List Range )
     | NewBowingGenerated ( Maybe Bowing, List Bowing )
     | NextTopic
@@ -674,7 +701,7 @@ selection model =
             []
         , selectionItem root rootToString "Root: "
         , if topic == Doublestops then
-            selectionItem interval String.fromInt "Interval: "
+            selectionItem interval intervalToString "Interval: "
 
           else
             div [ class "hidden" ] []
