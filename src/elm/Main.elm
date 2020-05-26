@@ -84,11 +84,17 @@ type Message
     | Error String
 
 
+type Bowing
+    = Slured Int
+    | RepeatedStaccato Int
+    | RepeatedTenuto Int
+    | BowStaccato Int
+    | Sequenced
+    | AddTopNote
+    | Rhythmed
 
--- type Pattern
---     = Slur Int
---     | Repeat Int
---     | Staccato Int
+
+
 -- Model
 
 
@@ -99,7 +105,7 @@ type alias Model =
     , mode : Mode
     , interval : Int
     , range : Range
-    , pattern : String
+    , bowing : Bowing
     , elapsedTime : Int
     , completedExercises : Int
     , isRunning : Bool
@@ -265,6 +271,31 @@ modeToString mode =
             "Wholestep"
 
 
+bowingToString : Bowing -> String
+bowingToString bowing =
+    case bowing of
+        Slured n ->
+            "Slured " ++ String.fromInt n
+
+        RepeatedStaccato n ->
+            "Repeated Staccato " ++ String.fromInt n
+
+        RepeatedTenuto n ->
+            "Repeated Tenuto " ++ String.fromInt n
+
+        BowStaccato n ->
+            "Bow Staccato " ++ String.fromInt n
+
+        Sequenced ->
+            "Sequenced"
+
+        AddTopNote ->
+            "AddTopNote"
+
+        Rhythmed ->
+            "Rhythmed"
+
+
 allIntervals : List Int
 allIntervals =
     [ 3, 4, 5, 6 ]
@@ -297,32 +328,43 @@ rangeToString range =
             "Full Range"
 
 
-allPatterns : List String
-allPatterns =
-    [ "▾ x 1"
-    , "▾ x 2"
-    , "▾ x 3"
-    , "▾ x 4"
-    , "▾ x 5"
-    , "▾ x 6"
-    , "▾ x 7"
-    , "▾ x 8"
-    , "⏜ x 1"
-    , "⏜ x 2"
-    , "⏜ x 3"
-    , "⏜ x 4"
-    , "⏜ x 5"
-    , "⏜ x 6"
-    , "⏜ x 7"
-    , "⏜ x 8"
-    , "♺ x 1"
-    , "♺ x 2"
-    , "♺ x 3"
-    , "♺ x 4"
-    , "♺ x 5"
-    , "♺ x 6"
-    , "♺ x 7"
-    , "♺ x 8"
+allBowings : List Bowing
+allBowings =
+    [ Slured 1
+    , Slured 2
+    , Slured 3
+    , Slured 4
+    , Slured 5
+    , Slured 6
+    , Slured 7
+    , Slured 8
+    , RepeatedStaccato 1
+    , RepeatedStaccato 2
+    , RepeatedStaccato 3
+    , RepeatedStaccato 4
+    , RepeatedStaccato 5
+    , RepeatedStaccato 6
+    , RepeatedStaccato 7
+    , RepeatedStaccato 8
+    , RepeatedTenuto 1
+    , RepeatedTenuto 2
+    , RepeatedTenuto 3
+    , RepeatedTenuto 4
+    , RepeatedTenuto 5
+    , RepeatedTenuto 6
+    , RepeatedTenuto 7
+    , RepeatedTenuto 8
+    , BowStaccato 1
+    , BowStaccato 2
+    , BowStaccato 3
+    , BowStaccato 4
+    , BowStaccato 5
+    , BowStaccato 6
+    , BowStaccato 7
+    , BowStaccato 8
+    , Sequenced
+    , AddTopNote
+    , Rhythmed
     ]
 
 
@@ -334,7 +376,7 @@ initialModel =
     , mode = Ionian
     , interval = 3
     , range = OneOctave 1
-    , pattern = "♺ x 1"
+    , bowing = RepeatedStaccato 1
     , elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
@@ -357,7 +399,7 @@ type Msg
     | NewModeGenerated ( Maybe Mode, List Mode )
     | NewIntervalGenerated ( Maybe Int, List Int )
     | NewRangeGenerated ( Maybe Range, List Range )
-    | NewPatternGenerated ( Maybe String, List String )
+    | NewBowingGenerated ( Maybe Bowing, List Bowing )
     | NextTopic
     | ToggleSettings
 
@@ -455,10 +497,10 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        NewPatternGenerated ( maybePattern, _ ) ->
-            case maybePattern of
-                Just pattern ->
-                    ( { model | pattern = pattern }, Cmd.none )
+        NewBowingGenerated ( maybeBowing, _ ) ->
+            case maybeBowing of
+                Just bowing ->
+                    ( { model | bowing = bowing }, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -482,7 +524,7 @@ generateEverything topic =
     Cmd.batch
         [ generateInterval
         , generateMode topic
-        , generatePattern
+        , generateBowing
         , generateRange
         , generateRoot
         ]
@@ -520,9 +562,9 @@ generateInterval =
     Random.generate NewIntervalGenerated (Random.List.choose allIntervals)
 
 
-generatePattern : Cmd Msg
-generatePattern =
-    Random.generate NewPatternGenerated (Random.List.choose allPatterns)
+generateBowing : Cmd Msg
+generateBowing =
+    Random.generate NewBowingGenerated (Random.List.choose allBowings)
 
 
 
@@ -558,7 +600,7 @@ view model =
 
 selection model =
     let
-        { practiceMode, topic, range, pattern, root, interval, mode } =
+        { practiceMode, topic, range, bowing, root, interval, mode } =
             model
     in
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
@@ -574,7 +616,7 @@ selection model =
             div [ class "hidden" ] []
         , selectionItem mode modeToString "Mode: "
         , selectionItem range rangeToString "Range: "
-        , selectionItem pattern identity "Pattern: "
+        , selectionItem bowing bowingToString "Bowings: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
