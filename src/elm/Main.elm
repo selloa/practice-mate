@@ -58,11 +58,6 @@ type
     | Lydisch
     | Mixolydisch
     | Aeolisch
-      -- intervals
-    | Terzen
-    | Quarten
-    | Quinten
-    | Sexten
 
 
 type Range
@@ -70,13 +65,11 @@ type Range
     | TwoOctaves
 
 
-type Pattern
-    = Slur Int
-    | Repeat Int
-    | Staccato Int
 
-
-
+-- type Pattern
+--     = Slur Int
+--     | Repeat Int
+--     | Staccato Int
 -- Model
 
 
@@ -85,8 +78,9 @@ type alias Model =
     , topic : Topic
     , root : Root
     , mode : Mode
-    , range : Maybe Range
-    , pattern : Maybe Pattern
+    , interval : Int
+    , range : Range
+    , pattern : String
     , elapsedTime : Int
     , completedExercises : Int
     , isRunning : Bool
@@ -95,7 +89,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, Cmd.batch [ generateMode Scales, generateRoot ] )
+    ( initialModel, generateEverything Scales )
 
 
 allRoots : List Root
@@ -113,12 +107,54 @@ allChords =
     [ Dur, Moll, Dim, Augm, Sus2, Sus4 ]
 
 
-allIntervals : List Mode
+allIntervals : List Int
 allIntervals =
-    [ Terzen
-    , Quarten
-    , Quinten
-    , Sexten
+    [ 3, 4, 5, 6 ]
+
+
+allRanges : List Range
+allRanges =
+    [ OneOctave, TwoOctaves ]
+
+
+allPatterns : List String
+allPatterns =
+    [ "▾ x 1"
+    , "▾ x 2"
+    , "▾ x 3"
+    , "▾ x 4"
+    , "▾ x 5"
+    , "▾ x 6"
+    , "▾ x 7"
+    , "▾ x 8"
+    , "▾ x 9"
+    , "▾ x 10"
+    , "▾ x 11"
+    , "▾ x 12"
+    , "⏜ x 1"
+    , "⏜ x 2"
+    , "⏜ x 3"
+    , "⏜ x 4"
+    , "⏜ x 5"
+    , "⏜ x 6"
+    , "⏜ x 7"
+    , "⏜ x 8"
+    , "⏜ x 9"
+    , "⏜ x 10"
+    , "⏜ x 11"
+    , "⏜ x 12"
+    , "♺ x 1"
+    , "♺ x 2"
+    , "♺ x 3"
+    , "♺ x 4"
+    , "♺ x 5"
+    , "♺ x 6"
+    , "♺ x 7"
+    , "♺ x 8"
+    , "♺ x 9"
+    , "♺ x 10"
+    , "♺ x 11"
+    , "♺ x 12"
     ]
 
 
@@ -128,8 +164,9 @@ initialModel =
     , topic = Scales
     , root = C
     , mode = Ionisch
-    , range = Nothing
-    , pattern = Nothing
+    , interval = 3
+    , range = OneOctave
+    , pattern = "♺ x 1"
     , elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
@@ -148,6 +185,9 @@ type Msg
     | NewExercise
     | NewRootGenerated ( Maybe Root, List Root )
     | NewModeGenerated ( Maybe Mode, List Mode )
+    | NewIntervalGenerated ( Maybe Int, List Int )
+    | NewRangeGenerated ( Maybe Range, List Range )
+    | NewPatternGenerated ( Maybe String, List String )
     | NextTopic
 
 
@@ -182,7 +222,7 @@ update msg model =
                 | completedExercises = model.completedExercises + 1
                 , isRunning = False
               }
-            , Cmd.batch [ generateRoot, generateMode model.topic ]
+            , generateEverything model.topic
             )
 
         NextTopic ->
@@ -203,7 +243,7 @@ update msg model =
                 , isRunning = False
                 , topic = nextTopic
               }
-            , Cmd.batch [ generateMode nextTopic, generateRoot ]
+            , generateEverything nextTopic
             )
 
         NewModeGenerated ( maybeMode, _ ) ->
@@ -218,6 +258,30 @@ update msg model =
             case maybeRoot of
                 Just root ->
                     ( { model | root = root }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        NewIntervalGenerated ( maybeInterval, _ ) ->
+            case maybeInterval of
+                Just interval ->
+                    ( { model | interval = interval }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        NewRangeGenerated ( maybeRange, _ ) ->
+            case maybeRange of
+                Just range ->
+                    ( { model | range = range }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        NewPatternGenerated ( maybePattern, _ ) ->
+            case maybePattern of
+                Just pattern ->
+                    ( { model | pattern = pattern }, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -237,9 +301,24 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
+generateEverything topic =
+    Cmd.batch
+        [ generateInterval
+        , generateMode topic
+        , generatePattern
+        , generateRange
+        , generateRoot
+        ]
+
+
 generateRoot : Cmd Msg
 generateRoot =
     Random.generate NewRootGenerated (Random.List.choose allRoots)
+
+
+generateRange : Cmd Msg
+generateRange =
+    Random.generate NewRangeGenerated (Random.List.choose allRanges)
 
 
 generateMode : Topic -> Cmd Msg
@@ -254,9 +333,19 @@ generateMode topic =
                     allChords
 
                 Doublestops ->
-                    allIntervals
+                    allScales
     in
     Random.generate NewModeGenerated (Random.List.choose source)
+
+
+generateInterval : Cmd Msg
+generateInterval =
+    Random.generate NewIntervalGenerated (Random.List.choose allIntervals)
+
+
+generatePattern : Cmd Msg
+generatePattern =
+    Random.generate NewPatternGenerated (Random.List.choose allPatterns)
 
 
 
@@ -303,9 +392,28 @@ selection model =
             [ text "Root:  "
             , text <| Debug.toString model.root
             ]
+        , div
+            [ class <|
+                if model.topic == Doublestops then
+                    "container text-left bg-white mb-1 p-2"
+
+                else
+                    "hidden"
+            ]
+            [ text "Interval:  "
+            , text <| String.fromInt model.interval
+            ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Mode:  "
             , text <| Debug.toString model.mode
+            ]
+        , div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Range:  "
+            , text <| Debug.toString model.range
+            ]
+        , div [ class "container text-left bg-white mb-1 p-2" ]
+            [ text "Pattern:  "
+            , text model.pattern
             ]
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
@@ -341,7 +449,8 @@ header model =
             "m-2 px-2 bg-gray-100"
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
-        [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
+        -- [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
+        [ h1 [ class "text-4xl font-sans" ] [ text "❒" ]
         , div [ class "container flex justify-end items-start" ]
             [ div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
