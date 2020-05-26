@@ -571,6 +571,8 @@ selection model =
                         "Doublestops"
             )
             "Topic: "
+        , div [ class "container text-left bg-gray mb-1 p-2" ]
+            []
         , selectionItem model.root rootToString "Root: "
         , if model.topic == Doublestops then
             selectionItem model.interval String.fromInt "Interval: "
