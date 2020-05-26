@@ -203,7 +203,7 @@ practiceModeToString : PracticeMode -> String
 practiceModeToString mode =
     case mode of
         TimeLimit duration ->
-            "Time (" ++ String.fromInt duration ++ ")"
+            "⏲️ " ++ String.fromInt duration
 
         ExerciseLimit exercises ->
             "Exercise (" ++ String.fromInt exercises ++ ")"
@@ -681,7 +681,7 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
+    div [ class "container font-mono mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
         [ header model
         , infoBox model.message
         , selection model
@@ -694,7 +694,7 @@ selection model =
         { practiceMode, topic, range, bowing, root, interval, key } =
             model
     in
-    div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
+    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-300 px-4" ]
         [ -- selectionItem practiceMode practiceModeToString "Practice mode: "
           selectionItem topic (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
