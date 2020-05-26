@@ -34,12 +34,17 @@ type Topic
 
 type Root
     = C
-    | G
+    | Cis
     | D
-    | A
+    | Dis
+    | E
     | F
+    | Fis
+    | G
+    | Gis
+    | A
     | Bb
-    | Eb
+    | B
 
 
 type
@@ -102,7 +107,7 @@ init _ =
 
 allRoots : List Root
 allRoots =
-    [ C, G, D, A, F, Bb, Eb ]
+    [ C, Cis, D, Dis, E, F, Fis, G, Gis, A, Bb, B ]
 
 
 rootToString : Root -> String
@@ -111,23 +116,38 @@ rootToString root =
         C ->
             "C"
 
-        G ->
-            "G"
+        Cis ->
+            "C# / Db"
 
         D ->
             "D"
 
-        A ->
-            "A"
+        Dis ->
+            "D# / Eb"
+
+        E ->
+            "E"
 
         F ->
             "F"
 
+        Fis ->
+            "F# / Db"
+
+        G ->
+            "G"
+
+        Gis ->
+            "G# / Ab"
+
+        A ->
+            "A"
+
         Bb ->
             "Bb"
 
-        Eb ->
-            "Eb"
+        B ->
+            "B"
 
 
 allScales : List Mode
