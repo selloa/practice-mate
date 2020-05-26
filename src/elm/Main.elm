@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, br, button, div, h1, p, text)
+import Html exposing (Html, button, div, h1, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
@@ -611,6 +611,7 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
+generateEverything : Topic -> Cmd Msg
 generateEverything topic =
     Cmd.batch
         [ generateInterval
@@ -689,14 +690,14 @@ view model =
         ]
 
 
+selection : Model -> Html Msg
 selection model =
     let
-        { practiceMode, topic, range, bowing, root, interval, key } =
+        { topic, range, bowing, root, interval, key } =
             model
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-300 px-4" ]
-        [ -- selectionItem practiceMode practiceModeToString "Practice mode: "
-          selectionItem topic (String.toUpper << topicToString) ""
+        [ selectionItem topic (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
         , selectionItem root rootToString "Root: "
@@ -721,13 +722,13 @@ infoBox message =
     let
         ( color, content ) =
             case message of
-                Just (Info msg duration) ->
+                Just (Info msg _) ->
                     ( "yellow-300", msg )
 
-                Just (Error msg duration) ->
+                Just (Error msg _) ->
                     ( "red-300", msg )
 
-                Just (Success msg duration) ->
+                Just (Success msg _) ->
                     ( "green-300", msg )
 
                 Nothing ->
@@ -753,6 +754,7 @@ selectionItem item toString label =
         ]
 
 
+settings : Model -> Html Msg
 settings model =
     if model.showSettings then
         div [] [ text "yo" ]
@@ -761,16 +763,19 @@ settings model =
         div [] []
 
 
+primaryButton : String
 primaryButton =
     """bg-pink-500 hover:bg-pink-400 cursor-pointer text-white 
     font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"""
 
 
+secondaryButton : String
 secondaryButton =
     """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
     font-bold py-2 px-4 border-b-4 border-gray-700 hover:border-gray-500 rounded"""
 
 
+header : Model -> Html Msg
 header model =
     let
         minutes =
