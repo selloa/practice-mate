@@ -11,6 +11,10 @@ import Random.List
 import Time
 
 
+
+-- main
+
+
 main : Program () Model Msg
 main =
     Browser.element
@@ -161,7 +165,7 @@ rootToString root =
             "Bb"
 
         B ->
-            "B"
+            "BB"
 
 
 allScales : List Mode
