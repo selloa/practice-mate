@@ -42,9 +42,27 @@ type Root
     | Eb
 
 
-type Mode
+type
+    Mode
+    -- chords
     = Dur
     | Moll
+    | Dim
+    | Augm
+    | Sus2
+    | Sus4
+      -- scales
+    | Ionisch
+    | Dorisch
+    | Phrygisch
+    | Lydisch
+    | Mixolydisch
+    | Aeolisch
+      -- intervals
+    | Terzen
+    | Quarten
+    | Quinten
+    | Sexten
 
 
 type Range
@@ -77,7 +95,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, Cmd.batch [ generateMode, generateRoot ] )
+    ( initialModel, Cmd.batch [ generateMode Scales, generateRoot ] )
 
 
 allRoots : List Root
@@ -85,9 +103,23 @@ allRoots =
     [ C, G, D, A, F, Bb, Eb ]
 
 
-allModes : List Mode
-allModes =
-    [ Dur, Moll ]
+allScales : List Mode
+allScales =
+    [ Ionisch, Dorisch, Phrygisch, Lydisch, Mixolydisch, Aeolisch ]
+
+
+allChords : List Mode
+allChords =
+    [ Dur, Moll, Dim, Augm, Sus2, Sus4 ]
+
+
+allIntervals : List Mode
+allIntervals =
+    [ Terzen
+    , Quarten
+    , Quinten
+    , Sexten
+    ]
 
 
 initialModel : Model
@@ -95,7 +127,7 @@ initialModel =
     { practiceMode = TimeLimit
     , topic = Scales
     , root = C
-    , mode = Dur
+    , mode = Ionisch
     , range = Nothing
     , pattern = Nothing
     , elapsedTime = 0
@@ -150,14 +182,12 @@ update msg model =
                 | completedExercises = model.completedExercises + 1
                 , isRunning = False
               }
-            , Cmd.batch [ generateRoot, generateMode ]
+            , Cmd.batch [ generateRoot, generateMode model.topic ]
             )
 
         NextTopic ->
-            ( { model
-                | completedExercises = model.completedExercises + 1
-                , isRunning = False
-                , topic =
+            let
+                nextTopic =
                     case model.topic of
                         Scales ->
                             Chords
@@ -167,8 +197,13 @@ update msg model =
 
                         Doublestops ->
                             Scales
+            in
+            ( { model
+                | completedExercises = model.completedExercises + 1
+                , isRunning = False
+                , topic = nextTopic
               }
-            , Cmd.none
+            , Cmd.batch [ generateMode nextTopic, generateRoot ]
             )
 
         NewModeGenerated ( maybeMode, _ ) ->
@@ -207,9 +242,21 @@ generateRoot =
     Random.generate NewRootGenerated (Random.List.choose allRoots)
 
 
-generateMode : Cmd Msg
-generateMode =
-    Random.generate NewModeGenerated (Random.List.choose allModes)
+generateMode : Topic -> Cmd Msg
+generateMode topic =
+    let
+        source =
+            case topic of
+                Scales ->
+                    allScales
+
+                Chords ->
+                    allChords
+
+                Doublestops ->
+                    allIntervals
+    in
+    Random.generate NewModeGenerated (Random.List.choose source)
 
 
 
@@ -294,7 +341,7 @@ header model =
             "m-2 px-2 bg-gray-100"
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
-        [ h1 [ class "font-mono text-5xl uppercase" ] [ text "Rüben" ]
+        [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
         , div [ class "container flex justify-end items-start" ]
             [ div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
