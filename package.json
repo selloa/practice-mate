@@ -7,6 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "build": "rm -rf compiled && parcel build src/index.html --out-dir compiled --public-url ./",
     "dev": "parcel --out-dir dev-temp src/index.html"
   },
   "dependencies": {},
