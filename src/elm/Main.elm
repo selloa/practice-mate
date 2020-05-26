@@ -111,24 +111,36 @@ type Bowing
 
 
 type alias Model =
-    { practiceMode : PracticeMode
+    { elapsedTime : Int
+    , completedExercises : Int
+    , isRunning : Bool
+    , showSettings : Bool
+    , message : Maybe Message
+
+    -- selection
+    , practiceMode : PracticeMode
     , topic : Topic
     , root : Root
     , key : Key
     , interval : Interval
     , range : Range
     , bowing : Bowing
-    , elapsedTime : Int
-    , completedExercises : Int
-    , isRunning : Bool
-    , showSettings : Bool
-    , message : Maybe Message
+
+    -- pick from these
+    , practiceModes : List PracticeMode
+    , topics : List Topic
+    , roots : List Root
+    , keys : List Key
+    , intervals : List Interval
+    , ranges : List Range
+    , bowings : List Bowing
+    , chords : List Key
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, generateEverything Scales )
+    ( initialModel, generateEverything initialModel )
 
 
 allRoots : List Root
@@ -401,18 +413,30 @@ allBowings =
 
 initialModel : Model
 initialModel =
-    { practiceMode = TimeLimit 1
+    { elapsedTime = 0
+    , completedExercises = 0
+    , isRunning = False
+    , showSettings = False
+    , message = Nothing
+
+    -- selection
+    , practiceMode = TimeLimit 1
     , topic = Scales
     , root = C
     , key = Ionian
     , interval = Thirds
     , range = OneOctave 1
     , bowing = RepeatedStaccato 1
-    , elapsedTime = 0
-    , completedExercises = 0
-    , isRunning = False
-    , showSettings = False
-    , message = Nothing
+
+    -- configuration
+    , practiceModes = [ TimeLimit 1, ExerciseLimit 5 ]
+    , topics = [ Scales, Chords, Doublestops ]
+    , roots = allRoots
+    , keys = allScales
+    , intervals = allIntervals
+    , ranges = allRanges
+    , bowings = allBowings
+    , chords = allChords
     }
 
 
@@ -519,7 +543,7 @@ update msg model =
             ( { model
                 | completedExercises = model.completedExercises + 1
               }
-            , generateEverything model.topic
+            , generateEverything model
             )
 
         ToggleSettings ->
@@ -547,7 +571,7 @@ update msg model =
                 , isRunning = False
                 , topic = nextTopic
               }
-            , generateEverything nextTopic
+            , generateEverything model
             )
 
         NewKeyGenerated ( maybeKey, _ ) ->
@@ -611,52 +635,52 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
-generateEverything : Topic -> Cmd Msg
-generateEverything topic =
+generateEverything : Model -> Cmd Msg
+generateEverything model =
     Cmd.batch
-        [ generateInterval
-        , generateMode topic
-        , generateBowing
-        , generateRange
-        , generateRoot
+        [ generateInterval model
+        , generateKey model
+        , generateBowing model
+        , generateRange model
+        , generateRoot model
         ]
 
 
-generateRoot : Cmd Msg
-generateRoot =
-    Random.generate NewRootGenerated (Random.List.choose allRoots)
+generateRoot : Model -> Cmd Msg
+generateRoot model =
+    Random.generate NewRootGenerated (Random.List.choose model.roots)
 
 
-generateRange : Cmd Msg
-generateRange =
-    Random.generate NewRangeGenerated (Random.List.choose allRanges)
+generateRange : Model -> Cmd Msg
+generateRange model =
+    Random.generate NewRangeGenerated (Random.List.choose model.ranges)
 
 
-generateMode : Topic -> Cmd Msg
-generateMode topic =
+generateKey : Model -> Cmd Msg
+generateKey model =
     let
         source =
-            case topic of
+            case model.topic of
                 Scales ->
-                    allScales
+                    model.keys
 
                 Chords ->
-                    allChords
+                    model.chords
 
                 Doublestops ->
-                    allScales
+                    model.keys
     in
     Random.generate NewKeyGenerated (Random.List.choose source)
 
 
-generateInterval : Cmd Msg
-generateInterval =
-    Random.generate NewIntervalGenerated (Random.List.choose allIntervals)
+generateInterval : Model -> Cmd Msg
+generateInterval model =
+    Random.generate NewIntervalGenerated (Random.List.choose model.intervals)
 
 
-generateBowing : Cmd Msg
-generateBowing =
-    Random.generate NewBowingGenerated (Random.List.choose allBowings)
+generateBowing : Model -> Cmd Msg
+generateBowing model =
+    Random.generate NewBowingGenerated (Random.List.choose model.bowings)
 
 
 
