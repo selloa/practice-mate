@@ -65,6 +65,12 @@ type Range
     | TwoOctaves
 
 
+type Message
+    = Info String
+    | Success String
+    | Error String
+
+
 
 -- type Pattern
 --     = Slur Int
@@ -85,6 +91,7 @@ type alias Model =
     , completedExercises : Int
     , isRunning : Bool
     , showSettings : Bool
+    , message : Maybe Message
     }
 
 
@@ -247,6 +254,7 @@ initialModel =
     , completedExercises = 0
     , isRunning = False
     , showSettings = False
+    , message = Just (Success "hello there")
     }
 
 
@@ -458,7 +466,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
         [ header model
-        , infoBox "green-300" "Something!"
+        , infoBox model.message
         , selection model
         , settings model
         ]
@@ -506,13 +514,33 @@ selection model =
         ]
 
 
-infoBox : String -> String -> Html msg
-infoBox color content =
-    div [ class <| "container flex-col mx-auto font-mono justify-center bg-" ++ color ++ " px-4" ]
-        [ div [ class <| "container text-left bg-" ++ color ++ " mb-1 p-2" ]
-            [ text content
+infoBox : Maybe Message -> Html msg
+infoBox message =
+    let
+        ( color, content ) =
+            case message of
+                Just (Info msg) ->
+                    ( "yellow-300", msg )
+
+                Just (Error msg) ->
+                    ( "red-300", msg )
+
+                Just (Success msg) ->
+                    ( "green-300", msg )
+
+                Nothing ->
+                    ( "", "" )
+    in
+    if String.isEmpty color then
+        div [] []
+
+    else
+        div
+            [ class <| "container flex-col mx-auto font-mono justify-center bg-" ++ color ++ " px-4" ]
+            [ div [ class <| "container text-left bg-" ++ color ++ " mb-1 p-2" ]
+                [ text content
+                ]
             ]
-        ]
 
 
 selectionItem : a -> (a -> String) -> String -> Html msg
