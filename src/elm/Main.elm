@@ -461,10 +461,9 @@ selection model =
             -- todo
             , text "Timing mode"
             ]
-        , div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Topic: "
-            , text <|
-                case model.topic of
+        , selectionItem model.topic
+            (\topic ->
+                case topic of
                     Scales ->
                         "Scales"
 
@@ -473,38 +472,29 @@ selection model =
 
                     Doublestops ->
                         "Doublestops"
-            ]
-        , div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Root:  "
-            , text <| rootToString model.root
-            ]
-        , div
-            [ class <|
-                if model.topic == Doublestops then
-                    "container text-left bg-white mb-1 p-2"
+            )
+            "Topic: "
+        , selectionItem model.root rootToString "Root: "
+        , if model.topic == Doublestops then
+            selectionItem model.interval String.fromInt "Interval: "
 
-                else
-                    "hidden"
-            ]
-            [ text "Interval:  "
-            , text <| String.fromInt model.interval
-            ]
-        , div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Mode:  "
-            , text <| modeToString model.mode
-            ]
-        , div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Range:  "
-            , text <| rangeToString model.range
-            ]
-        , div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Pattern:  "
-            , text model.pattern
-            ]
+          else
+            div [ class "hidden" ] []
+        , selectionItem model.mode modeToString "Mode: "
+        , selectionItem model.range rangeToString "Range: "
+        , selectionItem model.pattern identity "Pattern: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
             ]
+        ]
+
+
+selectionItem : a -> (a -> String) -> String -> Html msg
+selectionItem item toString label =
+    div [ class "container text-left bg-white mb-1 p-2" ]
+        [ text label
+        , text <| toString item
         ]
 
 
@@ -513,7 +503,8 @@ settings model =
 
 
 primaryButton =
-    "bg-pink-500 hover:bg-pink-400 cursor-pointer text-white font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"
+    """bg-pink-500 hover:bg-pink-400 cursor-pointer text-white 
+    font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"""
 
 
 header model =
