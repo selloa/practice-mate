@@ -22,8 +22,8 @@ main =
 
 
 type PracticeMode
-    = TimeLimit
-    | ExerciseLimit
+    = TimeLimit Int
+    | ExerciseLimit Int
 
 
 type Topic
@@ -190,11 +190,11 @@ allChords =
 practiceModeToString : PracticeMode -> String
 practiceModeToString mode =
     case mode of
-        TimeLimit ->
-            "Time limit"
+        TimeLimit duration ->
+            "Time (" ++ String.fromInt duration ++ ")"
 
-        ExerciseLimit ->
-            "Exercise limit"
+        ExerciseLimit exercises ->
+            "Exercise (" ++ String.fromInt exercises ++ ")"
 
 
 topicToString : Topic -> String
@@ -370,7 +370,7 @@ allBowings =
 
 initialModel : Model
 initialModel =
-    { practiceMode = TimeLimit
+    { practiceMode = TimeLimit 1
     , topic = Scales
     , root = C
     , mode = Ionian
@@ -408,8 +408,33 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
+            let
+                newTime =
+                    model.elapsedTime + 1
+
+                timeLimitInSeconds =
+                    case model.practiceMode of
+                        TimeLimit minutes ->
+                            minutes * 60
+
+                        ExerciseLimit _ ->
+                            0
+            in
             if model.isRunning then
-                ( { model | elapsedTime = model.elapsedTime + 1 }, Cmd.none )
+                ( { model
+                    | elapsedTime = newTime
+                    , message =
+                        if newTime == timeLimitInSeconds // 2 then
+                            Just (Info "Halftime, keep going!")
+
+                        else if newTime == timeLimitInSeconds then
+                            Just (Success "Yay, you're awesome!")
+
+                        else
+                            model.message
+                  }
+                , Cmd.none
+                )
 
             else
                 ( model, Cmd.none )
