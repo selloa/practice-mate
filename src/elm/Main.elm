@@ -380,7 +380,6 @@ update msg model =
         NewExercise ->
             ( { model
                 | completedExercises = model.completedExercises + 1
-                , isRunning = False
               }
             , generateEverything model.topic
             )
