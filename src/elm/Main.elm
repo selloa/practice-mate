@@ -51,8 +51,8 @@ type Root
     | B
 
 
-type
-    Mode
+type Key
+    
     -- chords
     = Major
     | Minor
@@ -106,7 +106,7 @@ type alias Model =
     { practiceMode : PracticeMode
     , topic : Topic
     , root : Root
-    , mode : Mode
+    , key : Key
     , interval : Int
     , range : Range
     , bowing : Bowing
@@ -168,7 +168,7 @@ rootToString root =
             "BB"
 
 
-allScales : List Mode
+allScales : List Key
 allScales =
     [ Ionian
     , Dorian
@@ -186,7 +186,7 @@ allScales =
     ]
 
 
-allChords : List Mode
+allChords : List Key
 allChords =
     [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
 
@@ -214,8 +214,8 @@ topicToString topic =
             "Doublestops"
 
 
-modeToString : Mode -> String
-modeToString mode =
+keyToString : Key -> String
+keyToString mode =
     case mode of
         Major ->
             "Major"
@@ -377,7 +377,7 @@ initialModel =
     { practiceMode = TimeLimit 1
     , topic = Scales
     , root = C
-    , mode = Ionian
+    , key = Ionian
     , interval = 3
     , range = OneOctave 1
     , bowing = RepeatedStaccato 1
@@ -400,7 +400,7 @@ type Msg
     | KeyPressed String
     | NewExercise
     | NewRootGenerated ( Maybe Root, List Root )
-    | NewModeGenerated ( Maybe Mode, List Mode )
+    | NewKeyGenerated ( Maybe Key, List Key )
     | NewIntervalGenerated ( Maybe Int, List Int )
     | NewRangeGenerated ( Maybe Range, List Range )
     | NewBowingGenerated ( Maybe Bowing, List Bowing )
@@ -523,10 +523,10 @@ update msg model =
             , generateEverything nextTopic
             )
 
-        NewModeGenerated ( maybeMode, _ ) ->
-            case maybeMode of
-                Just mode ->
-                    ( { model | mode = mode }, Cmd.none )
+        NewKeyGenerated ( maybeKey, _ ) ->
+            case maybeKey of
+                Just key ->
+                    ( { model | key = key }, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -618,7 +618,7 @@ generateMode topic =
                 Doublestops ->
                     allScales
     in
-    Random.generate NewModeGenerated (Random.List.choose source)
+    Random.generate NewKeyGenerated (Random.List.choose source)
 
 
 generateInterval : Cmd Msg
@@ -664,7 +664,7 @@ view model =
 
 selection model =
     let
-        { practiceMode, topic, range, bowing, root, interval, mode } =
+        { practiceMode, topic, range, bowing, root, interval, key } =
             model
     in
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
@@ -678,7 +678,7 @@ selection model =
 
           else
             div [ class "hidden" ] []
-        , selectionItem mode modeToString "Mode: "
+        , selectionItem key keyToString "Key: "
         , selectionItem range rangeToString "Range: "
         , selectionItem bowing bowingToString "Bowings: "
         , div [ class "container p-3 flex" ]
