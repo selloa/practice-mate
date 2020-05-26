@@ -57,12 +57,19 @@ type
     | Sus2
     | Sus4
       -- scales
-    | Ionisch
-    | Dorisch
-    | Phrygisch
-    | Lydisch
-    | Mixolydisch
-    | Aeolisch
+    | Ionian
+    | Dorian
+    | Phrygian
+    | Lydian
+    | Mixolydian
+    | Aeolian
+    | Mandalorian
+    | MelodicMinor
+    | HarmonicMinor
+    | MajorPentatonic
+    | MinorPentatonic
+    | Chromatic
+    | Wholestep
 
 
 type Range
@@ -152,7 +159,20 @@ rootToString root =
 
 allScales : List Mode
 allScales =
-    [ Ionisch, Dorisch, Phrygisch, Lydisch, Mixolydisch, Aeolisch ]
+    [ Ionian
+    , Dorian
+    , Phrygian
+    , Lydian
+    , Mixolydian
+    , Aeolian
+    , Mandalorian
+    , MelodicMinor
+    , HarmonicMinor
+    , MajorPentatonic
+    , MinorPentatonic
+    , Chromatic
+    , Wholestep
+    ]
 
 
 allChords : List Mode
@@ -181,23 +201,44 @@ modeToString mode =
         Sus4 ->
             "Sus4"
 
-        Ionisch ->
-            "Ionisch"
+        Ionian ->
+            "Ionian - Major"
 
-        Dorisch ->
-            "Dorisch"
+        Dorian ->
+            "Dorian"
 
-        Phrygisch ->
-            "Phrygisch"
+        Phrygian ->
+            "Phrygian"
 
-        Lydisch ->
-            "Lydisch"
+        Lydian ->
+            "Lydian"
 
-        Mixolydisch ->
-            "Mixolydisch"
+        Mixolydian ->
+            "Mixolydian"
 
-        Aeolisch ->
-            "Aeolisch"
+        Aeolian ->
+            "Aeolian Natural Minor"
+
+        Mandalorian ->
+            "Mandalorian"
+
+        MelodicMinor ->
+            "Melodic Minor"
+
+        HarmonicMinor ->
+            "Harmonic Minor"
+
+        MajorPentatonic ->
+            "Major Pentatonic"
+
+        MinorPentatonic ->
+            "Minor Pentatonic"
+
+        Chromatic ->
+            "Chromatic"
+
+        Wholestep ->
+            "Wholestep"
 
 
 allIntervals : List Int
@@ -266,7 +307,7 @@ initialModel =
     { practiceMode = TimeLimit
     , topic = Scales
     , root = C
-    , mode = Ionisch
+    , mode = Ionian
     , interval = 3
     , range = OneOctave
     , pattern = "♺ x 1"
