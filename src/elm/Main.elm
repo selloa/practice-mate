@@ -181,6 +181,29 @@ allChords =
     [ Dur, Moll, Dim, Augm, Sus2, Sus4 ]
 
 
+practiceModeToString : PracticeMode -> String
+practiceModeToString mode =
+    case mode of
+        TimeLimit ->
+            "Time limit"
+
+        ExerciseLimit ->
+            "Exercise limit"
+
+
+topicToString : Topic -> String
+topicToString topic =
+    case topic of
+        Scales ->
+            "Scales"
+
+        Chords ->
+            "Chords"
+
+        Doublestops ->
+            "Doublestops"
+
+
 modeToString : Mode -> String
 modeToString mode =
     case mode of
@@ -534,41 +557,24 @@ view model =
 
 
 selection model =
+    let
+        { practiceMode, topic, range, pattern, root, interval, mode } =
+            model
+    in
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
-        [ selectionItem model.practiceMode
-            (\practice ->
-                case practice of
-                    TimeLimit ->
-                        "Time limit"
-
-                    ExerciseLimit ->
-                        "Exercise limit"
-            )
-            "Practice mode: "
-        , selectionItem model.topic
-            (\topic ->
-                case topic of
-                    Scales ->
-                        "Scales"
-
-                    Chords ->
-                        "Chords"
-
-                    Doublestops ->
-                        "Doublestops"
-            )
-            "Topic: "
+        [ selectionItem practiceMode practiceModeToString "Practice mode: "
+        , selectionItem topic topicToString "Topic: "
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , selectionItem model.root rootToString "Root: "
-        , if model.topic == Doublestops then
-            selectionItem model.interval String.fromInt "Interval: "
+        , selectionItem root rootToString "Root: "
+        , if topic == Doublestops then
+            selectionItem interval String.fromInt "Interval: "
 
           else
             div [ class "hidden" ] []
-        , selectionItem model.mode modeToString "Mode: "
-        , selectionItem model.range rangeToString "Range: "
-        , selectionItem model.pattern identity "Pattern: "
+        , selectionItem mode modeToString "Mode: "
+        , selectionItem range rangeToString "Range: "
+        , selectionItem pattern identity "Pattern: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
