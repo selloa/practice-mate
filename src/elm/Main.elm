@@ -97,6 +97,31 @@ allRoots =
     [ C, G, D, A, F, Bb, Eb ]
 
 
+rootToString : Root -> String
+rootToString root =
+    case root of
+        C ->
+            "C"
+
+        G ->
+            "G"
+
+        D ->
+            "D"
+
+        A ->
+            "A"
+
+        F ->
+            "F"
+
+        Bb ->
+            "Bb"
+
+        Eb ->
+            "Eb"
+
+
 allScales : List Mode
 allScales =
     [ Ionisch, Dorisch, Phrygisch, Lydisch, Mixolydisch, Aeolisch ]
@@ -107,6 +132,46 @@ allChords =
     [ Dur, Moll, Dim, Augm, Sus2, Sus4 ]
 
 
+modeToString : Mode -> String
+modeToString mode =
+    case mode of
+        Dur ->
+            "Dur"
+
+        Moll ->
+            "Moll"
+
+        Dim ->
+            "Dim"
+
+        Augm ->
+            "Augm"
+
+        Sus2 ->
+            "Sus2"
+
+        Sus4 ->
+            "Sus4"
+
+        Ionisch ->
+            "Ionisch"
+
+        Dorisch ->
+            "Dorisch"
+
+        Phrygisch ->
+            "Phrygisch"
+
+        Lydisch ->
+            "Lydisch"
+
+        Mixolydisch ->
+            "Mixolydisch"
+
+        Aeolisch ->
+            "Aeolisch"
+
+
 allIntervals : List Int
 allIntervals =
     [ 3, 4, 5, 6 ]
@@ -115,6 +180,16 @@ allIntervals =
 allRanges : List Range
 allRanges =
     [ OneOctave, TwoOctaves ]
+
+
+rangeToString : Range -> String
+rangeToString range =
+    case range of
+        OneOctave ->
+            "One octave"
+
+        TwoOctaves ->
+            "Two octaves"
 
 
 allPatterns : List String
@@ -382,15 +457,26 @@ selection model =
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
         [ div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Practice mode: "
-            , text <| Debug.toString model.practiceMode
+
+            -- todo
+            , text "Timing mode"
             ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Topic: "
-            , text <| Debug.toString model.topic
+            , text <|
+                case model.topic of
+                    Scales ->
+                        "Scales"
+
+                    Chords ->
+                        "Chords"
+
+                    Doublestops ->
+                        "Doublestops"
             ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Root:  "
-            , text <| Debug.toString model.root
+            , text <| rootToString model.root
             ]
         , div
             [ class <|
@@ -405,11 +491,11 @@ selection model =
             ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Mode:  "
-            , text <| Debug.toString model.mode
+            , text <| modeToString model.mode
             ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Range:  "
-            , text <| Debug.toString model.range
+            , text <| rangeToString model.range
             ]
         , div [ class "container text-left bg-white mb-1 p-2" ]
             [ text "Pattern:  "
