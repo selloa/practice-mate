@@ -381,7 +381,7 @@ initialModel =
     , completedExercises = 0
     , isRunning = False
     , showSettings = False
-    , message = Just (Success "hello there")
+    , message = Nothing
     }
 
 
@@ -604,8 +604,8 @@ selection model =
             model
     in
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
-        [ selectionItem practiceMode practiceModeToString "Practice mode: "
-        , selectionItem topic topicToString "Topic: "
+        [ -- selectionItem practiceMode practiceModeToString "Practice mode: "
+          selectionItem topic (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
         , selectionItem root rootToString "Root: "
@@ -656,7 +656,7 @@ infoBox message =
 
 selectionItem : a -> (a -> String) -> String -> Html msg
 selectionItem item toString label =
-    div [ class "container text-left bg-white mb-1 p-2" ]
+    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
         [ text label
         , text <| toString item
         ]
@@ -696,16 +696,21 @@ header model =
                 number
 
         elementClass =
-            "m-2 px-2 bg-gray-100"
+            "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
+
+        buttonClass =
+            """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
+            font-bold mr-2 px-2 border-b-2 border-gray-700 hover:border-gray-500 rounded"""
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         -- [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
-        [ h1 [ class "text-4xl font-sans" ] [ text "❒" ]
+        [ h1 [ class elementClass, class "font-sans" ] [ text "❒" ]
         , div [ class "container flex justify-end items-start" ]
-            [ div [ class elementClass ]
+            [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
+            , div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
                 ]
-            , button [ class elementClass, onClick ToggleTimer ]
+            , button [ class buttonClass, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
                         "pause"
@@ -713,9 +718,9 @@ header model =
                     else
                         "start"
                 ]
-            , button [ class elementClass, onClick ClearTimer ] [ text "■" ]
-            , div [ class elementClass ]
-                [ text ("ex. " ++ String.fromInt model.completedExercises)
+            , button [ class buttonClass, onClick ClearTimer ] [ text "■" ]
+            , div [ class "px-2 mb-2 bg-gray-100 border-b-2 rounded" ]
+                [ text ("✔ " ++ String.fromInt model.completedExercises)
                 ]
             ]
         ]
