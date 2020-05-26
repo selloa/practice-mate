@@ -73,8 +73,9 @@ type
 
 
 type Range
-    = OneOctave
-    | TwoOctaves
+    = OneOctave Int
+    | OneStringScale Int
+    | FullRange
 
 
 type Message
@@ -248,17 +249,29 @@ allIntervals =
 
 allRanges : List Range
 allRanges =
-    [ OneOctave, TwoOctaves ]
+    [ OneOctave 1
+    , OneOctave 2
+    , OneOctave 3
+    , OneOctave 4
+    , OneStringScale 1
+    , OneStringScale 2
+    , OneStringScale 3
+    , OneStringScale 4
+    , FullRange
+    ]
 
 
 rangeToString : Range -> String
 rangeToString range =
     case range of
-        OneOctave ->
-            "One octave"
+        OneStringScale n ->
+            "One String Scale " ++ String.fromInt n
 
-        TwoOctaves ->
-            "Two octaves"
+        OneOctave n ->
+            "One Octave " ++ String.fromInt n
+
+        FullRange ->
+            "Full Range"
 
 
 allPatterns : List String
@@ -309,7 +322,7 @@ initialModel =
     , root = C
     , mode = Ionian
     , interval = 3
-    , range = OneOctave
+    , range = OneOctave 1
     , pattern = "♺ x 1"
     , elapsedTime = 0
     , completedExercises = 0
