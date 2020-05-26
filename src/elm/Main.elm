@@ -84,6 +84,7 @@ type alias Model =
     , elapsedTime : Int
     , completedExercises : Int
     , isRunning : Bool
+    , showSettings : Bool
     }
 
 
@@ -245,6 +246,7 @@ initialModel =
     , elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
+    , showSettings = False
     }
 
 
@@ -264,6 +266,7 @@ type Msg
     | NewRangeGenerated ( Maybe Range, List Range )
     | NewPatternGenerated ( Maybe String, List String )
     | NextTopic
+    | ToggleSettings
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -298,6 +301,13 @@ update msg model =
                 , isRunning = False
               }
             , generateEverything model.topic
+            )
+
+        ToggleSettings ->
+            ( { model
+                | showSettings = not model.showSettings
+              }
+            , Cmd.none
             )
 
         NextTopic ->
@@ -448,6 +458,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
         [ header model
+        , infoBox "green-300" "Something!"
         , selection model
         , settings model
         ]
@@ -455,12 +466,16 @@ view model =
 
 selection model =
     div [ class "container flex-col mx-auto font-mono justify-center p-3 bg-gray-300 px-4" ]
-        [ div [ class "container text-left bg-white mb-1 p-2" ]
-            [ text "Practice mode: "
+        [ selectionItem model.practiceMode
+            (\practice ->
+                case practice of
+                    TimeLimit ->
+                        "Time limit"
 
-            -- todo
-            , text "Timing mode"
-            ]
+                    ExerciseLimit ->
+                        "Exercise limit"
+            )
+            "Practice mode: "
         , selectionItem model.topic
             (\topic ->
                 case topic of
@@ -486,6 +501,16 @@ selection model =
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
+            , button [ class secondaryButton, class "flex-auto m-2", onClick ToggleSettings ] [ text "..." ]
+            ]
+        ]
+
+
+infoBox : String -> String -> Html msg
+infoBox color content =
+    div [ class <| "container flex-col mx-auto font-mono justify-center bg-" ++ color ++ " px-4" ]
+        [ div [ class <| "container text-left bg-" ++ color ++ " mb-1 p-2" ]
+            [ text content
             ]
         ]
 
@@ -499,12 +524,21 @@ selectionItem item toString label =
 
 
 settings model =
-    div [] []
+    if model.showSettings then
+        div [] [ text "yo" ]
+
+    else
+        div [] []
 
 
 primaryButton =
     """bg-pink-500 hover:bg-pink-400 cursor-pointer text-white 
     font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"""
+
+
+secondaryButton =
+    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
+    font-bold py-2 px-4 border-b-4 border-gray-700 hover:border-gray-500 rounded"""
 
 
 header model =
