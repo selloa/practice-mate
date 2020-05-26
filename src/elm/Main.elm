@@ -165,7 +165,7 @@ rootToString root =
             "Bb"
 
         B ->
-            "BB"
+            "B"
 
 
 allScales : List Key
