@@ -794,10 +794,7 @@ applyPreset model =
 
 
 toggle a list =
-    if List.length list == 1 && List.member a list then
-        list
-
-    else if List.member a list then
+    if List.member a list then
         List.filter (\element -> element /= a) list
 
     else
@@ -906,22 +903,23 @@ view model =
 selection : Model -> Html Msg
 selection model =
     let
-        { topic, range, bowing, root, interval, key } =
+        { topics, ranges, bowings, roots, intervals, keys } =
             model
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-300 px-4" ]
-        [ selectionItem topic (String.toUpper << topicToString) ""
+        [ selectionItem topics (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , if topic == Doublestops then
-            selectionItem interval intervalToString "Interval: "
+        , case List.head topics of
+            Just Doublestops ->
+                selectionItem intervals intervalToString "Interval: "
 
-          else
-            div [ class "hidden" ] []
-        , selectionItem root rootToString "Root: "
-        , selectionItem key keyToString "Key: "
-        , selectionItem range rangeToString "Range: "
-        , selectionItem bowing bowingToString "Bowings: "
+            _ ->
+                div [ class "hidden" ] []
+        , selectionItem roots rootToString "Root: "
+        , selectionItem keys keyToString "Key: "
+        , selectionItem ranges rangeToString "Range: "
+        , selectionItem bowings bowingToString "Bowings: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
@@ -959,12 +957,19 @@ infoBox message =
             ]
 
 
-selectionItem : a -> (a -> String) -> String -> Html msg
-selectionItem item toString label =
-    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-        [ text label
-        , text <| toString item
-        ]
+selectionItem : List a -> (a -> String) -> String -> Html msg
+selectionItem items toString label =
+    case List.head items of
+        Just item ->
+            div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                [ text label
+                , text <| toString item
+                ]
+
+        Nothing ->
+            div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                [ text "-/-"
+                ]
 
 
 settings : Model -> Html Msg
