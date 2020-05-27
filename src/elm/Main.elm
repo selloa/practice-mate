@@ -231,7 +231,7 @@ practiceModeToString mode =
             "⏲️ " ++ String.fromInt duration
 
         ExerciseLimit exercises ->
-            "Exercise (" ++ String.fromInt exercises ++ ")"
+            "✔ (" ++ String.fromInt exercises ++ ")"
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
@@ -672,18 +672,17 @@ update msg model =
             ( { model | practiceMode = practiceMode }, Cmd.none )
 
         ToggleTopic topic ->
-            let
-                length =
-                    List.length model.topics
-            in
-            ( if length /= 1 then
-                { model | topics = toggle topic model.topics }
-
-              else if length == 1 && not (List.member topic model.topics) then
-                { model | topics = toggle topic model.topics }
-
-              else
-                model
+            -- let
+            --     length =
+            --         List.length model.topics
+            -- in
+            -- ( if length /= 1 then
+            --     { model | topics = toggle topic model.topics }
+            --   else if length == 1 && not (List.member topic model.topics) then
+            --     { model | topics = toggle topic model.topics }
+            --   else
+            --     model
+            ( { model | topics = toggle topic model.topics }
             , Cmd.none
             )
 
@@ -877,7 +876,6 @@ selection model =
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
-            , button [ class secondaryButton, class "flex-auto m-2", onClick ToggleSettings ] [ text "..." ]
             ]
         ]
 
@@ -960,7 +958,7 @@ settings model =
                     [ text "Exercise limit" ]
                 ]
             , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Roots" ]
+                div [ class "container" ] [ text "Topics" ]
                     :: showSetting topicToString allTopics model.topics ToggleTopic
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Roots" ]
@@ -1085,8 +1083,6 @@ header model =
                         "start"
                 ]
             , button [ class buttonClass, onClick ClearTimer ] [ text "■" ]
-            , div [ class "px-2 mb-2 bg-gray-100 border-b-2 rounded" ]
-                [ text ("✔ " ++ String.fromInt model.completedExercises)
-                ]
+            , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
