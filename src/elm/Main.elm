@@ -134,12 +134,12 @@ type alias Model =
     -- selection
     , practiceMode : PracticeMode
     , topic : Topic
-    , root : Root
-    , key : Key
-    , interval : Interval
-    , range : Range
-    , bowing : Bowing
 
+    -- , root : Root
+    -- , key : Key
+    -- , interval : Interval
+    -- , range : Range
+    -- , bowing : Bowing
     -- pick from these
     , practiceModes : List PracticeMode
     , topics : List Topic
@@ -154,7 +154,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, generateEverything initialModel )
+    ( initialModel, shuffleEverything initialModel )
 
 
 allRoots : List Root
@@ -460,12 +460,12 @@ initialModel =
     -- selection
     , practiceMode = TimeLimit 1
     , topic = Scales
-    , root = C
-    , key = Ionian
-    , interval = Thirds
-    , range = OneOctave 1
-    , bowing = RepeatedStaccato 1
 
+    -- , root = C
+    -- , key = Ionian
+    -- , interval = Thirds
+    -- , range = OneOctave 1
+    -- , bowing = RepeatedStaccato 1
     -- configuration
     , practiceModes = [ TimeLimit 1 ]
     , topics = [ Scales, Chords, Doublestops ]
@@ -488,11 +488,11 @@ type Msg
     | ClearTimer
     | KeyPressed String
     | NewExercise
-    | NewRootGenerated ( Maybe Root, List Root )
-    | NewKeyGenerated ( Maybe Key, List Key )
-    | NewIntervalGenerated ( Maybe Interval, List Interval )
-    | NewRangeGenerated ( Maybe Range, List Range )
-    | NewBowingGenerated ( Maybe Bowing, List Bowing )
+    | NewRootsGenerated (List Root)
+    | NewKeysGenerated (List Key)
+    | NewIntervalsGenerated (List Interval)
+    | NewRangesGenerated (List Range)
+    | NewBowingsGenerated (List Bowing)
     | NextTopic
     | ToggleSettings
     | ToggleTopic Topic
@@ -516,11 +516,11 @@ update msg model =
                     model.elapsedTime + 1
 
                 timeLimitInSeconds =
-                    case model.practiceMode of
-                        TimeLimit minutes ->
+                    case List.head model.practiceModes of
+                        Just (TimeLimit minutes) ->
                             minutes * 60
 
-                        ExerciseLimit _ ->
+                        _ ->
                             0
             in
             if model.isRunning then
@@ -591,7 +591,7 @@ update msg model =
             ( { model
                 | completedExercises = model.completedExercises + 1
               }
-            , generateEverything model
+            , shuffleEverything model
             )
 
         ToggleSettings ->
@@ -619,101 +619,52 @@ update msg model =
                 , isRunning = False
                 , topic = nextTopic
               }
-            , generateEverything model
+            , shuffleEverything model
             )
 
-        NewKeyGenerated ( maybeKey, _ ) ->
-            case maybeKey of
-                Just key ->
-                    ( { model | key = key }, Cmd.none )
+        NewKeysGenerated keys ->
+            ( { model | keys = keys }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        NewRootsGenerated roots ->
+            ( { model | roots = roots }, Cmd.none )
 
-        NewRootGenerated ( maybeRoot, _ ) ->
-            case maybeRoot of
-                Just root ->
-                    ( { model | root = root }, Cmd.none )
+        NewBowingsGenerated bowings ->
+            ( { model | bowings = bowings }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        NewIntervalsGenerated intervals ->
+            ( { model | intervals = intervals }, Cmd.none )
 
-        NewIntervalGenerated ( maybeInterval, _ ) ->
-            case maybeInterval of
-                Just interval ->
-                    ( { model | interval = interval }, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        NewRangeGenerated ( maybeRange, _ ) ->
-            case maybeRange of
-                Just range ->
-                    ( { model | range = range }, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        NewBowingGenerated ( maybeBowing, _ ) ->
-            case maybeBowing of
-                Just bowing ->
-                    ( { model | bowing = bowing }, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
+        NewRangesGenerated ranges ->
+            ( { model | ranges = ranges }, Cmd.none )
 
         ToggleBowing bowing ->
-            ( { model | bowings = toggle bowing model.bowings }
-            , if model.bowing == bowing then
-                generateBowing model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleBowings (toggle bowing model.bowings)
             )
 
         ToggleChord chord ->
-            ( { model | chords = toggle chord model.chords }
-            , if model.key == chord then
-                generateKey model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleKeys { model | chords = toggle chord model.chords }
             )
 
         ToggleRoot root ->
-            ( { model | roots = toggle root model.roots }
-            , if model.root == root then
-                generateRoot model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleRoots (toggle root model.roots)
             )
 
         ToggleInterval interval ->
-            ( { model | intervals = toggle interval model.intervals }
-            , if model.interval == interval then
-                generateInterval model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleIntervals (toggle interval model.intervals)
             )
 
         ToggleRange range ->
-            ( { model | ranges = toggle range model.ranges }
-            , if model.range == range then
-                generateRange model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleRanges (toggle range model.ranges)
             )
 
         ToggleKey key ->
-            ( { model | keys = toggle key model.keys }
-            , if model.key == key then
-                generateKey model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleKeys { model | keys = toggle key model.keys }
             )
 
         TogglePracticeMode practiceMode ->
@@ -727,7 +678,7 @@ update msg model =
                 newModel =
                     { model | preset = preset } |> applyPreset
             in
-            ( newModel, generateEverything newModel )
+            ( newModel, shuffleEverything newModel )
 
         PrintConfiguration ->
             let
@@ -793,12 +744,12 @@ applyPreset model =
             }
 
 
-toggle a list =
-    if List.member a list then
-        List.filter (\element -> element /= a) list
+toggle element list =
+    if List.member element list then
+        List.filter ((/=) element) list
 
     else
-        a :: list
+        element :: list
 
 
 clearTimer : Model -> ( Model, Cmd Msg )
@@ -821,29 +772,29 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
-generateEverything : Model -> Cmd Msg
-generateEverything model =
+shuffleEverything : Model -> Cmd Msg
+shuffleEverything model =
     Cmd.batch
-        [ generateInterval model
-        , generateKey model
-        , generateBowing model
-        , generateRange model
-        , generateRoot model
+        [ shuffleIntervals model.intervals
+        , shuffleKeys model
+        , shuffleBowings model.bowings
+        , shuffleRanges model.ranges
+        , shuffleRoots model.roots
         ]
 
 
-generateRoot : Model -> Cmd Msg
-generateRoot model =
-    Random.generate NewRootGenerated (Random.List.choose model.roots)
+shuffleRoots : List Root -> Cmd Msg
+shuffleRoots roots =
+    Random.generate NewRootsGenerated (Random.List.shuffle roots)
 
 
-generateRange : Model -> Cmd Msg
-generateRange model =
-    Random.generate NewRangeGenerated (Random.List.choose model.ranges)
+shuffleRanges : List Range -> Cmd Msg
+shuffleRanges ranges =
+    Random.generate NewRangesGenerated (Random.List.shuffle ranges)
 
 
-generateKey : Model -> Cmd Msg
-generateKey model =
+shuffleKeys : Model -> Cmd Msg
+shuffleKeys model =
     let
         source =
             case model.topic of
@@ -856,17 +807,17 @@ generateKey model =
                 Doublestops ->
                     model.keys
     in
-    Random.generate NewKeyGenerated (Random.List.choose source)
+    Random.generate NewKeysGenerated (Random.List.shuffle source)
 
 
-generateInterval : Model -> Cmd Msg
-generateInterval model =
-    Random.generate NewIntervalGenerated (Random.List.choose model.intervals)
+shuffleIntervals : List Interval -> Cmd Msg
+shuffleIntervals intervals =
+    Random.generate NewIntervalsGenerated (Random.List.shuffle intervals)
 
 
-generateBowing : Model -> Cmd Msg
-generateBowing model =
-    Random.generate NewBowingGenerated (Random.List.choose model.bowings)
+shuffleBowings : List Bowing -> Cmd Msg
+shuffleBowings bowings =
+    Random.generate NewBowingsGenerated (Random.List.shuffle bowings)
 
 
 
