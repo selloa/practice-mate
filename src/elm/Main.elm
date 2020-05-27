@@ -58,17 +58,8 @@ type Root
     | B
 
 
-type
-    Key
-    -- chords
-    = Major
-    | Minor
-    | Dim
-    | Augm
-    | Sus2
-    | Sus4
-      -- scales
-    | Ionian
+type Key
+    = Ionian
     | Dorian
     | Phrygian
     | Lydian
@@ -81,6 +72,15 @@ type
     | MinorPentatonic
     | Chromatic
     | Wholestep
+
+
+type Chord
+    = Major
+    | Minor
+    | Dim
+    | Augm
+    | Sus2
+    | Sus4
 
 
 type Range
@@ -143,7 +143,7 @@ type alias Model =
     , intervals : List Interval
     , ranges : List Range
     , bowings : List Bowing
-    , chords : List Key
+    , chords : List Chord
     }
 
 
@@ -215,7 +215,7 @@ allScales =
     ]
 
 
-allChords : List Key
+allChords : List Chord
 allChords =
     [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
 
@@ -253,9 +253,9 @@ topicToString topic =
             "Doublestops"
 
 
-keyToString : Key -> String
-keyToString mode =
-    case mode of
+chordToString : Chord -> String
+chordToString chord =
+    case chord of
         Major ->
             "Major"
 
@@ -274,6 +274,10 @@ keyToString mode =
         Sus4 ->
             "Sus4"
 
+
+keyToString : Key -> String
+keyToString key =
+    case key of
         Ionian ->
             "Ionian - Major"
 
@@ -483,12 +487,13 @@ type Msg
     | NewIntervalsGenerated (List Interval)
     | NewRangesGenerated (List Range)
     | NewBowingsGenerated (List Bowing)
+    | NewChordsGenerated (List Chord)
     | NextTopic
     | ToggleSettings
     | ToggleTopic Topic
     | TogglePracticeMode PracticeMode
     | ToggleRoot Root
-    | ToggleChord Key
+    | ToggleChord Chord
     | ToggleKey Key
     | ToggleBowing Bowing
     | ToggleRange Range
@@ -624,6 +629,9 @@ update msg model =
         NewIntervalsGenerated intervals ->
             ( { model | intervals = intervals }, Cmd.none )
 
+        NewChordsGenerated chords ->
+            ( { model | chords = chords }, Cmd.none )
+
         NewRangesGenerated ranges ->
             ( { model | ranges = ranges }, Cmd.none )
 
@@ -634,7 +642,7 @@ update msg model =
 
         ToggleChord chord ->
             ( model
-            , shuffleKeys { model | chords = toggle chord model.chords }
+            , shuffleChords (toggle chord model.chords)
             )
 
         ToggleRoot root ->
@@ -654,7 +662,7 @@ update msg model =
 
         ToggleKey key ->
             ( model
-            , shuffleKeys { model | keys = toggle key model.keys }
+            , shuffleKeys (toggle key model.keys)
             )
 
         TogglePracticeMode practiceMode ->
@@ -766,7 +774,7 @@ shuffleEverything : Model -> Cmd Msg
 shuffleEverything model =
     Cmd.batch
         [ shuffleIntervals model.intervals
-        , shuffleKeys model
+        , shuffleKeys model.keys
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
@@ -783,21 +791,9 @@ shuffleRanges ranges =
     Random.generate NewRangesGenerated (Random.List.shuffle ranges)
 
 
-shuffleKeys : Model -> Cmd Msg
-shuffleKeys model =
-    let
-        source =
-            case model.topic of
-                Scales ->
-                    model.keys
-
-                Chords ->
-                    model.chords
-
-                Doublestops ->
-                    model.keys
-    in
-    Random.generate NewKeysGenerated (Random.List.shuffle source)
+shuffleKeys : List Key -> Cmd Msg
+shuffleKeys keys =
+    Random.generate NewKeysGenerated (Random.List.shuffle keys)
 
 
 shuffleIntervals : List Interval -> Cmd Msg
@@ -808,6 +804,11 @@ shuffleIntervals intervals =
 shuffleBowings : List Bowing -> Cmd Msg
 shuffleBowings bowings =
     Random.generate NewBowingsGenerated (Random.List.shuffle bowings)
+
+
+shuffleChords : List Chord -> Cmd Msg
+shuffleChords chords =
+    Random.generate NewChordsGenerated (Random.List.shuffle chords)
 
 
 
@@ -957,7 +958,7 @@ settings model =
                     :: showSetting keyToString allScales model.keys ToggleKey
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Chord" ]
-                    :: showSetting keyToString allChords model.chords ToggleChord
+                    :: showSetting chordToString allChords model.chords ToggleChord
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Ranges" ]
                     :: showSetting rangeToString allRanges model.ranges ToggleRange
