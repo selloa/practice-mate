@@ -633,22 +633,58 @@ update msg model =
                     ( model, Cmd.none )
 
         ToggleBowing bowing ->
-            ( { model | bowings = toggle bowing model.bowings }, Cmd.none )
+            ( { model | bowings = toggle bowing model.bowings }
+            , if model.bowing == bowing then
+                generateBowing model
+
+              else
+                Cmd.none
+            )
 
         ToggleChord chord ->
-            ( { model | chords = toggle chord model.chords }, Cmd.none )
+            ( { model | chords = toggle chord model.chords }
+            , if model.key == chord then
+                generateKey model
+
+              else
+                Cmd.none
+            )
 
         ToggleRoot root ->
-            ( { model | roots = toggle root model.roots }, Cmd.none )
+            ( { model | roots = toggle root model.roots }
+            , if model.root == root then
+                generateRoot model
+
+              else
+                Cmd.none
+            )
 
         ToggleInterval interval ->
-            ( { model | intervals = toggle interval model.intervals }, Cmd.none )
+            ( { model | intervals = toggle interval model.intervals }
+            , if model.interval == interval then
+                generateInterval model
+
+              else
+                Cmd.none
+            )
 
         ToggleRange range ->
-            ( { model | ranges = toggle range model.ranges }, Cmd.none )
+            ( { model | ranges = toggle range model.ranges }
+            , if model.range == range then
+                generateRange model
+
+              else
+                Cmd.none
+            )
 
         ToggleKey key ->
-            ( { model | keys = toggle key model.keys }, Cmd.none )
+            ( { model | keys = toggle key model.keys }
+            , if model.key == key then
+                generateKey model
+
+              else
+                Cmd.none
+            )
 
         TogglePracticeMode practiceMode ->
             ( { model | practiceMode = practiceMode }, Cmd.none )
@@ -658,7 +694,10 @@ update msg model =
 
 
 toggle a list =
-    if List.member a list then
+    if List.length list == 1 && List.member a list then
+        list
+
+    else if List.member a list then
         List.filter (\element -> element /= a) list
 
     else
@@ -830,9 +869,22 @@ selectionItem item toString label =
 
 settings : Model -> Html Msg
 settings model =
+    let
+        ( buttonTimeLimit, buttonExercises ) =
+            case model.practiceMode of
+                TimeLimit _ ->
+                    ( buttonActive, buttonPassive )
+
+                ExerciseLimit _ ->
+                    ( buttonPassive, buttonActive )
+    in
     if model.showSettings then
         div [ class "container bg-gray-300" ] <|
-            showSetting practiceModeToStringWithoutNumber [ TimeLimit 1, ExerciseLimit 1 ] model.practiceModes TogglePracticeMode
+            [ button [ class buttonTimeLimit, onClick (TogglePracticeMode <| TimeLimit 1) ]
+                [ text "Time limit" ]
+            , button [ class buttonExercises, onClick (TogglePracticeMode <| ExerciseLimit 5) ]
+                [ text "Exercise limit" ]
+            ]
                 ++ showSetting rootToString allRoots model.roots ToggleRoot
                 ++ showSetting intervalToString allIntervals model.intervals ToggleInterval
                 ++ showSetting keyToString allScales model.keys ToggleKey
@@ -844,16 +896,17 @@ settings model =
         div [] []
 
 
-showSetting toString elements selectedElements msg =
-    let
-        buttonActive =
-            """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 px-2 
-            border-b-2 border-green-700 hover:border-green-500 rounded"""
+buttonActive =
+    """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 px-2 
+    border-b-2 border-green-700 hover:border-green-500 rounded"""
 
-        buttonPassive =
-            """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 px-2 
-            border-b-2 border-gray-700 hover:border-gray-500 rounded"""
-    in
+
+buttonPassive =
+    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 px-2 
+    border-b-2 border-gray-700 hover:border-gray-500 rounded"""
+
+
+showSetting toString elements selectedElements msg =
     List.map
         (\element ->
             button
