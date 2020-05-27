@@ -108,7 +108,8 @@ type Bowing
 
 type Preset
     = Easy
-    | Everything
+    | All
+    | None
     | Custom
 
 
@@ -435,7 +436,7 @@ initialModel =
     , isRunning = False
     , showSettings = False
     , message = Nothing
-    , preset = Everything
+    , preset = All
 
     -- selection
     , practiceMode = TimeLimit 1
@@ -723,7 +724,7 @@ applyPreset model =
                 , bowings = [ Sequenced, AddTopNote, Rhythmed ]
             }
 
-        Everything ->
+        All ->
             { model
                 | practiceModes = [ TimeLimit 1 ]
                 , topics = [ Scales, Chords, Doublestops ]
@@ -733,6 +734,18 @@ applyPreset model =
                 , ranges = allRanges
                 , bowings = allBowings
                 , chords = allChords
+            }
+
+        None ->
+            { model
+                | practiceModes = [ TimeLimit 1 ]
+                , topics = [ ]
+                , roots = [ ]
+                , keys = [ ]
+                , intervals = [ ]
+                , ranges = [ ]
+                , bowings = [ ]
+                , chords = [ ]
             }
 
         Custom ->
@@ -935,16 +948,21 @@ settings model =
                     [ text "EASY" ]
                 , button
                     [ class buttonTimeLimit
-                    , onClick (ChangePreset Everything)
+                    , onClick (ChangePreset All)
                     ]
-                    [ text "EVERYTHING" ]
-
+                    [ text "All" ]
+                , button
+                    [ class buttonTimeLimit
+                    , onClick (ChangePreset None)
+                    ]
+                    [ text "NONE" ]
+                ]
                 -- , button
                 --     [ class buttonTimeLimit
                 --     , onClick (ChangePreset Custom)
                 --     ]
                 --     [ text "CUSTOM" ]
-                ]
+                
             , div
                 [ class "container mx-2" ]
                 [ div [ class "container" ] [ text "Practice mode" ]
