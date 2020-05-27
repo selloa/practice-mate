@@ -571,7 +571,11 @@ update msg model =
 
         KeyPressed key ->
             if key == " " then
-                toggleTimer model
+                ( { model
+                    | completedExercises = model.completedExercises + 1
+                  }
+                , generateEverything model
+                )
 
             else if key == "Backspace" then
                 clearTimer model
