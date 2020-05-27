@@ -135,12 +135,7 @@ type alias Model =
     , practiceMode : PracticeMode
     , topic : Topic
 
-    -- , root : Root
-    -- , key : Key
-    -- , interval : Interval
-    -- , range : Range
-    -- , bowing : Bowing
-    -- pick from these
+    --
     , practiceModes : List PracticeMode
     , topics : List Topic
     , roots : List Root
@@ -461,12 +456,7 @@ initialModel =
     , practiceMode = TimeLimit 1
     , topic = Scales
 
-    -- , root = C
-    -- , key = Ionian
-    -- , interval = Thirds
-    -- , range = OneOctave 1
-    -- , bowing = RepeatedStaccato 1
-    -- configuration
+    --
     , practiceModes = [ TimeLimit 1 ]
     , topics = [ Scales, Chords, Doublestops ]
     , roots = allRoots
