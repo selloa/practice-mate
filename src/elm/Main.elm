@@ -136,7 +136,6 @@ type alias Model =
     , topic : Topic
 
     --
-    , practiceModes : List PracticeMode
     , topics : List Topic
     , roots : List Root
     , keys : List Key
@@ -155,6 +154,11 @@ init _ =
 allRoots : List Root
 allRoots =
     [ C, Cis, D, Dis, E, F, Fis, G, Gis, A, Bb, B ]
+
+
+allTopics : List Topic
+allTopics =
+    [ Scales, Chords, Doublestops ]
 
 
 rootToString : Root -> String
@@ -452,7 +456,7 @@ initialModel =
     { elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
-    , showSettings = False
+    , showSettings = True
     , message = Nothing
     , preset = All
 
@@ -461,7 +465,6 @@ initialModel =
     , topic = Scales
 
     --
-    , practiceModes = [ TimeLimit 1 ]
     , topics = [ Scales, Chords, Doublestops ]
     , roots = allRoots
     , keys = allScales
@@ -511,11 +514,11 @@ update msg model =
                     model.elapsedTime + 1
 
                 timeLimitInSeconds =
-                    case List.head model.practiceModes of
-                        Just (TimeLimit minutes) ->
+                    case model.practiceMode of
+                        TimeLimit minutes ->
                             minutes * 60
 
-                        _ ->
+                        ExerciseLimit _ ->
                             0
             in
             if model.isRunning then
@@ -669,7 +672,20 @@ update msg model =
             ( { model | practiceMode = practiceMode }, Cmd.none )
 
         ToggleTopic topic ->
-            ( { model | topics = toggle topic model.topics }, Cmd.none )
+            let
+                length =
+                    List.length model.topics
+            in
+            ( if length /= 1 then
+                { model | topics = toggle topic model.topics }
+
+              else if length == 1 && not (List.member topic model.topics) then
+                { model | topics = toggle topic model.topics }
+
+              else
+                model
+            , Cmd.none
+            )
 
         ChangePreset preset ->
             let
@@ -689,7 +705,6 @@ update msg model =
                         , keys = model.keys
                         , chords = model.chords
                         , ranges = model.ranges
-                        , practiceModes = model.practiceModes
                         , intervals = model.intervals
                         }
                         |> String.replace "], " "]\n---\n"
@@ -707,8 +722,7 @@ applyPreset model =
     case model.preset of
         Easy ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = [ Scales, Chords ]
+                | topics = [ Scales, Chords ]
                 , roots = [ C, F, G ]
                 , keys = [ Ionian ]
                 , chords = [ Major, Minor ]
@@ -719,8 +733,7 @@ applyPreset model =
 
         All ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = [ Scales, Chords, Doublestops ]
+                | topics = [ Scales, Chords, Doublestops ]
                 , roots = allRoots
                 , keys = allScales
                 , intervals = allIntervals
@@ -731,8 +744,7 @@ applyPreset model =
 
         None ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = []
+                | topics = []
                 , roots = []
                 , keys = []
                 , intervals = []
@@ -848,7 +860,7 @@ selection model =
         { topics, ranges, bowings, roots, intervals, keys } =
             model
     in
-    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-300 px-4" ]
+    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4" ]
         [ selectionItem topics (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
@@ -947,6 +959,9 @@ settings model =
                     ]
                     [ text "Exercise limit" ]
                 ]
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Roots" ]
+                    :: showSetting topicToString allTopics model.topics ToggleTopic
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Roots" ]
                     :: showSetting rootToString allRoots model.roots ToggleRoot
