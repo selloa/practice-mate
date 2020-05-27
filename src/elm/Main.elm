@@ -109,6 +109,7 @@ type Bowing
 type Preset
     = Easy
     | Everything
+      -- step 1: add custom Preset
     | Custom
 
 
@@ -373,6 +374,19 @@ allRanges =
     , OneStringScale 4
     , FullRange
     ]
+
+
+presetToString : Preset -> String
+presetToString preset =
+    case preset of
+        Easy ->
+            "EASY"
+
+        Everything ->
+            "EVERYTHING"
+
+        Custom ->
+            "CUSTOM"
 
 
 rangeToString : Range -> String
@@ -928,22 +942,10 @@ settings model =
         div [ class "container bg-gray-300 font-mono" ] <|
             [ div [ class "container mx-2" ]
                 [ div [ class "container" ] [ text "Presets" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (ChangePreset Easy)
-                    ]
-                    [ text "EASY" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (ChangePreset Everything)
-                    ]
-                    [ text "EVERYTHING" ]
 
-                -- , button
-                --     [ class buttonTimeLimit
-                --     , onClick (ChangePreset Custom)
-                --     ]
-                --     [ text "CUSTOM" ]
+                -- last step: don't forget to add a button for your preset
+                , presetButton Easy model
+                , presetButton Everything model
                 ]
             , div
                 [ class "container mx-2" ]
@@ -981,6 +983,19 @@ settings model =
 
     else
         div [] []
+
+
+presetButton preset model =
+    button
+        [ class <|
+            if model.preset == preset then
+                buttonActive
+
+            else
+                buttonPassive
+        , onClick (ChangePreset preset)
+        ]
+        [ text <| presetToString preset ]
 
 
 buttonActive =
