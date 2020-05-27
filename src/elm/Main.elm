@@ -87,7 +87,7 @@ type Interval
     | Thirds
     | Octaves
     | Fourths
-    | Fiths
+    | Fifths
 
 
 type Message
@@ -108,9 +108,8 @@ type Bowing
 
 type Preset
     = Easy
-    | Everything
-      -- step 1: add custom Preset
-    | Custom
+    | All
+    | None
 
 
 
@@ -353,13 +352,13 @@ intervalToString interval =
         Fourths ->
             "4ths"
 
-        Fiths ->
+        Fifths ->
             "5ths"
 
 
 allIntervals : List Interval
 allIntervals =
-    [ Sixths, Thirds, Octaves, Fourths, Fiths ]
+    [ Sixths, Thirds, Octaves, Fourths, Fifths ]
 
 
 allRanges : List Range
@@ -382,11 +381,11 @@ presetToString preset =
         Easy ->
             "EASY"
 
-        Everything ->
-            "EVERYTHING"
+        All ->
+            "ALL"
 
-        Custom ->
-            "CUSTOM"
+        None ->
+            "NONE"
 
 
 rangeToString : Range -> String
@@ -449,7 +448,7 @@ initialModel =
     , isRunning = False
     , showSettings = False
     , message = Nothing
-    , preset = Everything
+    , preset = All
 
     -- selection
     , practiceMode = TimeLimit 1
@@ -732,12 +731,12 @@ applyPreset model =
                 , roots = [ C, D, E, F, G, A ]
                 , keys = [ Ionian ]
                 , chords = [ Major, Minor ]
-                , intervals = [ Fiths ]
+                , intervals = [ Fifths ]
                 , ranges = [ OneOctave 1 ]
                 , bowings = [ Sequenced, AddTopNote, Rhythmed ]
             }
 
-        Everything ->
+        All ->
             { model
                 | practiceModes = [ TimeLimit 1 ]
                 , topics = [ Scales, Chords, Doublestops ]
@@ -749,8 +748,17 @@ applyPreset model =
                 , chords = allChords
             }
 
-        Custom ->
-            model
+        None ->
+            { model
+                | practiceModes = [ TimeLimit 1 ]
+                , topics = []
+                , roots = []
+                , keys = []
+                , intervals = []
+                , ranges = []
+                , bowings = []
+                , chords = []
+            }
 
 
 toggle a list =
@@ -942,10 +950,9 @@ settings model =
         div [ class "container bg-gray-300 font-mono" ] <|
             [ div [ class "container mx-2" ]
                 [ div [ class "container" ] [ text "Presets" ]
-
-                -- last step: don't forget to add a button for your preset
                 , presetButton Easy model
-                , presetButton Everything model
+                , presetButton All model
+                , presetButton None model
                 ]
             , div
                 [ class "container mx-2" ]
@@ -985,6 +992,7 @@ settings model =
         div [] []
 
 
+presetButton : Preset -> Model -> Html Msg
 presetButton preset model =
     button
         [ class <|
