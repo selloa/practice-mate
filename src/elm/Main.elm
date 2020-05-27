@@ -612,7 +612,6 @@ update msg model =
             in
             ( { model
                 | completedExercises = model.completedExercises + 1
-                , isRunning = False
                 , topic = nextTopic
               }
             , generateEverything model
