@@ -87,7 +87,7 @@ type Interval
     | Thirds
     | Octaves
     | Fourths
-    | Fiths
+    | Fifths
 
 
 type Message
@@ -110,7 +110,6 @@ type Preset
     = Easy
     | All
     | None
-    | Custom
 
 
 
@@ -353,13 +352,13 @@ intervalToString interval =
         Fourths ->
             "4ths"
 
-        Fiths ->
+        Fifths ->
             "5ths"
 
 
 allIntervals : List Interval
 allIntervals =
-    [ Sixths, Thirds, Octaves, Fourths, Fiths ]
+    [ Sixths, Thirds, Octaves, Fourths, Fifths ]
 
 
 allRanges : List Range
@@ -374,6 +373,19 @@ allRanges =
     , OneStringScale 4
     , FullRange
     ]
+
+
+presetToString : Preset -> String
+presetToString preset =
+    case preset of
+        Easy ->
+            "EASY"
+
+        All ->
+            "ALL"
+
+        None ->
+            "NONE"
 
 
 rangeToString : Range -> String
@@ -739,17 +751,14 @@ applyPreset model =
         None ->
             { model
                 | practiceModes = [ TimeLimit 1 ]
-                , topics = [ ]
-                , roots = [ ]
-                , keys = [ ]
-                , intervals = [ ]
-                , ranges = [ ]
-                , bowings = [ ]
-                , chords = [ ]
+                , topics = []
+                , roots = []
+                , keys = []
+                , intervals = []
+                , ranges = []
+                , bowings = []
+                , chords = []
             }
-
-        Custom ->
-            model
 
 
 toggle a list =
@@ -941,28 +950,10 @@ settings model =
         div [ class "container bg-gray-300 font-mono" ] <|
             [ div [ class "container mx-2" ]
                 [ div [ class "container" ] [ text "Presets" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (ChangePreset Easy)
-                    ]
-                    [ text "EASY" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (ChangePreset All)
-                    ]
-                    [ text "All" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (ChangePreset None)
-                    ]
-                    [ text "NONE" ]
+                , presetButton Easy model
+                , presetButton All model
+                , presetButton None model
                 ]
-                -- , button
-                --     [ class buttonTimeLimit
-                --     , onClick (ChangePreset Custom)
-                --     ]
-                --     [ text "CUSTOM" ]
-                
             , div
                 [ class "container mx-2" ]
                 [ div [ class "container" ] [ text "Practice mode" ]
@@ -999,6 +990,20 @@ settings model =
 
     else
         div [] []
+
+
+presetButton : Preset -> Model -> Html Msg
+presetButton preset model =
+    button
+        [ class <|
+            if model.preset == preset then
+                buttonActive
+
+            else
+                buttonPassive
+        , onClick (ChangePreset preset)
+        ]
+        [ text <| presetToString preset ]
 
 
 buttonActive =
