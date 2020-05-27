@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
@@ -9,6 +9,13 @@ import Json.Decode as Decode
 import Random
 import Random.List
 import Time
+
+
+
+-- ports
+
+
+port printToConsole : String -> Cmd msg
 
 
 
@@ -497,6 +504,7 @@ type Msg
     | ToggleRange Range
     | ToggleInterval Interval
     | ChangePreset Preset
+    | PrintConfiguration
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -720,6 +728,30 @@ update msg model =
                     { model | preset = preset } |> applyPreset
             in
             ( newModel, generateEverything newModel )
+
+        PrintConfiguration ->
+            let
+                cmd =
+                    -- in order to build, the following code needs to be commented out
+                    Debug.toString
+                        { bowings = model.bowings
+                        , topics = model.topics
+                        , roots = model.roots
+                        , keys = model.keys
+                        , chords = model.chords
+                        , ranges = model.ranges
+                        , practiceModes = model.practiceModes
+                        , intervals = model.intervals
+                        }
+                        |> String.replace "], " "]\n---\n"
+                        |> String.replace "{ " ""
+                        |> String.replace "}" ""
+                        |> printToConsole
+
+                -- and this needds to be commented in
+                -- Cmd.none
+            in
+            ( model, cmd )
 
 
 applyPreset model =
@@ -986,6 +1018,14 @@ settings model =
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Bowings" ]
                     :: showSetting bowingToString allBowings model.bowings ToggleBowing
+            , div [ class "container m-2" ]
+                [ button
+                    [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
+    border-b-2 border-yellow-700 hover:border-yellow-500 rounded"""
+                    , onClick PrintConfiguration
+                    ]
+                    [ text "EXPORT" ]
+                ]
             ]
 
     else
