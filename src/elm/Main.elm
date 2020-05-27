@@ -859,12 +859,12 @@ selection model =
         [ selectionItem topic (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , selectionItem root rootToString "Root: "
         , if topic == Doublestops then
             selectionItem interval intervalToString "Interval: "
 
           else
             div [ class "hidden" ] []
+        , selectionItem root rootToString "Root: "
         , selectionItem key keyToString "Key: "
         , selectionItem range rangeToString "Range: "
         , selectionItem bowing bowingToString "Bowings: "
