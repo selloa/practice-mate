@@ -221,6 +221,16 @@ practiceModeToString mode =
             "Exercise (" ++ String.fromInt exercises ++ ")"
 
 
+practiceModeToStringWithoutNumber : PracticeMode -> String
+practiceModeToStringWithoutNumber mode =
+    case mode of
+        TimeLimit _ ->
+            "Time limit"
+
+        ExerciseLimit _ ->
+            "Exercise limit"
+
+
 topicToString : Topic -> String
 topicToString topic =
     case topic of
@@ -429,7 +439,7 @@ initialModel =
     , bowing = RepeatedStaccato 1
 
     -- configuration
-    , practiceModes = [ TimeLimit 1, ExerciseLimit 5 ]
+    , practiceModes = [ TimeLimit 1 ]
     , topics = [ Scales, Chords, Doublestops ]
     , roots = allRoots
     , keys = allScales
@@ -457,6 +467,14 @@ type Msg
     | NewBowingGenerated ( Maybe Bowing, List Bowing )
     | NextTopic
     | ToggleSettings
+    | ToggleTopic Topic
+    | TogglePracticeMode PracticeMode
+    | ToggleRoot Root
+    | ToggleChord Key
+    | ToggleKey Key
+    | ToggleBowing Bowing
+    | ToggleRange Range
+    | ToggleInterval Interval
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -613,6 +631,38 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        ToggleBowing bowing ->
+            ( { model | bowings = toggle bowing model.bowings }, Cmd.none )
+
+        ToggleChord chord ->
+            ( { model | chords = toggle chord model.chords }, Cmd.none )
+
+        ToggleRoot root ->
+            ( { model | roots = toggle root model.roots }, Cmd.none )
+
+        ToggleInterval interval ->
+            ( { model | intervals = toggle interval model.intervals }, Cmd.none )
+
+        ToggleRange range ->
+            ( { model | ranges = toggle range model.ranges }, Cmd.none )
+
+        ToggleKey key ->
+            ( { model | keys = toggle key model.keys }, Cmd.none )
+
+        TogglePracticeMode practiceMode ->
+            ( { model | practiceMode = practiceMode }, Cmd.none )
+
+        ToggleTopic topic ->
+            ( { model | topics = toggle topic model.topics }, Cmd.none )
+
+
+toggle a list =
+    if List.member a list then
+        List.filter (\element -> element /= a) list
+
+    else
+        a :: list
 
 
 clearTimer : Model -> ( Model, Cmd Msg )
@@ -781,10 +831,43 @@ selectionItem item toString label =
 settings : Model -> Html Msg
 settings model =
     if model.showSettings then
-        div [] [ text "yo" ]
+        div [ class "container bg-gray-300" ] <|
+            showSetting practiceModeToStringWithoutNumber [ TimeLimit 1, ExerciseLimit 1 ] model.practiceModes TogglePracticeMode
+                ++ showSetting rootToString allRoots model.roots ToggleRoot
+                ++ showSetting intervalToString allIntervals model.intervals ToggleInterval
+                ++ showSetting keyToString allScales model.keys ToggleKey
+                ++ showSetting keyToString allChords model.chords ToggleChord
+                ++ showSetting rangeToString allRanges model.ranges ToggleRange
+                ++ showSetting bowingToString allBowings model.bowings ToggleBowing
 
     else
         div [] []
+
+
+showSetting toString elements selectedElements msg =
+    let
+        buttonActive =
+            """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 px-2 
+            border-b-2 border-green-700 hover:border-green-500 rounded"""
+
+        buttonPassive =
+            """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 px-2 
+            border-b-2 border-gray-700 hover:border-gray-500 rounded"""
+    in
+    List.map
+        (\element ->
+            button
+                [ class <|
+                    if List.member element selectedElements then
+                        buttonActive
+
+                    else
+                        buttonPassive
+                , onClick (msg element)
+                ]
+                [ text <| toString element ]
+        )
+        elements
 
 
 primaryButton : String
