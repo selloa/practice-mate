@@ -715,13 +715,13 @@ applyPreset model =
         Easy ->
             { model
                 | practiceModes = [ TimeLimit 1 ]
-                , topics = [ Scales, Chords, Doublestops ]
-                , roots = [ C, D, E, F, G, A ]
+                , topics = [ Scales, Chords ]
+                , roots = [ C, F, G ]
                 , keys = [ Ionian ]
                 , chords = [ Major, Minor ]
-                , intervals = [ Fiths ]
-                , ranges = [ OneOctave 1 ]
-                , bowings = [ Sequenced, AddTopNote, Rhythmed ]
+                , intervals = [ Sixths ]
+                , ranges = [ OneOctave 2 ]
+                , bowings = [ Slured 1, Slured 2, Slured 3, Slured 4 ]
             }
 
         All ->
