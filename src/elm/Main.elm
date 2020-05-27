@@ -1071,9 +1071,7 @@ header model =
             font-bold mr-2 px-2 border-b-2 border-gray-700 hover:border-gray-500 rounded"""
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
-        -- [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
-        [ h1 [ class elementClass, class "font-sans" ] [ text "❒" ]
-        , div [ class "container flex justify-end items-start" ]
+        [ div [ class "container flex justify-end items-start" ]
             [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
             , div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
