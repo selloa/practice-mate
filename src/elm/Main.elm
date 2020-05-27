@@ -106,6 +106,12 @@ type Bowing
     | Rhythmed
 
 
+type Preset
+    = Easy
+    | Everything
+    | Custom
+
+
 
 -- Model
 
@@ -116,6 +122,7 @@ type alias Model =
     , isRunning : Bool
     , showSettings : Bool
     , message : Maybe Message
+    , preset : Preset
 
     -- selection
     , practiceMode : PracticeMode
@@ -428,6 +435,7 @@ initialModel =
     , isRunning = False
     , showSettings = False
     , message = Nothing
+    , preset = Everything
 
     -- selection
     , practiceMode = TimeLimit 1
@@ -475,6 +483,7 @@ type Msg
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
+    | ChangePreset Preset
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -692,6 +701,43 @@ update msg model =
         ToggleTopic topic ->
             ( { model | topics = toggle topic model.topics }, Cmd.none )
 
+        ChangePreset preset ->
+            let
+                newModel =
+                    { model | preset = preset } |> applyPreset
+            in
+            ( newModel, generateEverything newModel )
+
+
+applyPreset model =
+    case model.preset of
+        Easy ->
+            { model
+                | practiceModes = [ TimeLimit 1 ]
+                , topics = [ Scales, Chords, Doublestops ]
+                , roots = [ C, D, E, F, G, A ]
+                , keys = [ Ionian ]
+                , chords = [ Major, Minor ]
+                , intervals = [ Fiths ]
+                , ranges = [ OneOctave 1 ]
+                , bowings = [ Sequenced, AddTopNote, Rhythmed ]
+            }
+
+        Everything ->
+            { model
+                | practiceModes = [ TimeLimit 1 ]
+                , topics = [ Scales, Chords, Doublestops ]
+                , roots = allRoots
+                , keys = allScales
+                , intervals = allIntervals
+                , ranges = allRanges
+                , bowings = allBowings
+                , chords = allChords
+            }
+
+        Custom ->
+            model
+
 
 toggle a list =
     if List.length list == 1 && List.member a list then
@@ -879,30 +925,71 @@ settings model =
                     ( buttonPassive, buttonActive )
     in
     if model.showSettings then
-        div [ class "container bg-gray-300" ] <|
-            [ button [ class buttonTimeLimit, onClick (TogglePracticeMode <| TimeLimit 1) ]
-                [ text "Time limit" ]
-            , button [ class buttonExercises, onClick (TogglePracticeMode <| ExerciseLimit 5) ]
-                [ text "Exercise limit" ]
+        div [ class "container bg-gray-300 font-mono" ] <|
+            [ div [ class "container mx-2" ]
+                [ div [ class "container" ] [ text "Presets" ]
+                , button
+                    [ class buttonTimeLimit
+                    , onClick (ChangePreset Easy)
+                    ]
+                    [ text "EASY" ]
+                , button
+                    [ class buttonTimeLimit
+                    , onClick (ChangePreset Everything)
+                    ]
+                    [ text "EVERYTHING" ]
+
+                -- , button
+                --     [ class buttonTimeLimit
+                --     , onClick (ChangePreset Custom)
+                --     ]
+                --     [ text "CUSTOM" ]
+                ]
+            , div
+                [ class "container mx-2" ]
+                [ div [ class "container" ] [ text "Practice mode" ]
+                , button
+                    [ class buttonTimeLimit
+                    , onClick (TogglePracticeMode <| TimeLimit 1)
+                    ]
+                    [ text "Time limit" ]
+                , button
+                    [ class buttonExercises
+                    , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                    ]
+                    [ text "Exercise limit" ]
+                ]
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Roots" ]
+                    :: showSetting rootToString allRoots model.roots ToggleRoot
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Interval" ]
+                    :: showSetting intervalToString allIntervals model.intervals ToggleInterval
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Key" ]
+                    :: showSetting keyToString allScales model.keys ToggleKey
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Chord" ]
+                    :: showSetting keyToString allChords model.chords ToggleChord
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Ranges" ]
+                    :: showSetting rangeToString allRanges model.ranges ToggleRange
+            , div [ class "container m-2" ] <|
+                div [ class "container" ] [ text "Bowings" ]
+                    :: showSetting bowingToString allBowings model.bowings ToggleBowing
             ]
-                ++ showSetting rootToString allRoots model.roots ToggleRoot
-                ++ showSetting intervalToString allIntervals model.intervals ToggleInterval
-                ++ showSetting keyToString allScales model.keys ToggleKey
-                ++ showSetting keyToString allChords model.chords ToggleChord
-                ++ showSetting rangeToString allRanges model.ranges ToggleRange
-                ++ showSetting bowingToString allBowings model.bowings ToggleBowing
 
     else
         div [] []
 
 
 buttonActive =
-    """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 px-2 
+    """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
     border-b-2 border-green-700 hover:border-green-500 rounded"""
 
 
 buttonPassive =
-    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 px-2 
+    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
     border-b-2 border-gray-700 hover:border-gray-500 rounded"""
 
 
