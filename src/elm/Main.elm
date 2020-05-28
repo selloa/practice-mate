@@ -366,6 +366,37 @@ intervalToString interval =
             "5ths"
 
 
+fingeringToString : Key -> String
+fingeringToString key =
+    case key of
+        Ionian ->
+            "X^X 2 2 3"
+
+        Dorian ->
+            "3 X^X^X 2"
+
+        Phrygian ->
+            "2 3 3 X^X"
+
+        Lydian ->
+            "X 2 2 3 3"
+
+        Mixolydian ->
+            "X^X^X 2 2"
+
+        Aeolian ->
+            "3 3 X^X^X"
+
+        MelodicMinor ->
+            "3 X 2^X 3"
+
+        HarmonicMinor ->
+            "3 3 2^X 141"
+
+        _ ->
+            ""
+
+
 allIntervals : List Interval
 allIntervals =
     [ Sixths, Thirds, Octaves, Fourths, Fifths ]
@@ -893,6 +924,7 @@ selection model =
         , selectionItem keys keyToString "Key: "
         , selectionItem ranges rangeToString "Range: "
         , selectionItem bowings bowingToString "Bowings: "
+        , selectionItem keys fingeringToString "Fingering: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button
@@ -965,17 +997,21 @@ infoBox message =
 
 selectionItem : List a -> (a -> String) -> String -> Html msg
 selectionItem items toString label =
-    case List.head items of
-        Just item ->
-            div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-                [ text label
-                , text <| toString item
-                ]
+    List.head items
+        |> Maybe.map toString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text "-/-"
+                        ]
 
-        Nothing ->
-            div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-                [ text "-/-"
-                ]
+                else
+                    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text label
+                        , text string
+                        ]
+           )
 
 
 settings : Model -> Html Msg
