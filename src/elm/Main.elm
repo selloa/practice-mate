@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html exposing (Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -35,6 +35,16 @@ main =
 type PracticeMode
     = TimeLimit Int
     | ExerciseLimit Int
+
+
+type Attribute tag
+    = Topic
+    | Root
+    | Bowing
+    | Key
+    | Chord
+    | Range
+    | Interval
 
 
 type Topic
@@ -483,15 +493,18 @@ type Msg
     = Tick Time.Posix
     | ToggleTimer
     | ClearTimer
+      -- input
     | KeyPressed String
     | NewExercise
+    | NextTopic
+      -- random generators
     | NewRootsGenerated (List Root)
     | NewKeysGenerated (List Key)
     | NewIntervalsGenerated (List Interval)
     | NewRangesGenerated (List Range)
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
-    | NextTopic
+      -- toggle settings
     | ToggleSettings
     | ToggleTopic Topic
     | TogglePracticeMode PracticeMode
@@ -501,6 +514,15 @@ type Msg
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
+      -- skip setting
+    | SkipTopic
+    | SkipRoot
+    | SkipChord
+    | SkipKey
+    | SkipBowing
+    | SkipRange
+    | SkipInterval
+      --
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
@@ -682,6 +704,27 @@ update msg model =
             , Cmd.none
             )
 
+        SkipTopic ->
+            ( { model | topics = appendFirstItem model.topics }, Cmd.none )
+
+        SkipInterval ->
+            ( { model | intervals = appendFirstItem model.intervals }, Cmd.none )
+
+        SkipRange ->
+            ( { model | ranges = appendFirstItem model.ranges }, Cmd.none )
+
+        SkipKey ->
+            ( { model | keys = appendFirstItem model.keys }, Cmd.none )
+
+        SkipChord ->
+            ( { model | chords = appendFirstItem model.chords }, Cmd.none )
+
+        SkipBowing ->
+            ( { model | bowings = appendFirstItem model.bowings }, Cmd.none )
+
+        SkipRoot ->
+            ( { model | roots = appendFirstItem model.roots }, Cmd.none )
+
         ChangePreset preset ->
             let
                 newModel =
@@ -728,6 +771,16 @@ update msg model =
                 -- Cmd.none
             in
             ( model, cmd )
+
+
+appendFirstItem : List a -> List a
+appendFirstItem items =
+    case items of
+        first :: rest ->
+            rest ++ [ first ]
+
+        [] ->
+            []
 
 
 applyPreset model =
@@ -880,19 +933,19 @@ selection model =
             model
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        [ selectionItem topics (String.toUpper << topicToString) ""
+        [ selectionItem topics (String.toUpper << topicToString) SkipTopic ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
         , case List.head topics of
             Just Doublestops ->
-                selectionItem intervals intervalToString "Interval: "
+                selectionItem intervals intervalToString SkipInterval "Interval: "
 
             _ ->
                 div [ class "hidden" ] []
-        , selectionItem roots rootToString "Root: "
-        , selectionItem keys keyToString "Key: "
-        , selectionItem ranges rangeToString "Range: "
-        , selectionItem bowings bowingToString "Bowings: "
+        , selectionItem roots rootToString SkipRoot "Root: "
+        , selectionItem keys keyToString SkipKey "Key: "
+        , selectionItem ranges rangeToString SkipRange "Range: "
+        , selectionItem bowings bowingToString SkipBowing "Bowings: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button
@@ -963,17 +1016,22 @@ infoBox message =
             ]
 
 
-selectionItem : List a -> (a -> String) -> String -> Html msg
-selectionItem items toString label =
+selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
+selectionItem items toString msg label =
     case List.head items of
         Just item ->
-            div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+            div
+                [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded"
+                , onClick <| msg
+                ]
                 [ text label
                 , text <| toString item
                 ]
 
         Nothing ->
-            div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+            div
+                [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded"
+                ]
                 [ text "-/-"
                 ]
 
@@ -1031,8 +1089,9 @@ settings model =
                         :: showSetting chordToString allChords model.chords ToggleChord
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Ranges" ]
-                        -- :: showSetting rangeToString allRanges model.ranges ToggleRange
-                        :: showRangeSliderSetting model
+                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+
+                -- :: showRangeSliderSetting model
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
