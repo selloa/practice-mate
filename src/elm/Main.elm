@@ -1060,7 +1060,7 @@ settings model =
     in
     if model.showSettings then
         div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
-            [ div [ class "container bg-gray-200 font-mono" ] <|
+            [ div [ class "container bg-gray-200 font-mono rounded" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
                     , presetButton Easy model
