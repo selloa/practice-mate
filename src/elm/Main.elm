@@ -855,6 +855,7 @@ shuffleEverything model =
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
+        , shuffleChords model.chords
         ]
 
 
@@ -929,49 +930,70 @@ selectionContainer model =
 selection : Model -> Html Msg
 selection model =
     let
-        { topics, ranges, bowings, roots, intervals, keys, chords } =
-            model
+        intervals =
+            selectionItem model.intervals intervalToString SkipInterval "Interval: "
+
+        roots =
+            selectionItem model.roots rootToString SkipRoot "Root: "
+
+        keys =
+            selectionItem model.keys keyToString SkipKey "Key: "
+
+        chords =
+            selectionItem model.chords chordToString SkipChord "Chord: "
+
+        ranges =
+            selectionItem model.ranges rangeToString SkipRange "Range: "
+
+        bowings =
+            selectionItem model.bowings bowingToString SkipBowing "Bowings: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        [ selectionItem topics (String.toUpper << topicToString) SkipTopic ""
-        , div [ class "container text-left bg-gray mb-1 p-2" ]
+        ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
+         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , case List.head topics of
-            Just Doublestops ->
-                selectionItem intervals intervalToString SkipInterval "Interval: "
+         ]
+            ++ (case List.head model.topics of
+                    Just Scales ->
+                        [ roots
+                        , keys
+                        , ranges
+                        , bowings
+                        ]
 
-            _ ->
-                div [ class "hidden" ] []
-        , selectionItem roots rootToString SkipRoot "Root: "
-        , case List.head topics of
-            Just Chords ->
-                div [ class "hidden" ] []
+                    Just Chords ->
+                        [ roots
+                        , chords
+                        , bowings
+                        ]
 
-            _ ->
-                selectionItem keys keyToString SkipKey "Key: "
-        , case List.head topics of
-            Just Chords ->
-                selectionItem chords chordToString SkipChord "Chord: "
+                    Just Doublestops ->
+                        [ roots
+                        , intervals
+                        , keys
+                        , ranges
+                        , bowings
+                        ]
 
-            _ ->
-                div [ class "hidden" ] []
-        , selectionItem ranges rangeToString SkipRange "Range: "
-        , selectionItem bowings bowingToString SkipBowing "Bowings: "
-        , div [ class "container p-3 flex" ]
-            [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
-            , button
-                [ class <|
-                    if List.length model.topics < 2 then
-                        secondaryButton
+                    _ ->
+                        []
+               )
+            ++ [ div [ class "container p-3 flex" ]
+                    [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
+                    , button
+                        [ class <|
+                            if List.length model.topics < 2 then
+                                secondaryButton
 
-                    else
-                        primaryButton
-                , class "flex-auto m-2"
-                , onClick NextTopic
-                ]
-                [ text "Next topic" ]
-            ]
-        ]
+                            else
+                                primaryButton
+                        , class "flex-auto m-2"
+                        , onClick NextTopic
+                        ]
+                        [ text "Next topic" ]
+                    ]
+               ]
+        )
 
 
 slider : Model -> List (Html Msg)
