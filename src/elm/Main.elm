@@ -789,13 +789,13 @@ applyPreset model =
     case model.preset of
         Easy ->
             { model
-                | topics = [ Scales, Chords ]
-                , roots = [ C, F, G ]
+                | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+                , chords = [ Major ]
+                , intervals = []
                 , keys = [ Ionian ]
-                , chords = [ Major, Minor ]
-                , intervals = [ Sixths ]
-                , ranges = [ FreeRange ]
-                , bowings = [ Slured 1, Slured 2, Slured 3, Slured 4 ]
+                , ranges = []
+                , roots = [ G, C, F ]
+                , topics = [ Chords, Scales ]
             }
 
         All ->
@@ -947,8 +947,8 @@ selection model =
         , selectionItem roots rootToString "Root: "
         , selectionItem keys keyToString "Key: "
         , selectionItem keys fingeringToString "Fingering: "
+        , selectionItem bowings bowingToString "Bowing: "
         , selectionItem ranges rangeToString "Range: "
-        , selectionItem bowings bowingToString "Bowings: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button
