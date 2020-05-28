@@ -600,25 +600,20 @@ update msg model =
             )
 
         NextTopic ->
-            let
-                nextTopic =
-                    case model.topic of
-                        Scales ->
-                            Chords
+            case model.topics of
+                _ :: [] ->
+                    ( model, Cmd.none )
 
-                        Chords ->
-                            Doublestops
+                current :: next :: rest ->
+                    ( { model
+                        | completedExercises = model.completedExercises + 1
+                        , topics = next :: rest ++ [ current ]
+                      }
+                    , shuffleEverything model
+                    )
 
-                        Doublestops ->
-                            Scales
-            in
-            ( { model
-                | completedExercises = model.completedExercises + 1
-                , isRunning = False
-                , topic = nextTopic
-              }
-            , shuffleEverything model
-            )
+                [] ->
+                    ( model, Cmd.none )
 
         NewKeysGenerated keys ->
             ( { model | keys = keys }, Cmd.none )
@@ -845,11 +840,18 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container font-mono mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
+    div [ class "font-mono bg-gray-200 px-10 py-5 min-h-screen flex items-start" ]
+        [ selectionContainer model
+        , settings model
+        ]
+
+
+selectionContainer : Model -> Html Msg
+selectionContainer model =
+    div [ class "container bg-gray-600 px-5 py-5 my-10 max-w-lg rounded" ]
         [ header model
         , infoBox model.message
         , selection model
-        , settings model
         ]
 
 
@@ -859,7 +861,7 @@ selection model =
         { topics, ranges, bowings, roots, intervals, keys } =
             model
     in
-    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4" ]
+    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         [ selectionItem topics (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
@@ -875,7 +877,17 @@ selection model =
         , selectionItem bowings bowingToString "Bowings: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
-            , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
+            , button
+                [ class <|
+                    if List.length model.topics < 2 then
+                        secondaryButton
+
+                    else
+                        primaryButton
+                , class "flex-auto m-2"
+                , onClick NextTopic
+                ]
+                [ text "Next topic" ]
             ]
         ]
 
@@ -936,55 +948,57 @@ settings model =
                     ( buttonPassive, buttonActive )
     in
     if model.showSettings then
-        div [ class "container bg-gray-300 font-mono" ] <|
-            [ div [ class "container mx-2" ]
-                [ div [ class "container" ] [ text "Presets" ]
-                , presetButton Easy model
-                , presetButton All model
-                , presetButton None model
-                ]
-            , div
-                [ class "container mx-2" ]
-                [ div [ class "container" ] [ text "Practice mode" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (TogglePracticeMode <| TimeLimit 1)
+        div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
+            [ div [ class "container bg-gray-300 font-mono" ] <|
+                [ div [ class "container mx-2" ]
+                    [ div [ class "container" ] [ text "Presets" ]
+                    , presetButton Easy model
+                    , presetButton All model
+                    , presetButton None model
                     ]
-                    [ text "Time limit" ]
-                , button
-                    [ class buttonExercises
-                    , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                , div
+                    [ class "container mx-2" ]
+                    [ div [ class "container" ] [ text "Practice mode" ]
+                    , button
+                        [ class buttonTimeLimit
+                        , onClick (TogglePracticeMode <| TimeLimit 1)
+                        ]
+                        [ text "Time limit" ]
+                    , button
+                        [ class buttonExercises
+                        , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                        ]
+                        [ text "Exercise limit" ]
                     ]
-                    [ text "Exercise limit" ]
-                ]
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Topics" ]
-                    :: showSetting topicToString allTopics model.topics ToggleTopic
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Roots" ]
-                    :: showSetting rootToString allRoots model.roots ToggleRoot
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Interval" ]
-                    :: showSetting intervalToString allIntervals model.intervals ToggleInterval
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Key" ]
-                    :: showSetting keyToString allScales model.keys ToggleKey
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Chord" ]
-                    :: showSetting chordToString allChords model.chords ToggleChord
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Ranges" ]
-                    :: showSetting rangeToString allRanges model.ranges ToggleRange
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Bowings" ]
-                    :: showSetting bowingToString allBowings model.bowings ToggleBowing
-            , div [ class "container m-2" ]
-                [ button
-                    [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Topics" ]
+                        :: showSetting topicToString allTopics model.topics ToggleTopic
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Roots" ]
+                        :: showSetting rootToString allRoots model.roots ToggleRoot
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Interval" ]
+                        :: showSetting intervalToString allIntervals model.intervals ToggleInterval
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Key" ]
+                        :: showSetting keyToString allScales model.keys ToggleKey
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Chord" ]
+                        :: showSetting chordToString allChords model.chords ToggleChord
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Ranges" ]
+                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Bowings" ]
+                        :: showSetting bowingToString allBowings model.bowings ToggleBowing
+                , div [ class "container m-2" ]
+                    [ button
+                        [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
     border-b-2 border-yellow-700 hover:border-yellow-500 rounded"""
-                    , onClick PrintConfiguration
+                        , onClick PrintConfiguration
+                        ]
+                        [ text "EXPORT" ]
                     ]
-                    [ text "EXPORT" ]
                 ]
             ]
 
