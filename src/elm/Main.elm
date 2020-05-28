@@ -376,6 +376,37 @@ intervalToString interval =
             "5ths"
 
 
+fingeringToString : Key -> String
+fingeringToString key =
+    case key of
+        Ionian ->
+            "X^X 2 2 3"
+
+        Dorian ->
+            "3 X^X^X 2"
+
+        Phrygian ->
+            "2 3 3 X^X"
+
+        Lydian ->
+            "X 2 2 3 3"
+
+        Mixolydian ->
+            "X^X^X 2 2"
+
+        Aeolian ->
+            "3 3 X^X^X"
+
+        MelodicMinor ->
+            "3 X 2^X 3"
+
+        HarmonicMinor ->
+            "3 3 2^X 141"
+
+        _ ->
+            ""
+
+
 allIntervals : List Interval
 allIntervals =
     [ Sixths, Thirds, Octaves, Fourths, Fifths ]
@@ -526,6 +557,7 @@ type Msg
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -600,6 +632,14 @@ update msg model =
 
         KeyPressed key ->
             if key == " " then
+                ( { model
+                    | completedExercises = model.completedExercises + 1
+                    , isRunning = True
+                  }
+                , shuffleEverything model
+                )
+
+            else if key == "t" then
                 toggleTimer model
 
             else if key == "Backspace" then
@@ -771,6 +811,9 @@ update msg model =
                 -- Cmd.none
             in
             ( model, cmd )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 appendFirstItem : List a -> List a
@@ -947,6 +990,9 @@ selection model =
 
         bowings =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
+
+        fingerings =
+            selectionItem model.keys fingeringToString NoOp "Fingering: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
@@ -959,6 +1005,7 @@ selection model =
                         , keys
                         , ranges
                         , bowings
+                        , fingerings
                         ]
 
                     Just Chords ->
@@ -1050,23 +1097,25 @@ infoBox message =
 
 
 selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
-selectionItem items toString msg label =
-    case List.head items of
-        Just item ->
-            div
-                [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded"
-                , onClick <| msg
-                ]
-                [ text label
-                , text <| toString item
-                ]
+selectionItem items toString skip label =
+    List.head items
+        |> Maybe.map toString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text "-/-"
+                        ]
 
-        Nothing ->
-            div
-                [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded"
-                ]
-                [ text "-/-"
-                ]
+                else
+                    div
+                        [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded"
+                        , onClick skip
+                        ]
+                        [ text label
+                        , text string
+                        ]
+           )
 
 
 settings : Model -> Html Msg
