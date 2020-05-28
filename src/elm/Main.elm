@@ -609,6 +609,14 @@ update msg model =
 
         KeyPressed key ->
             if key == " " then
+                ( { model
+                    | completedExercises = model.completedExercises + 1
+                    , isRunning = True
+                  }
+                , shuffleEverything model
+                )
+
+            else if key == "t" then
                 toggleTimer model
 
             else if key == "Backspace" then
