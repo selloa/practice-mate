@@ -1,14 +1,21 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, h1, text)
-import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
+import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html.Attributes as A exposing (class, max, min, type_, value)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Random
 import Random.List
 import Time
+
+
+
+-- ports
+
+
+port printToConsole : String -> Cmd msg
 
 
 
@@ -51,17 +58,8 @@ type Root
     | B
 
 
-type
-    Key
-    -- chords
-    = Major
-    | Minor
-    | Dim
-    | Augm
-    | Sus2
-    | Sus4
-      -- scales
-    | Ionian
+type Key
+    = Ionian
     | Dorian
     | Phrygian
     | Lydian
@@ -74,6 +72,15 @@ type
     | MinorPentatonic
     | Chromatic
     | Wholestep
+
+
+type Chord
+    = Major
+    | Minor
+    | Dim
+    | Augm
+    | Sus2
+    | Sus4
 
 
 type Range
@@ -127,32 +134,31 @@ type alias Model =
     -- selection
     , practiceMode : PracticeMode
     , topic : Topic
-    , root : Root
-    , key : Key
-    , interval : Interval
-    , range : Range
-    , bowing : Bowing
 
-    -- pick from these
-    , practiceModes : List PracticeMode
+    --
     , topics : List Topic
     , roots : List Root
     , keys : List Key
     , intervals : List Interval
     , ranges : List Range
     , bowings : List Bowing
-    , chords : List Key
+    , chords : List Chord
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( initialModel, generateEverything initialModel )
+    ( initialModel, shuffleEverything initialModel )
 
 
 allRoots : List Root
 allRoots =
     [ C, Cis, D, Dis, E, F, Fis, G, Gis, A, Bb, B ]
+
+
+allTopics : List Topic
+allTopics =
+    [ Scales, Chords, Doublestops ]
 
 
 rootToString : Root -> String
@@ -213,7 +219,7 @@ allScales =
     ]
 
 
-allChords : List Key
+allChords : List Chord
 allChords =
     [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
 
@@ -225,7 +231,7 @@ practiceModeToString mode =
             "⏲️ " ++ String.fromInt duration
 
         ExerciseLimit exercises ->
-            "Exercise (" ++ String.fromInt exercises ++ ")"
+            "✔ (" ++ String.fromInt exercises ++ ")"
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
@@ -251,9 +257,9 @@ topicToString topic =
             "Doublestops"
 
 
-keyToString : Key -> String
-keyToString mode =
-    case mode of
+chordToString : Chord -> String
+chordToString chord =
+    case chord of
         Major ->
             "Major"
 
@@ -272,6 +278,10 @@ keyToString mode =
         Sus4 ->
             "Sus4"
 
+
+keyToString : Key -> String
+keyToString key =
+    case key of
         Ionian ->
             "Ionian - Major"
 
@@ -354,6 +364,37 @@ intervalToString interval =
 
         Fifths ->
             "5ths"
+
+
+fingeringToString : Key -> String
+fingeringToString key =
+    case key of
+        Ionian ->
+            "X^X 2 2 3"
+
+        Dorian ->
+            "3 X^X^X 2"
+
+        Phrygian ->
+            "2 3 3 X^X"
+
+        Lydian ->
+            "X 2 2 3 3"
+
+        Mixolydian ->
+            "X^X^X 2 2"
+
+        Aeolian ->
+            "3 3 X^X^X"
+
+        MelodicMinor ->
+            "3 X 2^X 3"
+
+        HarmonicMinor ->
+            "3 3 2^X 141"
+
+        _ ->
+            ""
 
 
 allIntervals : List Interval
@@ -446,21 +487,15 @@ initialModel =
     { elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
-    , showSettings = False
+    , showSettings = True
     , message = Nothing
     , preset = All
 
     -- selection
-    , practiceMode = TimeLimit 1
+    , practiceMode = TimeLimit 5
     , topic = Scales
-    , root = C
-    , key = Ionian
-    , interval = Thirds
-    , range = OneOctave 1
-    , bowing = RepeatedStaccato 1
 
-    -- configuration
-    , practiceModes = [ TimeLimit 1 ]
+    --
     , topics = [ Scales, Chords, Doublestops ]
     , roots = allRoots
     , keys = allScales
@@ -481,22 +516,25 @@ type Msg
     | ClearTimer
     | KeyPressed String
     | NewExercise
-    | NewRootGenerated ( Maybe Root, List Root )
-    | NewKeyGenerated ( Maybe Key, List Key )
-    | NewIntervalGenerated ( Maybe Interval, List Interval )
-    | NewRangeGenerated ( Maybe Range, List Range )
-    | NewBowingGenerated ( Maybe Bowing, List Bowing )
+    | NewRootsGenerated (List Root)
+    | NewKeysGenerated (List Key)
+    | NewIntervalsGenerated (List Interval)
+    | NewRangesGenerated (List Range)
+    | NewBowingsGenerated (List Bowing)
+    | NewChordsGenerated (List Chord)
     | NextTopic
     | ToggleSettings
     | ToggleTopic Topic
     | TogglePracticeMode PracticeMode
     | ToggleRoot Root
-    | ToggleChord Key
+    | ToggleChord Chord
     | ToggleKey Key
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
     | ChangePreset Preset
+    | PrintConfiguration
+    | UpdatedSlider String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -575,7 +613,7 @@ update msg model =
                     | completedExercises = model.completedExercises + 1
                     , isRunning = True
                   }
-                , generateEverything model
+                , shuffleEverything model
                 )
 
             else if key == "t" then
@@ -591,7 +629,7 @@ update msg model =
             ( { model
                 | completedExercises = model.completedExercises + 1
               }
-            , generateEverything model
+            , shuffleEverything model
             )
 
         ToggleSettings ->
@@ -602,139 +640,140 @@ update msg model =
             )
 
         NextTopic ->
-            let
-                nextTopic =
-                    case model.topic of
-                        Scales ->
-                            Chords
-
-                        Chords ->
-                            Doublestops
-
-                        Doublestops ->
-                            Scales
-            in
-            ( { model
-                | completedExercises = model.completedExercises + 1
-                , topic = nextTopic
-              }
-            , generateEverything model
-            )
-
-        NewKeyGenerated ( maybeKey, _ ) ->
-            case maybeKey of
-                Just key ->
-                    ( { model | key = key }, Cmd.none )
-
-                Nothing ->
+            case model.topics of
+                _ :: [] ->
                     ( model, Cmd.none )
 
-        NewRootGenerated ( maybeRoot, _ ) ->
-            case maybeRoot of
-                Just root ->
-                    ( { model | root = root }, Cmd.none )
+                current :: next :: rest ->
+                    ( { model
+                        | completedExercises = model.completedExercises + 1
+                        , topics = next :: rest ++ [ current ]
+                      }
+                    , shuffleEverything model
+                    )
 
-                Nothing ->
+                [] ->
                     ( model, Cmd.none )
 
-        NewIntervalGenerated ( maybeInterval, _ ) ->
-            case maybeInterval of
-                Just interval ->
-                    ( { model | interval = interval }, Cmd.none )
+        NewKeysGenerated keys ->
+            ( { model | keys = keys }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        NewRootsGenerated roots ->
+            ( { model | roots = roots }, Cmd.none )
 
-        NewRangeGenerated ( maybeRange, _ ) ->
-            case maybeRange of
-                Just range ->
-                    ( { model | range = range }, Cmd.none )
+        NewBowingsGenerated bowings ->
+            ( { model | bowings = bowings }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        NewIntervalsGenerated intervals ->
+            ( { model | intervals = intervals }, Cmd.none )
 
-        NewBowingGenerated ( maybeBowing, _ ) ->
-            case maybeBowing of
-                Just bowing ->
-                    ( { model | bowing = bowing }, Cmd.none )
+        NewChordsGenerated chords ->
+            ( { model | chords = chords }, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        NewRangesGenerated ranges ->
+            ( { model | ranges = ranges }, Cmd.none )
 
         ToggleBowing bowing ->
-            ( { model | bowings = toggle bowing model.bowings }
-            , if model.bowing == bowing then
-                generateBowing model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleBowings (toggle bowing model.bowings)
             )
 
         ToggleChord chord ->
-            ( { model | chords = toggle chord model.chords }
-            , if model.key == chord then
-                generateKey model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleChords (toggle chord model.chords)
             )
 
         ToggleRoot root ->
-            ( { model | roots = toggle root model.roots }
-            , if model.root == root then
-                generateRoot model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleRoots (toggle root model.roots)
             )
 
         ToggleInterval interval ->
-            ( { model | intervals = toggle interval model.intervals }
-            , if model.interval == interval then
-                generateInterval model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleIntervals (toggle interval model.intervals)
             )
 
         ToggleRange range ->
-            ( { model | ranges = toggle range model.ranges }
-            , if model.range == range then
-                generateRange model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleRanges (toggle range model.ranges)
             )
 
         ToggleKey key ->
-            ( { model | keys = toggle key model.keys }
-            , if model.key == key then
-                generateKey model
-
-              else
-                Cmd.none
+            ( model
+            , shuffleKeys (toggle key model.keys)
             )
 
         TogglePracticeMode practiceMode ->
             ( { model | practiceMode = practiceMode }, Cmd.none )
 
         ToggleTopic topic ->
-            ( { model | topics = toggle topic model.topics }, Cmd.none )
+            -- let
+            --     length =
+            --         List.length model.topics
+            -- in
+            -- ( if length /= 1 then
+            --     { model | topics = toggle topic model.topics }
+            --   else if length == 1 && not (List.member topic model.topics) then
+            --     { model | topics = toggle topic model.topics }
+            --   else
+            --     model
+            ( { model | topics = toggle topic model.topics }
+            , Cmd.none
+            )
 
         ChangePreset preset ->
             let
                 newModel =
                     { model | preset = preset } |> applyPreset
             in
-            ( newModel, generateEverything newModel )
+            ( newModel, shuffleEverything newModel )
+
+        UpdatedSlider newValue ->
+            ( { model
+                | practiceMode =
+                    case model.practiceMode of
+                        TimeLimit _ ->
+                            String.toInt newValue
+                                |> Maybe.withDefault 15
+                                |> TimeLimit
+
+                        ExerciseLimit _ ->
+                            String.toInt newValue
+                                |> Maybe.withDefault 15
+                                |> ExerciseLimit
+              }
+            , Cmd.none
+            )
+
+        PrintConfiguration ->
+            let
+                cmd =
+                    -- in order to build, the following code needs to be commented out
+                    Debug.toString
+                        { bowings = model.bowings
+                        , topics = model.topics
+                        , roots = model.roots
+                        , keys = model.keys
+                        , chords = model.chords
+                        , ranges = model.ranges
+                        , intervals = model.intervals
+                        }
+                        |> String.replace "], " "]\n---\n"
+                        |> String.replace "{ " ""
+                        |> String.replace "}" ""
+                        |> printToConsole
+
+                -- and this needds to be commented in
+                -- Cmd.none
+            in
+            ( model, cmd )
 
 
 applyPreset model =
     case model.preset of
         Easy ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = [ Scales, Chords ]
+                | topics = [ Scales, Chords ]
                 , roots = [ C, F, G ]
                 , keys = [ Ionian ]
                 , chords = [ Major, Minor ]
@@ -745,8 +784,7 @@ applyPreset model =
 
         All ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = [ Scales, Chords, Doublestops ]
+                | topics = [ Scales, Chords, Doublestops ]
                 , roots = allRoots
                 , keys = allScales
                 , intervals = allIntervals
@@ -757,8 +795,7 @@ applyPreset model =
 
         None ->
             { model
-                | practiceModes = [ TimeLimit 1 ]
-                , topics = []
+                | topics = []
                 , roots = []
                 , keys = []
                 , intervals = []
@@ -768,15 +805,12 @@ applyPreset model =
             }
 
 
-toggle a list =
-    if List.length list == 1 && List.member a list then
-        list
-
-    else if List.member a list then
-        List.filter (\element -> element /= a) list
+toggle element list =
+    if List.member element list then
+        List.filter ((/=) element) list
 
     else
-        a :: list
+        element :: list
 
 
 clearTimer : Model -> ( Model, Cmd Msg )
@@ -799,52 +833,45 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
-generateEverything : Model -> Cmd Msg
-generateEverything model =
+shuffleEverything : Model -> Cmd Msg
+shuffleEverything model =
     Cmd.batch
-        [ generateInterval model
-        , generateKey model
-        , generateBowing model
-        , generateRange model
-        , generateRoot model
+        [ shuffleIntervals model.intervals
+        , shuffleKeys model.keys
+        , shuffleBowings model.bowings
+        , shuffleRanges model.ranges
+        , shuffleRoots model.roots
         ]
 
 
-generateRoot : Model -> Cmd Msg
-generateRoot model =
-    Random.generate NewRootGenerated (Random.List.choose model.roots)
+shuffleRoots : List Root -> Cmd Msg
+shuffleRoots roots =
+    Random.generate NewRootsGenerated (Random.List.shuffle roots)
 
 
-generateRange : Model -> Cmd Msg
-generateRange model =
-    Random.generate NewRangeGenerated (Random.List.choose model.ranges)
+shuffleRanges : List Range -> Cmd Msg
+shuffleRanges ranges =
+    Random.generate NewRangesGenerated (Random.List.shuffle ranges)
 
 
-generateKey : Model -> Cmd Msg
-generateKey model =
-    let
-        source =
-            case model.topic of
-                Scales ->
-                    model.keys
-
-                Chords ->
-                    model.chords
-
-                Doublestops ->
-                    model.keys
-    in
-    Random.generate NewKeyGenerated (Random.List.choose source)
+shuffleKeys : List Key -> Cmd Msg
+shuffleKeys keys =
+    Random.generate NewKeysGenerated (Random.List.shuffle keys)
 
 
-generateInterval : Model -> Cmd Msg
-generateInterval model =
-    Random.generate NewIntervalGenerated (Random.List.choose model.intervals)
+shuffleIntervals : List Interval -> Cmd Msg
+shuffleIntervals intervals =
+    Random.generate NewIntervalsGenerated (Random.List.shuffle intervals)
 
 
-generateBowing : Model -> Cmd Msg
-generateBowing model =
-    Random.generate NewBowingGenerated (Random.List.choose model.bowings)
+shuffleBowings : List Bowing -> Cmd Msg
+shuffleBowings bowings =
+    Random.generate NewBowingsGenerated (Random.List.shuffle bowings)
+
+
+shuffleChords : List Chord -> Cmd Msg
+shuffleChords chords =
+    Random.generate NewChordsGenerated (Random.List.shuffle chords)
 
 
 
@@ -870,39 +897,81 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container font-mono mx-auto bg-gray-200 px-5 py-5 my-10 max-w-lg" ]
+    div [ class "font-mono bg-gray-200 px-10 py-5 min-h-screen flex items-start" ]
+        [ selectionContainer model
+        , settings model
+        ]
+
+
+selectionContainer : Model -> Html Msg
+selectionContainer model =
+    div [ class "container bg-gray-600 px-5 py-5 my-10 max-w-lg rounded" ]
         [ header model
         , infoBox model.message
         , selection model
-        , settings model
         ]
 
 
 selection : Model -> Html Msg
 selection model =
     let
-        { topic, range, bowing, root, interval, key } =
+        { topics, ranges, bowings, roots, intervals, keys } =
             model
     in
-    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-300 px-4" ]
-        [ selectionItem topic (String.toUpper << topicToString) ""
+    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
+        [ selectionItem topics (String.toUpper << topicToString) ""
         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , if topic == Doublestops then
-            selectionItem interval intervalToString "Interval: "
+        , case List.head topics of
+            Just Doublestops ->
+                selectionItem intervals intervalToString "Interval: "
 
-          else
-            div [ class "hidden" ] []
-        , selectionItem root rootToString "Root: "
-        , selectionItem key keyToString "Key: "
-        , selectionItem range rangeToString "Range: "
-        , selectionItem bowing bowingToString "Bowings: "
+            _ ->
+                div [ class "hidden" ] []
+        , selectionItem roots rootToString "Root: "
+        , selectionItem keys keyToString "Key: "
+        , selectionItem ranges rangeToString "Range: "
+        , selectionItem bowings bowingToString "Bowings: "
+        , selectionItem keys fingeringToString "Fingering: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
-            , button [ class primaryButton, class "flex-auto m-2", onClick NextTopic ] [ text "Next topic" ]
-            , button [ class secondaryButton, class "flex-auto m-2", onClick ToggleSettings ] [ text "..." ]
+            , button
+                [ class <|
+                    if List.length model.topics < 2 then
+                        secondaryButton
+
+                    else
+                        primaryButton
+                , class "flex-auto m-2"
+                , onClick NextTopic
+                ]
+                [ text "Next topic" ]
             ]
         ]
+
+
+slider : Model -> List (Html Msg)
+slider model =
+    let
+        getValue mode =
+            case mode of
+                TimeLimit number ->
+                    number
+
+                ExerciseLimit number ->
+                    number
+    in
+    [ input
+        [ type_ "range"
+        , A.min "5"
+        , A.max "20"
+        , value <| String.fromInt (getValue model.practiceMode)
+        , onInput UpdatedSlider
+        , class "text-black mr-2 px-2 rounded"
+        ]
+        []
+    , text <| String.fromInt <| getValue model.practiceMode
+    ]
 
 
 infoBox : Maybe Message -> Html msg
@@ -934,12 +1003,23 @@ infoBox message =
             ]
 
 
-selectionItem : a -> (a -> String) -> String -> Html msg
-selectionItem item toString label =
-    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-        [ text label
-        , text <| toString item
-        ]
+selectionItem : List a -> (a -> String) -> String -> Html msg
+selectionItem items toString label =
+    List.head items
+        |> Maybe.map toString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text "-/-"
+                        ]
+
+                else
+                    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text label
+                        , text string
+                        ]
+           )
 
 
 settings : Model -> Html Msg
@@ -954,45 +1034,61 @@ settings model =
                     ( buttonPassive, buttonActive )
     in
     if model.showSettings then
-        div [ class "container bg-gray-300 font-mono" ] <|
-            [ div [ class "container mx-2" ]
-                [ div [ class "container" ] [ text "Presets" ]
-                , presetButton Easy model
-                , presetButton All model
-                , presetButton None model
-                ]
-            , div
-                [ class "container mx-2" ]
-                [ div [ class "container" ] [ text "Practice mode" ]
-                , button
-                    [ class buttonTimeLimit
-                    , onClick (TogglePracticeMode <| TimeLimit 1)
+        div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
+            [ div [ class "container bg-gray-200 font-mono" ] <|
+                [ div [ class "container mx-2" ]
+                    [ div [ class "container" ] [ text "Presets" ]
+                    , presetButton Easy model
+                    , presetButton All model
+                    , presetButton None model
                     ]
-                    [ text "Time limit" ]
-                , button
-                    [ class buttonExercises
-                    , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                , div
+                    [ class "container mx-2" ]
+                  <|
+                    [ div [ class "container" ] [ text "Practice mode" ]
+                    , button
+                        [ class buttonTimeLimit
+                        , onClick (TogglePracticeMode <| TimeLimit 5)
+                        ]
+                        [ text "Time limit" ]
+                    , button
+                        [ class buttonExercises
+                        , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                        ]
+                        [ text "Exercise limit" ]
                     ]
-                    [ text "Exercise limit" ]
+                        ++ slider model
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Topics" ]
+                        :: showSetting topicToString allTopics model.topics ToggleTopic
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Roots" ]
+                        :: showSetting rootToString allRoots model.roots ToggleRoot
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Interval" ]
+                        :: showSetting intervalToString allIntervals model.intervals ToggleInterval
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Key" ]
+                        :: showSetting keyToString allScales model.keys ToggleKey
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Chord" ]
+                        :: showSetting chordToString allChords model.chords ToggleChord
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Ranges" ]
+                        -- :: showSetting rangeToString allRanges model.ranges ToggleRange
+                        :: showRangeSliderSetting model
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Bowings" ]
+                        :: showSetting bowingToString allBowings model.bowings ToggleBowing
+                , div [ class "container m-2" ]
+                    [ button
+                        [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
+    border-b-2 border-yellow-700 hover:border-yellow-500 rounded"""
+                        , onClick PrintConfiguration
+                        ]
+                        [ text "EXPORT" ]
+                    ]
                 ]
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Roots" ]
-                    :: showSetting rootToString allRoots model.roots ToggleRoot
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Interval" ]
-                    :: showSetting intervalToString allIntervals model.intervals ToggleInterval
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Key" ]
-                    :: showSetting keyToString allScales model.keys ToggleKey
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Chord" ]
-                    :: showSetting keyToString allChords model.chords ToggleChord
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Ranges" ]
-                    :: showSetting rangeToString allRanges model.ranges ToggleRange
-            , div [ class "container m-2" ] <|
-                div [ class "container" ] [ text "Bowings" ]
-                    :: showSetting bowingToString allBowings model.bowings ToggleBowing
             ]
 
     else
@@ -1023,6 +1119,25 @@ buttonPassive =
     border-b-2 border-gray-700 hover:border-gray-500 rounded"""
 
 
+showRangeSliderSetting model =
+    List.map
+        (\element ->
+            button
+                [ class <|
+                    if List.member element model.ranges then
+                        buttonActive
+
+                    else
+                        buttonPassive
+                , onClick (ToggleRange element)
+                ]
+                [ text <| rangeToString element ]
+        )
+        allRanges
+        ++ slider model
+
+
+showSetting : (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
 showSetting toString elements selectedElements msg =
     List.map
         (\element ->
@@ -1076,9 +1191,7 @@ header model =
             font-bold mr-2 px-2 border-b-2 border-gray-700 hover:border-gray-500 rounded"""
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
-        -- [ h1 [ class "text-4xl font-sans" ] [ text "✔︎❒✘❍🎵" ]
-        [ h1 [ class elementClass, class "font-sans" ] [ text "❒" ]
-        , div [ class "container flex justify-end items-start" ]
+        [ div [ class "container flex justify-end items-start" ]
             [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
             , div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
@@ -1092,8 +1205,6 @@ header model =
                         "start"
                 ]
             , button [ class buttonClass, onClick ClearTimer ] [ text "■" ]
-            , div [ class "px-2 mb-2 bg-gray-100 border-b-2 rounded" ]
-                [ text ("✔ " ++ String.fromInt model.completedExercises)
-                ]
+            , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
