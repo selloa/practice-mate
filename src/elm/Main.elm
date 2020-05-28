@@ -88,15 +88,27 @@ type Chord
     = Major
     | Minor
     | Dim
-    | Augm
+    | Aug
     | Sus2
     | Sus4
+    | Maj7
+    | Min7
+    | Dom7
+    | MinMaj7
+    | HalfDim7
+    | Dim7
 
 
 type Range
-    = OneOctave Int
-    | OneStringScale Int
-    | FullRange
+    = FreeRange
+    | NoEmptyStrings
+    | AllEmptyStrings
+    | OnlyAString
+    | OnlyDString
+    | OnlyGString
+    | OnlyCString
+    | NoAString
+    | NoADString
 
 
 type Interval
@@ -163,7 +175,7 @@ init _ =
 
 allRoots : List Root
 allRoots =
-    [ C, Cis, D, Dis, E, F, Fis, G, Gis, A, Bb, B ]
+    [ A, B, Bb, C, Cis, D, Dis, E, F, Fis, G, Gis ]
 
 
 allTopics : List Topic
@@ -193,7 +205,7 @@ rootToString root =
             "F"
 
         Fis ->
-            "F# / Db"
+            "F# / Gb"
 
         G ->
             "G"
@@ -214,14 +226,14 @@ rootToString root =
 allScales : List Key
 allScales =
     [ Ionian
+    , Aeolian
+    , MelodicMinor
+    , HarmonicMinor
     , Dorian
     , Phrygian
     , Lydian
     , Mixolydian
-    , Aeolian
     , Mandalorian
-    , MelodicMinor
-    , HarmonicMinor
     , MajorPentatonic
     , MinorPentatonic
     , Chromatic
@@ -231,7 +243,19 @@ allScales =
 
 allChords : List Chord
 allChords =
-    [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
+    [ Major
+    , Minor
+    , Dim
+    , Aug
+    , Sus2
+    , Sus4
+    , Maj7
+    , Min7
+    , Dom7
+    , MinMaj7
+    , HalfDim7
+    , Dim7
+    ]
 
 
 practiceModeToString : PracticeMode -> String
@@ -279,7 +303,7 @@ chordToString chord =
         Dim ->
             "Dim"
 
-        Augm ->
+        Aug ->
             "Augm"
 
         Sus2 ->
@@ -287,6 +311,24 @@ chordToString chord =
 
         Sus4 ->
             "Sus4"
+
+        Maj7 ->
+            "Maj7"
+
+        Min7 ->
+            "Min7"
+
+        Dom7 ->
+            "Dom7"
+
+        MinMaj7 ->
+            "MinMaj7"
+
+        HalfDim7 ->
+            "HalfDim7"
+
+        Dim7 ->
+            "Dim7"
 
 
 keyToString : Key -> String
@@ -376,8 +418,8 @@ intervalToString interval =
             "5ths"
 
 
-fingeringToString : Key -> String
-fingeringToString key =
+scaleFingeringToString : Key -> String
+scaleFingeringToString key =
     case key of
         Ionian ->
             "X^X 2 2 3"
@@ -414,15 +456,15 @@ allIntervals =
 
 allRanges : List Range
 allRanges =
-    [ OneOctave 1
-    , OneOctave 2
-    , OneOctave 3
-    , OneOctave 4
-    , OneStringScale 1
-    , OneStringScale 2
-    , OneStringScale 3
-    , OneStringScale 4
-    , FullRange
+    [ FreeRange
+    , NoEmptyStrings
+    , AllEmptyStrings
+    , OnlyAString
+    , OnlyDString
+    , OnlyGString
+    , OnlyCString
+    , NoAString
+    , NoADString
     ]
 
 
@@ -442,14 +484,32 @@ presetToString preset =
 rangeToString : Range -> String
 rangeToString range =
     case range of
-        OneStringScale n ->
-            "One String Scale " ++ String.fromInt n
+        FreeRange ->
+            "Free Range"
 
-        OneOctave n ->
-            "One Octave " ++ String.fromInt n
+        NoEmptyStrings ->
+            "No Empty Strings"
 
-        FullRange ->
-            "Full Range"
+        AllEmptyStrings ->
+            "Empty Strings where possible"
+
+        OnlyAString ->
+            "Play only on A String"
+
+        OnlyDString ->
+            "Play only on D String"
+
+        OnlyGString ->
+            "Play only on G String"
+
+        OnlyCString ->
+            "Play only on C String"
+
+        NoAString ->
+            "Don't play on A String"
+
+        NoADString ->
+            "Don't play on A or D String"
 
 
 allBowings : List Bowing
@@ -830,13 +890,13 @@ applyPreset model =
     case model.preset of
         Easy ->
             { model
-                | topics = [ Scales, Chords ]
-                , roots = [ C, F, G ]
+                | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+                , chords = [ Major ]
+                , intervals = []
                 , keys = [ Ionian ]
-                , chords = [ Major, Minor ]
-                , intervals = [ Sixths ]
-                , ranges = [ OneOctave 2 ]
-                , bowings = [ Slured 1, Slured 2, Slured 3, Slured 4 ]
+                , ranges = []
+                , roots = [ G, C, F ]
+                , topics = [ Chords, Scales ]
             }
 
         All ->
@@ -991,8 +1051,8 @@ selection model =
         bowings =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
-        fingerings =
-            selectionItem model.keys fingeringToString NoOp "Fingering: "
+        fingerings toStringFunction =
+            selectionItem model.keys toStringFunction NoOp "Fingering: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
@@ -1003,23 +1063,26 @@ selection model =
                     Just Scales ->
                         [ roots
                         , keys
-                        , ranges
+                        , fingerings scaleFingeringToString
                         , bowings
-                        , fingerings
+                        , ranges
                         ]
 
                     Just Chords ->
                         [ roots
                         , chords
                         , bowings
+                        , ranges
                         ]
 
                     Just Doublestops ->
-                        [ roots
-                        , intervals
+                        [ intervals
+                        , roots
                         , keys
-                        , ranges
+
+                        -- , fingerings doublestopFingeringToString
                         , bowings
+                        , ranges
                         ]
 
                     _ ->
@@ -1177,6 +1240,9 @@ settings model =
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Ranges" ]
+                        :: showSetting rangeToString allRanges model.ranges ToggleRange
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
