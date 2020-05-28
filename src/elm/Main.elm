@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, h1, input, text)
+import Html exposing (Html, button, div, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
