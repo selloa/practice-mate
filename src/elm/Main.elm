@@ -1090,11 +1090,11 @@ settings model =
                     div [ class "container" ] [ text "Chord" ]
                         :: showSetting chordToString allChords model.chords ToggleChord
                 , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
-                , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
+                , div [ class "container m-2" ] <|
+                    div [ class "container" ] [ text "Ranges" ]
+                        :: showSetting rangeToString allRanges model.ranges ToggleRange
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
