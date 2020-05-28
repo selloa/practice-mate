@@ -84,9 +84,15 @@ type Chord
 
 
 type Range
-    = OneOctave Int
-    | OneStringScale Int
-    | FullRange
+    = FreeRange
+    | NoEmptyStrings
+    | AllEmptyStrings
+    | OnlyAString
+    | OnlyDString
+    | OnlyGString
+    | OnlyCString
+    | NoAString
+    | NoADString
 
 
 type Interval
@@ -404,15 +410,15 @@ allIntervals =
 
 allRanges : List Range
 allRanges =
-    [ OneOctave 1
-    , OneOctave 2
-    , OneOctave 3
-    , OneOctave 4
-    , OneStringScale 1
-    , OneStringScale 2
-    , OneStringScale 3
-    , OneStringScale 4
-    , FullRange
+    [ FreeRange
+    , NoEmptyStrings
+    , AllEmptyStrings
+    , OnlyAString
+    , OnlyDString
+    , OnlyGString
+    , OnlyCString
+    , NoAString
+    , NoADString
     ]
 
 
@@ -432,14 +438,32 @@ presetToString preset =
 rangeToString : Range -> String
 rangeToString range =
     case range of
-        OneStringScale n ->
-            "One String Scale " ++ String.fromInt n
+        FreeRange ->
+            "Free Range"
 
-        OneOctave n ->
-            "One Octave " ++ String.fromInt n
+        NoEmptyStrings ->
+            "No Empty Strings"
 
-        FullRange ->
-            "Full Range"
+        AllEmptyStrings ->
+            "Empty Strings where possible"
+
+        OnlyAString ->
+            "Play only on A String"
+
+        OnlyDString ->
+            "Play only on D String"
+
+        OnlyGString ->
+            "Play only on G String"
+
+        OnlyCString ->
+            "Play only on C String"
+
+        NoAString ->
+            "Don't play on A String"
+
+        NoADString ->
+            "Don't play on A or D String"
 
 
 allBowings : List Bowing
@@ -770,7 +794,7 @@ applyPreset model =
                 , keys = [ Ionian ]
                 , chords = [ Major, Minor ]
                 , intervals = [ Sixths ]
-                , ranges = [ OneOctave 2 ]
+                , ranges = [ FreeRange ]
                 , bowings = [ Slured 1, Slured 2, Slured 3, Slured 4 ]
             }
 
@@ -1067,8 +1091,7 @@ settings model =
                         :: showSetting chordToString allChords model.chords ToggleChord
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Ranges" ]
-                        -- :: showSetting rangeToString allRanges model.ranges ToggleRange
-                        :: showRangeSliderSetting model
+                        :: showSetting rangeToString allRanges model.ranges ToggleRange
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
