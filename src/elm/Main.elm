@@ -153,7 +153,7 @@ init _ =
 
 allRoots : List Root
 allRoots =
-    [ C, Cis, D, Dis, E, F, Fis, G, Gis, A, Bb, B ]
+    [ A, B, Bb, C, Cis, D, Dis, E, F, Fis, G, Gis ]
 
 
 allTopics : List Topic
@@ -183,7 +183,7 @@ rootToString root =
             "F"
 
         Fis ->
-            "F# / Db"
+            "F# / Gb"
 
         G ->
             "G"
@@ -922,9 +922,9 @@ selection model =
                 div [ class "hidden" ] []
         , selectionItem roots rootToString "Root: "
         , selectionItem keys keyToString "Key: "
+        , selectionItem keys fingeringToString "Fingering: "
         , selectionItem ranges rangeToString "Range: "
         , selectionItem bowings bowingToString "Bowings: "
-        , selectionItem keys fingeringToString "Fingering: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
             , button
