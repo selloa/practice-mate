@@ -929,7 +929,7 @@ selectionContainer model =
 selection : Model -> Html Msg
 selection model =
     let
-        { topics, ranges, bowings, roots, intervals, keys } =
+        { topics, ranges, bowings, roots, intervals, keys, chords } =
             model
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
@@ -943,7 +943,18 @@ selection model =
             _ ->
                 div [ class "hidden" ] []
         , selectionItem roots rootToString SkipRoot "Root: "
-        , selectionItem keys keyToString SkipKey "Key: "
+        , case List.head topics of
+            Just Chords ->
+                div [ class "hidden" ] []
+
+            _ ->
+                selectionItem keys keyToString SkipKey "Key: "
+        , case List.head topics of
+            Just Chords ->
+                selectionItem chords chordToString SkipChord "Chord: "
+
+            _ ->
+                div [ class "hidden" ] []
         , selectionItem ranges rangeToString SkipRange "Range: "
         , selectionItem bowings bowingToString SkipBowing "Bowings: "
         , div [ class "container p-3 flex" ]
