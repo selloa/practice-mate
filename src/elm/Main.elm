@@ -1031,7 +1031,8 @@ settings model =
                         :: showSetting chordToString allChords model.chords ToggleChord
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                        -- :: showSetting rangeToString allRanges model.ranges ToggleRange
+                        :: showRangeSliderSetting model
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
@@ -1074,6 +1075,25 @@ buttonPassive =
     border-b-2 border-gray-700 hover:border-gray-500 rounded"""
 
 
+showRangeSliderSetting model =
+    List.map
+        (\element ->
+            button
+                [ class <|
+                    if List.member element model.ranges then
+                        buttonActive
+
+                    else
+                        buttonPassive
+                , onClick (ToggleRange element)
+                ]
+                [ text <| rangeToString element ]
+        )
+        allRanges
+        ++ slider model
+
+
+showSetting : (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
 showSetting toString elements selectedElements msg =
     List.map
         (\element ->
