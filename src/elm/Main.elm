@@ -78,9 +78,15 @@ type Chord
     = Major
     | Minor
     | Dim
-    | Augm
+    | Aug
     | Sus2
     | Sus4
+    | Maj7
+    | Min7
+    | Dom7
+    | MinMaj7
+    | HalfDim7
+    | Dim7
 
 
 type Range
@@ -227,7 +233,19 @@ allScales =
 
 allChords : List Chord
 allChords =
-    [ Major, Minor, Dim, Augm, Sus2, Sus4 ]
+    [ Major
+    , Minor
+    , Dim
+    , Aug
+    , Sus2
+    , Sus4
+    , Maj7
+    , Min7
+    , Dom7
+    , MinMaj7
+    , HalfDim7
+    , Dim7
+    ]
 
 
 practiceModeToString : PracticeMode -> String
@@ -275,7 +293,7 @@ chordToString chord =
         Dim ->
             "Dim"
 
-        Augm ->
+        Aug ->
             "Augm"
 
         Sus2 ->
@@ -283,6 +301,24 @@ chordToString chord =
 
         Sus4 ->
             "Sus4"
+
+        Maj7 ->
+            "Maj7"
+
+        Min7 ->
+            "Min7"
+
+        Dom7 ->
+            "Dom7"
+
+        MinMaj7 ->
+            "MinMaj7"
+
+        HalfDim7 ->
+            "HalfDim7"
+
+        Dim7 ->
+            "Dim7"
 
 
 keyToString : Key -> String
