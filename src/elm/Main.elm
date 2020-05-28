@@ -204,14 +204,14 @@ rootToString root =
 allScales : List Key
 allScales =
     [ Ionian
+    , Aeolian
+    , MelodicMinor
+    , HarmonicMinor
     , Dorian
     , Phrygian
     , Lydian
     , Mixolydian
-    , Aeolian
     , Mandalorian
-    , MelodicMinor
-    , HarmonicMinor
     , MajorPentatonic
     , MinorPentatonic
     , Chromatic
