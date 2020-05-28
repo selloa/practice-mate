@@ -2,9 +2,9 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, h1, text)
-import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
+import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html.Attributes as A exposing (class, max, min, type_, value)
+import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Random
 import Random.List
@@ -461,7 +461,7 @@ initialModel =
     , preset = All
 
     -- selection
-    , practiceMode = TimeLimit 1
+    , practiceMode = TimeLimit 5
     , topic = Scales
 
     --
@@ -503,6 +503,7 @@ type Msg
     | ToggleInterval Interval
     | ChangePreset Preset
     | PrintConfiguration
+    | UpdatedSlider String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -687,6 +688,23 @@ update msg model =
                     { model | preset = preset } |> applyPreset
             in
             ( newModel, shuffleEverything newModel )
+
+        UpdatedSlider newValue ->
+            ( { model
+                | practiceMode =
+                    case model.practiceMode of
+                        TimeLimit _ ->
+                            String.toInt newValue
+                                |> Maybe.withDefault 15
+                                |> TimeLimit
+
+                        ExerciseLimit _ ->
+                            String.toInt newValue
+                                |> Maybe.withDefault 15
+                                |> ExerciseLimit
+              }
+            , Cmd.none
+            )
 
         PrintConfiguration ->
             let
@@ -892,6 +910,30 @@ selection model =
         ]
 
 
+slider : Model -> List (Html Msg)
+slider model =
+    let
+        getValue mode =
+            case mode of
+                TimeLimit number ->
+                    number
+
+                ExerciseLimit number ->
+                    number
+    in
+    [ input
+        [ type_ "range"
+        , A.min "5"
+        , A.max "20"
+        , value <| String.fromInt (getValue model.practiceMode)
+        , onInput UpdatedSlider
+        , class "text-black mr-2 px-2 rounded"
+        ]
+        []
+    , text <| String.fromInt <| getValue model.practiceMode
+    ]
+
+
 infoBox : Maybe Message -> Html msg
 infoBox message =
     let
@@ -949,7 +991,7 @@ settings model =
     in
     if model.showSettings then
         div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
-            [ div [ class "container bg-gray-300 font-mono" ] <|
+            [ div [ class "container bg-gray-200 font-mono" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
                     , presetButton Easy model
@@ -958,10 +1000,11 @@ settings model =
                     ]
                 , div
                     [ class "container mx-2" ]
+                  <|
                     [ div [ class "container" ] [ text "Practice mode" ]
                     , button
                         [ class buttonTimeLimit
-                        , onClick (TogglePracticeMode <| TimeLimit 1)
+                        , onClick (TogglePracticeMode <| TimeLimit 5)
                         ]
                         [ text "Time limit" ]
                     , button
@@ -970,6 +1013,7 @@ settings model =
                         ]
                         [ text "Exercise limit" ]
                     ]
+                        ++ slider model
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Topics" ]
                         :: showSetting topicToString allTopics model.topics ToggleTopic
