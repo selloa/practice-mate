@@ -997,17 +997,21 @@ infoBox message =
 
 selectionItem : List a -> (a -> String) -> String -> Html msg
 selectionItem items toString label =
-    case List.head items of
-        Just item ->
-            div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-                [ text label
-                , text <| toString item
-                ]
+    List.head items
+        |> Maybe.map toString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text "-/-"
+                        ]
 
-        Nothing ->
-            div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded" ]
-                [ text "-/-"
-                ]
+                else
+                    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
+                        [ text label
+                        , text string
+                        ]
+           )
 
 
 settings : Model -> Html Msg
