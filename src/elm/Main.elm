@@ -945,9 +945,6 @@ selectionItem item toString label =
 settings : Model -> Html Msg
 settings model =
     let
-        a =
-            Debug.log "bowings:" model.bowings
-
         ( buttonTimeLimit, buttonExercises ) =
             case model.practiceMode of
                 TimeLimit _ ->
@@ -980,7 +977,7 @@ settings model =
                 ]
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Roots" ]
-                    :: showSetting rootToString allRoots (Debug.log "roots" model.roots) ToggleRoot
+                    :: showSetting rootToString allRoots model.roots ToggleRoot
             , div [ class "container m-2" ] <|
                 div [ class "container" ] [ text "Interval" ]
                     :: showSetting intervalToString allIntervals model.intervals ToggleInterval
