@@ -196,7 +196,7 @@ rootToString root =
             "D"
 
         Dis ->
-            "D# / Eb"
+            "Eb / D#"
 
         E ->
             "E"
@@ -458,8 +458,8 @@ scalePatternToString key =
         Blues ->
             "Root - 1x234 1x2"
 
-        _ ->
-            ""
+        Mandalorian ->
+            "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
 
 
 doublestopPatternToString : Key -> String
