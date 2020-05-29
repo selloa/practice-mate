@@ -139,6 +139,7 @@ type Preset
     = Easy
     | All
     | None
+    | Custom
 
 
 
@@ -480,6 +481,9 @@ presetToString preset =
         None ->
             "NONE"
 
+        Custom ->
+            "CUSTOM"
+
 
 rangeToString : Range -> String
 rangeToString range =
@@ -765,32 +769,32 @@ update msg model =
             ( { model | ranges = ranges }, Cmd.none )
 
         ToggleBowing bowing ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleBowings (toggle bowing model.bowings)
             )
 
         ToggleChord chord ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleChords (toggle chord model.chords)
             )
 
         ToggleRoot root ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleRoots (toggle root model.roots)
             )
 
         ToggleInterval interval ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleIntervals (toggle interval model.intervals)
             )
 
         ToggleRange range ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleRanges (toggle range model.ranges)
             )
 
         ToggleKey key ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleKeys (toggle key model.keys)
             )
 
@@ -808,30 +812,30 @@ update msg model =
             --     { model | topics = toggle topic model.topics }
             --   else
             --     model
-            ( { model | topics = toggle topic model.topics }
+            ( { model | topics = toggle topic model.topics, preset = Custom }
             , Cmd.none
             )
 
         ToggleAllTopics ->
-            ( { model | topics = toggleList model.topics allTopics }, Cmd.none )
+            ( { model | topics = toggleList model.topics allTopics, preset = Custom }, Cmd.none )
 
         ToggleAllRoots ->
-            ( { model | roots = toggleList model.roots allRoots }, Cmd.none )
+            ( { model | roots = toggleList model.roots allRoots, preset = Custom }, Cmd.none )
 
         ToggleAllIntervals ->
-            ( { model | intervals = toggleList model.intervals allIntervals }, Cmd.none )
+            ( { model | intervals = toggleList model.intervals allIntervals, preset = Custom }, Cmd.none )
 
         ToggleAllKeys ->
-            ( { model | keys = toggleList model.keys allScales }, Cmd.none )
+            ( { model | keys = toggleList model.keys allScales, preset = Custom }, Cmd.none )
 
         ToggleAllRanges ->
-            ( { model | ranges = toggleList model.ranges allRanges }, Cmd.none )
+            ( { model | ranges = toggleList model.ranges allRanges, preset = Custom }, Cmd.none )
 
         ToggleAllBowings ->
-            ( { model | bowings = toggleList model.bowings allBowings }, Cmd.none )
+            ( { model | bowings = toggleList model.bowings allBowings, preset = Custom }, Cmd.none )
 
         ToggleAllChords ->
-            ( { model | chords = toggleList model.chords allChords }, Cmd.none )
+            ( { model | chords = toggleList model.chords allChords, preset = Custom }, Cmd.none )
 
         SkipTopic ->
             ( { model | topics = appendFirstItem model.topics }, Cmd.none )
@@ -915,6 +919,7 @@ appendFirstItem items =
             []
 
 
+applyPreset : Model -> Model
 applyPreset model =
     case model.preset of
         Easy ->
@@ -949,6 +954,9 @@ applyPreset model =
                 , bowings = []
                 , chords = []
             }
+
+        Custom ->
+            model
 
 
 toggle element list =
@@ -1238,6 +1246,7 @@ settings model =
                     , presetButton Easy model
                     , presetButton All model
                     , presetButton None model
+                    , presetButton Custom model
                     ]
                 , div
                     [ class "container mx-2" ]
