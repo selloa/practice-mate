@@ -961,7 +961,7 @@ applyPreset model =
                 , keys = [ Ionian ]
                 , ranges = []
                 , roots = [ G, C, F ]
-                , topics = [ Chords, Scales ]
+                , topics = [ Scales, Chords ]
             }
 
         All ->
