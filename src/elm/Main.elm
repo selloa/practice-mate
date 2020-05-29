@@ -1300,13 +1300,35 @@ presetButton preset model =
     button
         [ class <|
             if model.preset == preset then
-                buttonActive
+                coloredButton "indigo" 300 400 700
 
             else
                 buttonPassive
         , onClick (ChangePreset preset)
         ]
         [ text <| presetToString preset ]
+
+
+coloredButton : String -> Int -> Int -> Int -> String
+coloredButton color light normal dark =
+    "bg-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt normal
+        ++ " hover:bg-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt light
+        ++ " cursor-pointer text-white"
+        ++ " font-bold mr-2 mb-1 px-2 border-b-2 border-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt dark
+        ++ " hover:border-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt normal
+        ++ " rounded"
 
 
 buttonActive =
