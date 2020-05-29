@@ -1217,32 +1217,15 @@ settings model =
                         [ text "Exercise limit" ]
                     ]
                         ++ slider model
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Topics" ]
-                        :: showSetting topicToString allTopics model.topics ToggleTopic
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Roots" ]
-                        :: showSetting rootToString allRoots model.roots ToggleRoot
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Interval" ]
-                        :: showSetting intervalToString allIntervals model.intervals ToggleInterval
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Key" ]
-                        :: showSetting keyToString allScales model.keys ToggleKey
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Chord" ]
-                        :: showSetting chordToString allChords model.chords ToggleChord
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                , settingsFor model.topics allTopics topicToString ToggleTopic "Topics"
+                , settingsFor model.roots allRoots rootToString ToggleRoot "Roots"
+                , settingsFor model.intervals allIntervals intervalToString ToggleInterval "Intervals"
+                , settingsFor model.keys allScales keyToString ToggleKey "Keys"
+                , settingsFor model.chords allChords chordToString ToggleChord "Chords"
 
                 -- :: showRangeSliderSetting model
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Bowings" ]
-                        :: showSetting bowingToString allBowings model.bowings ToggleBowing
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                , settingsFor model.bowings allBowings bowingToString ToggleBowing "Bowings"
+                , settingsFor model.ranges allRanges rangeToString ToggleRange "Ranges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
@@ -1256,6 +1239,13 @@ settings model =
 
     else
         div [] []
+
+
+settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> String -> Html Msg
+settingsFor currentItems allItems itemToString msg label =
+    div [ class "container m-2" ] <|
+        div [ class "container" ] [ text label ]
+            :: showSetting itemToString allItems currentItems msg
 
 
 presetButton : Preset -> Model -> Html Msg
