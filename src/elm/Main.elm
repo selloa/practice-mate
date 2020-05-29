@@ -416,8 +416,8 @@ intervalToString interval =
             "10th"
 
 
-fingeringToString : Key -> String
-fingeringToString key =
+scalePatternToString : Key -> String
+scalePatternToString key =
     case key of
         Ionian ->
             "X^X 2 2 3"
@@ -1038,14 +1038,18 @@ selection model =
                 div [ class "hidden" ] []
         , selectionItem roots rootToString "Root: "
         , selectionItem keys keyToString "Key: "
-        , selectionItem keys fingeringToString "Fingering: "
+        , selectionItem keys scalePatternToString "Scale Pattern: "
         , case List.head topics of
             Just Doublestops ->
-                selectionItem keys doublestopPatternToString "Pattern: "
+                selectionItem keys doublestopPatternToString "Doublestop Pattern: "
 
             _ ->
                 div [ class "hidden" ] []
+        , div [ class "container text-left bg-gray mb-1 p-2" ]
+            []
         , selectionItem bowings bowingToString "Bowing: "
+        , div [ class "container text-left bg-gray mb-1 p-2" ]
+            []
         , selectionItem ranges rangeToString "Extra Challenge: "
         , div [ class "container p-3 flex" ]
             [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
