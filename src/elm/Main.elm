@@ -605,6 +605,14 @@ type Msg
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
+      -- toggle everything for a setting
+    | ToggleAllTopics
+    | ToggleAllRoots
+    | ToggleAllChords
+    | ToggleAllKeys
+    | ToggleAllBowings
+    | ToggleAllRanges
+    | ToggleAllIntervals
       -- skip setting
     | SkipTopic
     | SkipRoot
@@ -804,6 +812,27 @@ update msg model =
             , Cmd.none
             )
 
+        ToggleAllTopics ->
+            ( { model | topics = toggleList model.topics allTopics }, Cmd.none )
+
+        ToggleAllRoots ->
+            ( { model | roots = toggleList model.roots allRoots }, Cmd.none )
+
+        ToggleAllIntervals ->
+            ( { model | intervals = toggleList model.intervals allIntervals }, Cmd.none )
+
+        ToggleAllKeys ->
+            ( { model | keys = toggleList model.keys allScales }, Cmd.none )
+
+        ToggleAllRanges ->
+            ( { model | ranges = toggleList model.ranges allRanges }, Cmd.none )
+
+        ToggleAllBowings ->
+            ( { model | bowings = toggleList model.bowings allBowings }, Cmd.none )
+
+        ToggleAllChords ->
+            ( { model | chords = toggleList model.chords allChords }, Cmd.none )
+
         SkipTopic ->
             ( { model | topics = appendFirstItem model.topics }, Cmd.none )
 
@@ -928,6 +957,15 @@ toggle element list =
 
     else
         element :: list
+
+
+toggleList : List a -> List a -> List a
+toggleList items allItems =
+    if List.isEmpty items then
+        allItems
+
+    else
+        []
 
 
 clearTimer : Model -> ( Model, Cmd Msg )
@@ -1217,15 +1255,15 @@ settings model =
                         [ text "Exercise limit" ]
                     ]
                         ++ slider model
-                , settingsFor model.topics allTopics topicToString ToggleTopic "Topics"
-                , settingsFor model.roots allRoots rootToString ToggleRoot "Roots"
-                , settingsFor model.intervals allIntervals intervalToString ToggleInterval "Intervals"
-                , settingsFor model.keys allScales keyToString ToggleKey "Keys"
-                , settingsFor model.chords allChords chordToString ToggleChord "Chords"
+                , settingsFor model.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
+                , settingsFor model.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
+                , settingsFor model.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
+                , settingsFor model.keys allScales keyToString ToggleKey ToggleAllKeys "Keys"
+                , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
                 -- :: showRangeSliderSetting model
-                , settingsFor model.bowings allBowings bowingToString ToggleBowing "Bowings"
-                , settingsFor model.ranges allRanges rangeToString ToggleRange "Ranges"
+                , settingsFor model.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
+                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Ranges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
@@ -1241,11 +1279,11 @@ settings model =
         div [] []
 
 
-settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> String -> Html Msg
-settingsFor currentItems allItems itemToString msg label =
+settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Html Msg
+settingsFor currentItems allItems itemToString toggleSingle toggleAll label =
     div [ class "container m-2" ] <|
-        div [ class "container" ] [ text label ]
-            :: showSetting itemToString allItems currentItems msg
+        div [ class "container" ] [ button [ onClick toggleAll ] [ text label ] ]
+            :: showSetting itemToString allItems currentItems toggleSingle
 
 
 presetButton : Preset -> Model -> Html Msg
