@@ -940,6 +940,16 @@ update msg model =
             ( model, cmd )
 
 
+appendFirstItem : List a -> List a
+appendFirstItem items =
+    case items of
+        first :: rest ->
+            rest ++ [ first ]
+
+        [] ->
+            []
+
+
 applyPreset : Model -> Model
 applyPreset model =
     case model.preset of
@@ -1121,50 +1131,55 @@ selection model =
             selectionItem model.keys toStringFunction SkipKey "Fingering: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        [ selectionItem topics (String.toUpper << topicToString) ""
-        , div [ class "container text-left bg-gray mb-1 p-2" ]
+        ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
+         , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-        , case List.head topics of
-            Just Doublestops ->
-                selectionItem intervals intervalToString "Interval: "
+         ]
+            ++ (case List.head model.topics of
+                    Just Scales ->
+                        [ roots
+                        , keys
+                        , fingerings scalePatternToString
+                        , bowings
+                        , ranges
+                        ]
 
-            _ ->
-                div [ class "hidden" ] []
-        , selectionItem roots rootToString "Root: "
-        , selectionItem keys keyToString "Key: "
-        , case List.head topics of
-            Just Scales ->
-                selectionItem keys scalePatternToString "Scale Pattern: "
+                    Just Chords ->
+                        [ roots
+                        , chords
+                        , bowings
+                        , ranges
+                        ]
 
-            _ ->
-                div [ class "hidden" ] []
-        , case List.head topics of
-            Just Doublestops ->
-                selectionItem keys doublestopPatternToString "Doublestop Pattern: "
+                    Just Doublestops ->
+                        [ intervals
+                        , roots
+                        , keys
 
-            _ ->
-                div [ class "hidden" ] []
-        , div [ class "container text-left bg-gray mb-1 p-2" ]
-            []
-        , selectionItem bowings bowingToString "Bowing: "
-        , div [ class "container text-left bg-gray mb-1 p-2" ]
-            []
-        , selectionItem ranges rangeToString "Extra Challenge: "
-        , div [ class "container p-3 flex" ]
-            [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
-            , button
-                [ class <|
-                    if List.length model.topics < 2 then
-                        secondaryButton
+                        -- , fingerings doublestopFingeringToString
+                        , bowings
+                        , ranges
+                        ]
 
-                    else
-                        primaryButton
-                , class "flex-auto m-2"
-                , onClick NextTopic
-                ]
-                [ text "Next topic" ]
-            ]
-        ]
+                    _ ->
+                        []
+               )
+            ++ [ div [ class "container p-3 flex" ]
+                    [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
+                    , button
+                        [ class <|
+                            if List.length model.topics < 2 then
+                                secondaryButton
+
+                            else
+                                primaryButton
+                        , class "flex-auto m-2"
+                        , onClick NextTopic
+                        ]
+                        [ text "Next topic" ]
+                    ]
+               ]
+        )
 
 
 slider : Model -> List (Html Msg)
@@ -1220,8 +1235,8 @@ infoBox message =
             ]
 
 
-selectionItem : List a -> (a -> String) -> String -> Html msg
-selectionItem items toString label =
+selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
+selectionItem items toString skip label =
     List.head items
         |> Maybe.map toString
         |> Maybe.withDefault ""
