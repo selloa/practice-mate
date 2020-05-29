@@ -342,7 +342,7 @@ keyToString key =
             "Mixolydian"
 
         Aeolian ->
-            "Minor (Natural, Aeolian)"
+            "Natural Minor (Aeolian)"
 
         Mandalorian ->
             "Mandalorian"
