@@ -1052,7 +1052,7 @@ selection model =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
         fingerings toStringFunction =
-            selectionItem model.keys toStringFunction NoOp "Fingering: "
+            selectionItem model.keys toStringFunction SkipKey "Fingering: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
