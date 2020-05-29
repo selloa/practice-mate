@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, input, text)
+import Html exposing (Attribute, Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -35,16 +35,6 @@ main =
 type PracticeMode
     = TimeLimit Int
     | ExerciseLimit Int
-
-
-type Attribute tag
-    = Topic
-    | Root
-    | Bowing
-    | Key
-    | Chord
-    | Range
-    | Interval
 
 
 type Topic
@@ -82,6 +72,7 @@ type Key
     | MinorPentatonic
     | Chromatic
     | Wholestep
+    | Blues
 
 
 type Chord
@@ -100,13 +91,12 @@ type Chord
 
 
 type Range
-    = FreeRange
-    | NoEmptyStrings
+    = NoEmptyStrings
     | AllEmptyStrings
-    | OnlyAString
-    | OnlyDString
-    | OnlyGString
-    | OnlyCString
+    | AString
+    | DString
+    | GString
+    | CString
     | NoAString
     | NoADString
 
@@ -117,6 +107,7 @@ type Interval
     | Octaves
     | Fourths
     | Fifths
+    | Tenths
 
 
 type Message
@@ -238,6 +229,7 @@ allScales =
     , MinorPentatonic
     , Chromatic
     , Wholestep
+    , Blues
     ]
 
 
@@ -335,7 +327,7 @@ keyToString : Key -> String
 keyToString key =
     case key of
         Ionian ->
-            "Ionian - Major"
+            "Major (Ionian)"
 
         Dorian ->
             "Dorian"
@@ -350,7 +342,7 @@ keyToString key =
             "Mixolydian"
 
         Aeolian ->
-            "Aeolian Natural Minor"
+            "Minor (Natural, Aeolian)"
 
         Mandalorian ->
             "Mandalorian"
@@ -372,6 +364,9 @@ keyToString key =
 
         Wholestep ->
             "Wholestep"
+
+        Blues ->
+            "Blues"
 
 
 bowingToString : Bowing -> String
@@ -412,14 +407,17 @@ intervalToString interval =
             "8ths"
 
         Fourths ->
-            "4ths"
+            "parallel parallel 4ths"
 
         Fifths ->
-            "5ths"
+            "parallel 5ths"
+
+        Tenths ->
+            "10th"
 
 
-scaleFingeringToString : Key -> String
-scaleFingeringToString key =
+fingeringToString : Key -> String
+fingeringToString key =
     case key of
         Ionian ->
             "X^X 2 2 3"
@@ -445,24 +443,38 @@ scaleFingeringToString key =
         HarmonicMinor ->
             "3 3 2^X 141"
 
+        Wholestep ->
+            "X X repeat"
+
+        Chromatic ->
+            "0123 | 123 repeat"
+
+        MinorPentatonic ->
+            "Root - 124 12"
+
+        MajorPentatonic ->
+            "1x2412 in one Pos"
+
+        Blues ->
+            "Root - 1x234 1x2"
+
         _ ->
             ""
 
 
 allIntervals : List Interval
 allIntervals =
-    [ Sixths, Thirds, Octaves, Fourths, Fifths ]
+    [ Sixths, Thirds, Octaves, Fourths, Fifths, Tenths ]
 
 
 allRanges : List Range
 allRanges =
-    [ FreeRange
-    , NoEmptyStrings
+    [ NoEmptyStrings
     , AllEmptyStrings
-    , OnlyAString
-    , OnlyDString
-    , OnlyGString
-    , OnlyCString
+    , AString
+    , DString
+    , GString
+    , CString
     , NoAString
     , NoADString
     ]
@@ -484,32 +496,29 @@ presetToString preset =
 rangeToString : Range -> String
 rangeToString range =
     case range of
-        FreeRange ->
-            "Free Range"
-
         NoEmptyStrings ->
             "No Empty Strings"
 
         AllEmptyStrings ->
             "Empty Strings where possible"
 
-        OnlyAString ->
-            "Play only on A String"
+        AString ->
+            "Play on A String"
 
-        OnlyDString ->
-            "Play only on D String"
+        DString ->
+            "Play on D String"
 
-        OnlyGString ->
-            "Play only on G String"
+        GString ->
+            "Play on G String"
 
-        OnlyCString ->
-            "Play only on C String"
+        CString ->
+            "Play on C String"
 
         NoAString ->
-            "Don't play on A String"
+            "Go up D String"
 
         NoADString ->
-            "Don't play on A or D String"
+            "Go up G String"
 
 
 allBowings : List Bowing
@@ -584,18 +593,15 @@ type Msg
     = Tick Time.Posix
     | ToggleTimer
     | ClearTimer
-      -- input
     | KeyPressed String
     | NewExercise
-    | NextTopic
-      -- random generators
     | NewRootsGenerated (List Root)
     | NewKeysGenerated (List Key)
     | NewIntervalsGenerated (List Interval)
     | NewRangesGenerated (List Range)
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
-      -- toggle settings
+    | NextTopic
     | ToggleSettings
     | ToggleTopic Topic
     | TogglePracticeMode PracticeMode
@@ -605,19 +611,9 @@ type Msg
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
-      -- skip setting
-    | SkipTopic
-    | SkipRoot
-    | SkipChord
-    | SkipKey
-    | SkipBowing
-    | SkipRange
-    | SkipInterval
-      --
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -692,14 +688,6 @@ update msg model =
 
         KeyPressed key ->
             if key == " " then
-                ( { model
-                    | completedExercises = model.completedExercises + 1
-                    , isRunning = True
-                  }
-                , shuffleEverything model
-                )
-
-            else if key == "t" then
                 toggleTimer model
 
             else if key == "Backspace" then
@@ -804,27 +792,6 @@ update msg model =
             , Cmd.none
             )
 
-        SkipTopic ->
-            ( { model | topics = appendFirstItem model.topics }, Cmd.none )
-
-        SkipInterval ->
-            ( { model | intervals = appendFirstItem model.intervals }, Cmd.none )
-
-        SkipRange ->
-            ( { model | ranges = appendFirstItem model.ranges }, Cmd.none )
-
-        SkipKey ->
-            ( { model | keys = appendFirstItem model.keys }, Cmd.none )
-
-        SkipChord ->
-            ( { model | chords = appendFirstItem model.chords }, Cmd.none )
-
-        SkipBowing ->
-            ( { model | bowings = appendFirstItem model.bowings }, Cmd.none )
-
-        SkipRoot ->
-            ( { model | roots = appendFirstItem model.roots }, Cmd.none )
-
         ChangePreset preset ->
             let
                 newModel =
@@ -871,19 +838,6 @@ update msg model =
                 -- Cmd.none
             in
             ( model, cmd )
-
-        NoOp ->
-            ( model, Cmd.none )
-
-
-appendFirstItem : List a -> List a
-appendFirstItem items =
-    case items of
-        first :: rest ->
-            rest ++ [ first ]
-
-        [] ->
-            []
 
 
 applyPreset model =
@@ -958,7 +912,6 @@ shuffleEverything model =
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
-        , shuffleChords model.chords
         ]
 
 
@@ -1033,77 +986,39 @@ selectionContainer model =
 selection : Model -> Html Msg
 selection model =
     let
-        intervals =
-            selectionItem model.intervals intervalToString SkipInterval "Interval: "
-
-        roots =
-            selectionItem model.roots rootToString SkipRoot "Root: "
-
-        keys =
-            selectionItem model.keys keyToString SkipKey "Key: "
-
-        chords =
-            selectionItem model.chords chordToString SkipChord "Chord: "
-
-        ranges =
-            selectionItem model.ranges rangeToString SkipRange "Range: "
-
-        bowings =
-            selectionItem model.bowings bowingToString SkipBowing "Bowings: "
-
-        fingerings toStringFunction =
-            selectionItem model.keys toStringFunction NoOp "Fingering: "
+        { topics, ranges, bowings, roots, intervals, keys } =
+            model
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
-         , div [ class "container text-left bg-gray mb-1 p-2" ]
+        [ selectionItem topics (String.toUpper << topicToString) ""
+        , div [ class "container text-left bg-gray mb-1 p-2" ]
             []
-         ]
-            ++ (case List.head model.topics of
-                    Just Scales ->
-                        [ roots
-                        , keys
-                        , fingerings scaleFingeringToString
-                        , bowings
-                        , ranges
-                        ]
+        , case List.head topics of
+            Just Doublestops ->
+                selectionItem intervals intervalToString "Interval: "
 
-                    Just Chords ->
-                        [ roots
-                        , chords
-                        , bowings
-                        , ranges
-                        ]
+            _ ->
+                div [ class "hidden" ] []
+        , selectionItem roots rootToString "Root: "
+        , selectionItem keys keyToString "Key: "
+        , selectionItem keys fingeringToString "Fingering: "
+        , selectionItem bowings bowingToString "Bowing: "
+        , selectionItem ranges rangeToString "Extra Challenge: "
+        , div [ class "container p-3 flex" ]
+            [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
+            , button
+                [ class <|
+                    if List.length model.topics < 2 then
+                        secondaryButton
 
-                    Just Doublestops ->
-                        [ intervals
-                        , roots
-                        , keys
-
-                        -- , fingerings doublestopFingeringToString
-                        , bowings
-                        , ranges
-                        ]
-
-                    _ ->
-                        []
-               )
-            ++ [ div [ class "container p-3 flex" ]
-                    [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
-                    , button
-                        [ class <|
-                            if List.length model.topics < 2 then
-                                secondaryButton
-
-                            else
-                                primaryButton
-                        , class "flex-auto m-2"
-                        , onClick NextTopic
-                        ]
-                        [ text "Next topic" ]
-                    ]
-               ]
-        )
+                    else
+                        primaryButton
+                , class "flex-auto m-2"
+                , onClick NextTopic
+                ]
+                [ text "Next topic" ]
+            ]
+        ]
 
 
 slider : Model -> List (Html Msg)
@@ -1159,8 +1074,8 @@ infoBox message =
             ]
 
 
-selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
-selectionItem items toString skip label =
+selectionItem : List a -> (a -> String) -> String -> Html msg
+selectionItem items toString label =
     List.head items
         |> Maybe.map toString
         |> Maybe.withDefault ""
@@ -1171,10 +1086,7 @@ selectionItem items toString skip label =
                         ]
 
                 else
-                    div
-                        [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded"
-                        , onClick skip
-                        ]
+                    div [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded" ]
                         [ text label
                         , text string
                         ]
@@ -1194,7 +1106,7 @@ settings model =
     in
     if model.showSettings then
         div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
-            [ div [ class "container bg-gray-200 font-mono rounded" ] <|
+            [ div [ class "container bg-gray-200 font-mono" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
                     , presetButton Easy model
@@ -1232,11 +1144,6 @@ settings model =
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Chord" ]
                         :: showSetting chordToString allChords model.chords ToggleChord
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
-
-                -- :: showRangeSliderSetting model
                 , div [ class "container m-2" ] <|
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
