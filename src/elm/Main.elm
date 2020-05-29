@@ -462,6 +462,43 @@ fingeringToString key =
             ""
 
 
+doublestopPatternToString : Key -> String
+doublestopPatternToString key =
+    case key of
+        Ionian ->
+            "mMMm mMMm"
+
+        Dorian ->
+            "MMmm MMmM"
+
+        Phrygian ->
+            "MmmM MmMM"
+
+        Lydian ->
+            "mmMM mMMm"
+
+        Mixolydian ->
+            "mMMm MMmm"
+
+        Aeolian ->
+            "MMmM MmmM"
+
+        MelodicMinor ->
+            "MMmM mMMM"
+
+        HarmonicMinor ->
+            "MMmM mmMM"
+
+        Wholestep ->
+            "m m repeat"
+
+        Chromatic ->
+            "M M repeat"
+
+        _ ->
+            ""
+
+
 allIntervals : List Interval
 allIntervals =
     [ Sixths, Thirds, Octaves, Fourths, Fifths, Tenths ]
@@ -1002,6 +1039,12 @@ selection model =
         , selectionItem roots rootToString "Root: "
         , selectionItem keys keyToString "Key: "
         , selectionItem keys fingeringToString "Fingering: "
+        , case List.head topics of
+            Just Doublestops ->
+                selectionItem keys doublestopPatternToString "Pattern: "
+
+            _ ->
+                div [ class "hidden" ] []
         , selectionItem bowings bowingToString "Bowing: "
         , selectionItem ranges rangeToString "Extra Challenge: "
         , div [ class "container p-3 flex" ]
