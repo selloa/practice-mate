@@ -139,6 +139,7 @@ type Preset
     = Easy
     | All
     | None
+    | Custom
 
 
 
@@ -480,6 +481,9 @@ presetToString preset =
         None ->
             "NONE"
 
+        Custom ->
+            "CUSTOM"
+
 
 rangeToString : Range -> String
 rangeToString range =
@@ -605,6 +609,14 @@ type Msg
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
+      -- toggle everything for a setting
+    | ToggleAllTopics
+    | ToggleAllRoots
+    | ToggleAllChords
+    | ToggleAllKeys
+    | ToggleAllBowings
+    | ToggleAllRanges
+    | ToggleAllIntervals
       -- skip setting
     | SkipTopic
     | SkipRoot
@@ -757,32 +769,32 @@ update msg model =
             ( { model | ranges = ranges }, Cmd.none )
 
         ToggleBowing bowing ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleBowings (toggle bowing model.bowings)
             )
 
         ToggleChord chord ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleChords (toggle chord model.chords)
             )
 
         ToggleRoot root ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleRoots (toggle root model.roots)
             )
 
         ToggleInterval interval ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleIntervals (toggle interval model.intervals)
             )
 
         ToggleRange range ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleRanges (toggle range model.ranges)
             )
 
         ToggleKey key ->
-            ( model
+            ( { model | preset = Custom }
             , shuffleKeys (toggle key model.keys)
             )
 
@@ -800,9 +812,30 @@ update msg model =
             --     { model | topics = toggle topic model.topics }
             --   else
             --     model
-            ( { model | topics = toggle topic model.topics }
+            ( { model | topics = toggle topic model.topics, preset = Custom }
             , Cmd.none
             )
+
+        ToggleAllTopics ->
+            ( { model | topics = toggleList model.topics allTopics, preset = Custom }, Cmd.none )
+
+        ToggleAllRoots ->
+            ( { model | roots = toggleList model.roots allRoots, preset = Custom }, Cmd.none )
+
+        ToggleAllIntervals ->
+            ( { model | intervals = toggleList model.intervals allIntervals, preset = Custom }, Cmd.none )
+
+        ToggleAllKeys ->
+            ( { model | keys = toggleList model.keys allScales, preset = Custom }, Cmd.none )
+
+        ToggleAllRanges ->
+            ( { model | ranges = toggleList model.ranges allRanges, preset = Custom }, Cmd.none )
+
+        ToggleAllBowings ->
+            ( { model | bowings = toggleList model.bowings allBowings, preset = Custom }, Cmd.none )
+
+        ToggleAllChords ->
+            ( { model | chords = toggleList model.chords allChords, preset = Custom }, Cmd.none )
 
         SkipTopic ->
             ( { model | topics = appendFirstItem model.topics }, Cmd.none )
@@ -886,6 +919,7 @@ appendFirstItem items =
             []
 
 
+applyPreset : Model -> Model
 applyPreset model =
     case model.preset of
         Easy ->
@@ -921,6 +955,9 @@ applyPreset model =
                 , chords = []
             }
 
+        Custom ->
+            model
+
 
 toggle element list =
     if List.member element list then
@@ -928,6 +965,15 @@ toggle element list =
 
     else
         element :: list
+
+
+toggleList : List a -> List a -> List a
+toggleList items allItems =
+    if List.isEmpty items then
+        allItems
+
+    else
+        []
 
 
 clearTimer : Model -> ( Model, Cmd Msg )
@@ -1015,7 +1061,7 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "font-mono bg-gray-200 px-10 py-5 min-h-screen flex items-start" ]
+    div [ class "font-mono bg-gray-200 px-5 py-5 min-h-screen flex items-start" ]
         [ selectionContainer model
         , settings model
         ]
@@ -1023,7 +1069,7 @@ view model =
 
 selectionContainer : Model -> Html Msg
 selectionContainer model =
-    div [ class "container bg-gray-600 px-5 py-5 my-10 max-w-lg rounded" ]
+    div [ class "container bg-gray-200 px-5 py-5 max-w-lg rounded" ]
         [ header model
         , infoBox model.message
         , selection model
@@ -1052,7 +1098,7 @@ selection model =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
         fingerings toStringFunction =
-            selectionItem model.keys toStringFunction NoOp "Fingering: "
+            selectionItem model.keys toStringFunction SkipKey "Fingering: "
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
@@ -1193,13 +1239,14 @@ settings model =
                     ( buttonPassive, buttonActive )
     in
     if model.showSettings then
-        div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
+        div [ class "container bg-gray-200 px-5 py-5 rounded" ]
             [ div [ class "container bg-gray-200 font-mono rounded" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
                     , presetButton Easy model
                     , presetButton All model
                     , presetButton None model
+                    , presetButton Custom model
                     ]
                 , div
                     [ class "container mx-2" ]
@@ -1217,32 +1264,15 @@ settings model =
                         [ text "Exercise limit" ]
                     ]
                         ++ slider model
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Topics" ]
-                        :: showSetting topicToString allTopics model.topics ToggleTopic
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Roots" ]
-                        :: showSetting rootToString allRoots model.roots ToggleRoot
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Interval" ]
-                        :: showSetting intervalToString allIntervals model.intervals ToggleInterval
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Key" ]
-                        :: showSetting keyToString allScales model.keys ToggleKey
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Chord" ]
-                        :: showSetting chordToString allChords model.chords ToggleChord
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                , settingsFor model.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
+                , settingsFor model.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
+                , settingsFor model.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
+                , settingsFor model.keys allScales keyToString ToggleKey ToggleAllKeys "Keys"
+                , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
                 -- :: showRangeSliderSetting model
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Bowings" ]
-                        :: showSetting bowingToString allBowings model.bowings ToggleBowing
-                , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
-                        :: showSetting rangeToString allRanges model.ranges ToggleRange
+                , settingsFor model.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
+                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Ranges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
@@ -1258,18 +1288,47 @@ settings model =
         div [] []
 
 
+settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Html Msg
+settingsFor currentItems allItems itemToString toggleSingle toggleAll label =
+    div [ class "container m-2" ] <|
+        div [ class "container" ] [ button [ onClick toggleAll ] [ text label ] ]
+            :: showSetting itemToString allItems currentItems toggleSingle
+
+
 presetButton : Preset -> Model -> Html Msg
 presetButton preset model =
     button
         [ class <|
             if model.preset == preset then
-                buttonActive
+                coloredButton "indigo" 300 400 700
 
             else
                 buttonPassive
         , onClick (ChangePreset preset)
         ]
         [ text <| presetToString preset ]
+
+
+coloredButton : String -> Int -> Int -> Int -> String
+coloredButton color light normal dark =
+    "bg-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt normal
+        ++ " hover:bg-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt light
+        ++ " cursor-pointer text-white"
+        ++ " font-bold mr-2 mb-1 px-2 border-b-2 border-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt dark
+        ++ " hover:border-"
+        ++ color
+        ++ "-"
+        ++ String.fromInt normal
+        ++ " rounded"
 
 
 buttonActive =
