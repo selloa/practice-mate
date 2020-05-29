@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Html, button, div, input, text)
+import Html exposing (Attribute, Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -37,16 +37,6 @@ type PracticeMode
     | ExerciseLimit Int
 
 
-type Attribute tag
-    = Topic
-    | Root
-    | Bowing
-    | Key
-    | Chord
-    | Range
-    | Interval
-
-
 type Topic
     = Scales
     | Chords
@@ -54,7 +44,10 @@ type Topic
 
 
 type Root
-    = C
+    = A
+    | Bb
+    | B
+    | C
     | Cis
     | D
     | Dis
@@ -63,9 +56,6 @@ type Root
     | Fis
     | G
     | Gis
-    | A
-    | Bb
-    | B
 
 
 type Key
@@ -82,6 +72,7 @@ type Key
     | MinorPentatonic
     | Chromatic
     | Wholestep
+    | Blues
 
 
 type Chord
@@ -100,13 +91,12 @@ type Chord
 
 
 type Range
-    = FreeRange
-    | NoEmptyStrings
+    = NoEmptyStrings
     | AllEmptyStrings
-    | OnlyAString
-    | OnlyDString
-    | OnlyGString
-    | OnlyCString
+    | AString
+    | DString
+    | GString
+    | CString
     | NoAString
     | NoADString
 
@@ -117,6 +107,7 @@ type Interval
     | Octaves
     | Fourths
     | Fifths
+    | Tenths
 
 
 type Message
@@ -187,6 +178,15 @@ allTopics =
 rootToString : Root -> String
 rootToString root =
     case root of
+        A ->
+            "A"
+
+        Bb ->
+            "Bb"
+
+        B ->
+            "B"
+
         C ->
             "C"
 
@@ -197,7 +197,7 @@ rootToString root =
             "D"
 
         Dis ->
-            "D# / Eb"
+            "Eb / D#"
 
         E ->
             "E"
@@ -213,15 +213,6 @@ rootToString root =
 
         Gis ->
             "G# / Ab"
-
-        A ->
-            "A"
-
-        Bb ->
-            "Bb"
-
-        B ->
-            "B"
 
 
 allScales : List Key
@@ -239,6 +230,7 @@ allScales =
     , MinorPentatonic
     , Chromatic
     , Wholestep
+    , Blues
     ]
 
 
@@ -336,7 +328,7 @@ keyToString : Key -> String
 keyToString key =
     case key of
         Ionian ->
-            "Ionian - Major"
+            "Major (Ionian)"
 
         Dorian ->
             "Dorian"
@@ -351,7 +343,7 @@ keyToString key =
             "Mixolydian"
 
         Aeolian ->
-            "Aeolian Natural Minor"
+            "Minor (Natural, Aeolian)"
 
         Mandalorian ->
             "Mandalorian"
@@ -373,6 +365,9 @@ keyToString key =
 
         Wholestep ->
             "Wholestep"
+
+        Blues ->
+            "Blues"
 
 
 bowingToString : Bowing -> String
@@ -413,14 +408,17 @@ intervalToString interval =
             "8ths"
 
         Fourths ->
-            "4ths"
+            "parallel parallel 4ths"
 
         Fifths ->
-            "5ths"
+            "parallel 5ths"
+
+        Tenths ->
+            "10th"
 
 
-scaleFingeringToString : Key -> String
-scaleFingeringToString key =
+scalePatternToString : Key -> String
+scalePatternToString key =
     case key of
         Ionian ->
             "X^X 2 2 3"
@@ -446,24 +444,75 @@ scaleFingeringToString key =
         HarmonicMinor ->
             "3 3 2^X 141"
 
+        Wholestep ->
+            "X X repeat"
+
+        Chromatic ->
+            "0123 | 123 repeat"
+
+        MinorPentatonic ->
+            "Root - 124 12"
+
+        MajorPentatonic ->
+            "1x2412 in one Pos"
+
+        Blues ->
+            "Root - 1x234 1x2"
+
+        Mandalorian ->
+            "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
+
+
+doublestopPatternToString : Key -> String
+doublestopPatternToString key =
+    case key of
+        Ionian ->
+            "m M M m - m M M m"
+
+        Dorian ->
+            "M M m m - M M m M"
+
+        Phrygian ->
+            "M m m M - M m M M"
+
+        Lydian ->
+            "m m M M - m M M m"
+
+        Mixolydian ->
+            "m M M m - M M m m"
+
+        Aeolian ->
+            "M M m M - M m m M"
+
+        MelodicMinor ->
+            "M M m M - m M M M"
+
+        HarmonicMinor ->
+            "M M m M - m m M M"
+
+        Wholestep ->
+            "m m repeat"
+
+        Chromatic ->
+            "M M repeat"
+
         _ ->
             ""
 
 
 allIntervals : List Interval
 allIntervals =
-    [ Sixths, Thirds, Octaves, Fourths, Fifths ]
+    [ Sixths, Thirds, Octaves, Fourths, Fifths, Tenths ]
 
 
 allRanges : List Range
 allRanges =
-    [ FreeRange
-    , NoEmptyStrings
+    [ NoEmptyStrings
     , AllEmptyStrings
-    , OnlyAString
-    , OnlyDString
-    , OnlyGString
-    , OnlyCString
+    , AString
+    , DString
+    , GString
+    , CString
     , NoAString
     , NoADString
     ]
@@ -488,32 +537,29 @@ presetToString preset =
 rangeToString : Range -> String
 rangeToString range =
     case range of
-        FreeRange ->
-            "Free Range"
-
         NoEmptyStrings ->
             "No Empty Strings"
 
         AllEmptyStrings ->
             "Empty Strings where possible"
 
-        OnlyAString ->
-            "Play only on A String"
+        AString ->
+            "Play on A String"
 
-        OnlyDString ->
-            "Play only on D String"
+        DString ->
+            "Play on D String"
 
-        OnlyGString ->
-            "Play only on G String"
+        GString ->
+            "Play on G String"
 
-        OnlyCString ->
-            "Play only on C String"
+        CString ->
+            "Play on C String"
 
         NoAString ->
-            "Don't play on A String"
+            "Go up D String"
 
         NoADString ->
-            "Don't play on A or D String"
+            "Go up G String"
 
 
 allBowings : List Bowing
@@ -588,18 +634,15 @@ type Msg
     = Tick Time.Posix
     | ToggleTimer
     | ClearTimer
-      -- input
     | KeyPressed String
     | NewExercise
-    | NextTopic
-      -- random generators
     | NewRootsGenerated (List Root)
     | NewKeysGenerated (List Key)
     | NewIntervalsGenerated (List Interval)
     | NewRangesGenerated (List Range)
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
-      -- toggle settings
+    | NextTopic
     | ToggleSettings
     | ToggleTopic Topic
     | TogglePracticeMode PracticeMode
@@ -629,7 +672,6 @@ type Msg
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -704,14 +746,6 @@ update msg model =
 
         KeyPressed key ->
             if key == " " then
-                ( { model
-                    | completedExercises = model.completedExercises + 1
-                    , isRunning = True
-                  }
-                , shuffleEverything model
-                )
-
-            else if key == "t" then
                 toggleTimer model
 
             else if key == "Backspace" then
@@ -905,9 +939,6 @@ update msg model =
             in
             ( model, cmd )
 
-        NoOp ->
-            ( model, Cmd.none )
-
 
 appendFirstItem : List a -> List a
 appendFirstItem items =
@@ -1004,7 +1035,6 @@ shuffleEverything model =
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
-        , shuffleChords model.chords
         ]
 
 
@@ -1109,7 +1139,7 @@ selection model =
                     Just Scales ->
                         [ roots
                         , keys
-                        , fingerings scaleFingeringToString
+                        , fingerings scalePatternToString
                         , bowings
                         , ranges
                         ]
@@ -1272,7 +1302,7 @@ settings model =
 
                 -- :: showRangeSliderSetting model
                 , settingsFor model.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
-                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Ranges"
+                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
