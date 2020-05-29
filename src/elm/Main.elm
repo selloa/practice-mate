@@ -1038,7 +1038,12 @@ selection model =
                 div [ class "hidden" ] []
         , selectionItem roots rootToString "Root: "
         , selectionItem keys keyToString "Key: "
-        , selectionItem keys scalePatternToString "Scale Pattern: "
+        , case List.head topics of
+            Just Scales ->
+                selectionItem keys scalePatternToString "Scale Pattern: "
+
+            _ ->
+                div [ class "hidden" ] []
         , case List.head topics of
             Just Doublestops ->
                 selectionItem keys doublestopPatternToString "Doublestop Pattern: "
