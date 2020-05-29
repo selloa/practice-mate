@@ -44,7 +44,10 @@ type Topic
 
 
 type Root
-    = C
+    = A
+    | Bb
+    | B
+    | C
     | Cis
     | D
     | Dis
@@ -53,9 +56,6 @@ type Root
     | Fis
     | G
     | Gis
-    | A
-    | Bb
-    | B
 
 
 type Key
@@ -177,6 +177,15 @@ allTopics =
 rootToString : Root -> String
 rootToString root =
     case root of
+        A ->
+            "A"
+
+        Bb ->
+            "Bb"
+
+        B ->
+            "B"
+
         C ->
             "C"
 
@@ -203,15 +212,6 @@ rootToString root =
 
         Gis ->
             "G# / Ab"
-
-        A ->
-            "A"
-
-        Bb ->
-            "Bb"
-
-        B ->
-            "B"
 
 
 allScales : List Key
@@ -342,7 +342,7 @@ keyToString key =
             "Mixolydian"
 
         Aeolian ->
-            "Natural Minor (Aeolian)"
+            "Minor (Natural, Aeolian)"
 
         Mandalorian ->
             "Mandalorian"
