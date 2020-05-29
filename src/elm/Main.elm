@@ -1015,7 +1015,7 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "font-mono bg-gray-200 px-10 py-5 min-h-screen flex items-start" ]
+    div [ class "font-mono bg-gray-200 px-5 py-5 min-h-screen flex items-start" ]
         [ selectionContainer model
         , settings model
         ]
@@ -1023,7 +1023,7 @@ view model =
 
 selectionContainer : Model -> Html Msg
 selectionContainer model =
-    div [ class "container bg-gray-600 px-5 py-5 my-10 max-w-lg rounded" ]
+    div [ class "container bg-gray-200 px-5 py-5 max-w-lg rounded" ]
         [ header model
         , infoBox model.message
         , selection model
@@ -1193,7 +1193,7 @@ settings model =
                     ( buttonPassive, buttonActive )
     in
     if model.showSettings then
-        div [ class "container bg-gray-600 px-5 py-5 m-10 rounded" ]
+        div [ class "container bg-gray-200 px-5 py-5 rounded" ]
             [ div [ class "container bg-gray-200 font-mono rounded" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
