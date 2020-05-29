@@ -1200,7 +1200,7 @@ settings model =
                     div [ class "container" ] [ text "Bowings" ]
                         :: showSetting bowingToString allBowings model.bowings ToggleBowing
                 , div [ class "container m-2" ] <|
-                    div [ class "container" ] [ text "Ranges" ]
+                    div [ class "container" ] [ text "Challenges" ]
                         :: showSetting rangeToString allRanges model.ranges ToggleRange
                 , div [ class "container m-2" ]
                     [ button
