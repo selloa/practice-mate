@@ -466,28 +466,28 @@ doublestopPatternToString : Key -> String
 doublestopPatternToString key =
     case key of
         Ionian ->
-            "mMMm mMMm"
+            "m M M m - m M M m"
 
         Dorian ->
-            "MMmm MMmM"
+            "M M m m - M M m M"
 
         Phrygian ->
-            "MmmM MmMM"
+            "M m m M - M m M M"
 
         Lydian ->
-            "mmMM mMMm"
+            "m m M M - m M M m"
 
         Mixolydian ->
-            "mMMm MMmm"
+            "m M M m - M M m m"
 
         Aeolian ->
-            "MMmM MmmM"
+            "M M m M - M m m M"
 
         MelodicMinor ->
-            "MMmM mMMM"
+            "M M m M - m M M M"
 
         HarmonicMinor ->
-            "MMmM mmMM"
+            "M M m M - m m M M"
 
         Wholestep ->
             "m m repeat"
