@@ -145,7 +145,7 @@ type Bowing
 
 
 type Preset
-    = Easy
+    = Basic
     | All
     | None
     | Custom
@@ -569,8 +569,8 @@ allRanges =
 presetToString : Preset -> String
 presetToString preset =
     case preset of
-        Easy ->
-            "EASY"
+        Basic ->
+            "BASIC"
 
         All ->
             "ALL"
@@ -1020,7 +1020,7 @@ appendFirstItem items =
 applyPreset : Model -> Model
 applyPreset model =
     case model.preset of
-        Easy ->
+        Basic ->
             { model
                 | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
                 , chords = [ Major ]
@@ -1351,7 +1351,7 @@ settings model =
             [ div [ class "container bg-gray-200 font-mono rounded" ] <|
                 [ div [ class "container mx-2" ]
                     [ div [ class "container" ] [ text "Presets" ]
-                    , presetButton Easy model
+                    , presetButton Basic model
                     , presetButton All model
                     , presetButton None model
                     , presetButton Custom model
