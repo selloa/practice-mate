@@ -6,6 +6,7 @@ import Html exposing (Attribute, Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Random
 import Random.List
 import Time
@@ -18,16 +19,33 @@ import Time
 port printToConsole : String -> Cmd msg
 
 
+port setStorage : Encode.Value -> Cmd msg
+
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg oldModel =
+    let
+        ( newModel, cmds ) =
+            update msg oldModel
+
+        configuration =
+            createConfiguration newModel
+    in
+    ( newModel
+    , Cmd.batch [ setStorage (encodeConfiguration configuration), cmds ]
+    )
+
+
 
 -- main
 
 
-main : Program () Model Msg
+main : Program Encode.Value Model Msg
 main =
     Browser.element
         { init = init
         , view = view
-        , update = update
+        , update = updateWithStorage
         , subscriptions = subscriptions
         }
 
@@ -133,6 +151,29 @@ type Preset
     | Custom
 
 
+type alias Configuration =
+    { topics : List Topic
+    , roots : List Root
+    , scales : List Scale
+    , intervals : List Interval
+    , ranges : List Range
+    , bowings : List Bowing
+    , chords : List Chord
+    }
+
+
+createConfiguration : Model -> Configuration
+createConfiguration model =
+    { topics = model.topics
+    , roots = model.roots
+    , scales = model.scales
+    , intervals = model.intervals
+    , ranges = model.ranges
+    , bowings = model.bowings
+    , chords = model.chords
+    }
+
+
 
 -- Model
 
@@ -160,9 +201,16 @@ type alias Model =
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( initialModel, shuffleEverything initialModel )
+init : Encode.Value -> ( Model, Cmd Msg )
+init flags =
+    let
+        localInitialModel =
+            initialModel flags
+    in
+    ( localInitialModel
+    , Cmd.none
+      -- , shuffleEverything localInitialModel
+    )
 
 
 allRoots : List Root
@@ -408,13 +456,13 @@ intervalToString interval =
             "8ths"
 
         Fourths ->
-            "parallel parallel 4ths"
+            "parallel 4ths"
 
         Fifths ->
             "parallel 5ths"
 
         Tenths ->
-            "10th"
+            "10ths"
 
 
 scalePatternToString : Scale -> String
@@ -602,8 +650,24 @@ allBowings =
     ]
 
 
-initialModel : Model
-initialModel =
+initialModel : Encode.Value -> Model
+initialModel flags =
+    let
+        configuration =
+            case Decode.decodeValue decodeConfiguration flags of
+                Ok config ->
+                    config
+
+                Err _ ->
+                    { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+                    , chords = [ Major ]
+                    , intervals = []
+                    , scales = [ Ionian ]
+                    , ranges = []
+                    , roots = [ G, C, F ]
+                    , topics = [ Scales, Chords ]
+                    }
+    in
     { elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
@@ -613,16 +677,19 @@ initialModel =
 
     -- selection
     , practiceMode = TimeLimit 5
-    , topic = Scales
+    , topic =
+        List.head configuration.topics
+            |> Maybe.withDefault Scales
 
     --
-    , topics = [ Scales, Chords, Doublestops ]
-    , roots = allRoots
-    , scales = allScales
-    , intervals = allIntervals
-    , ranges = allRanges
-    , bowings = allBowings
-    , chords = allChords
+    -- , topics = [ Scales, Chords, Doublestops ]
+    , topics = configuration.topics
+    , roots = configuration.roots
+    , scales = configuration.scales
+    , intervals = configuration.intervals
+    , ranges = configuration.ranges
+    , bowings = configuration.bowings
+    , chords = configuration.chords
     }
 
 
@@ -961,7 +1028,7 @@ applyPreset model =
                 , scales = [ Ionian ]
                 , ranges = []
                 , roots = [ G, C, F ]
-                , topics = [ Chords, Scales ]
+                , topics = [ Scales, Chords ]
             }
 
         All ->
@@ -1035,6 +1102,7 @@ shuffleEverything model =
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
+        , shuffleChords model.chords
         ]
 
 
@@ -1122,25 +1190,33 @@ selection model =
             selectionItem model.chords chordToString SkipChord "Chord: "
 
         ranges =
-            selectionItem model.ranges rangeToString SkipRange "Range: "
+            selectionItem model.ranges rangeToString SkipRange "Extra challenge: "
 
         bowings =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
-        fingerings toStringFunction =
-            selectionItem model.scales toStringFunction SkipScale "Fingering: "
+        scalePatterns =
+            selectionItem model.scales scalePatternToString SkipScale "Scale pattern: "
+
+        doublestopPatterns =
+            selectionItem model.scales doublestopPatternToString SkipScale "Doublestop pattern: "
+
+        spacing =
+            div [ class "container text-left bg-gray mb-1 p-2" ]
+                []
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
-         , div [ class "container text-left bg-gray mb-1 p-2" ]
-            []
+         , spacing
          ]
             ++ (case List.head model.topics of
                     Just Scales ->
                         [ roots
                         , scales
-                        , fingerings scalePatternToString
+                        , scalePatterns
+                        , spacing
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
@@ -1148,6 +1224,7 @@ selection model =
                         [ roots
                         , chords
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
@@ -1155,9 +1232,10 @@ selection model =
                         [ intervals
                         , roots
                         , scales
-
-                        -- , fingerings doublestopFingeringToString
+                        , doublestopPatterns
+                        , spacing
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
@@ -1460,3 +1538,361 @@ header model =
             , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
+
+
+
+-- JSON ENCODE/DECODE
+
+
+encodeBowing a =
+    case a of
+        Slured times ->
+            Encode.object
+                [ ( "kind", Encode.string "Slured" )
+                , ( "times", Encode.int times )
+                ]
+
+        RepeatedStaccato times ->
+            Encode.object
+                [ ( "kind", Encode.string "RepeatedStaccato" )
+                , ( "times", Encode.int times )
+                ]
+
+        RepeatedTenuto times ->
+            Encode.object
+                [ ( "kind", Encode.string "RepeatedTenuto" )
+                , ( "times", Encode.int times )
+                ]
+
+        BowStaccato times ->
+            Encode.object
+                [ ( "kind", Encode.string "BowStaccato" )
+                , ( "times", Encode.int times )
+                ]
+
+        Sequenced ->
+            Encode.object
+                [ ( "kind", Encode.string "Sequenced" )
+                ]
+
+        AddTopNote ->
+            Encode.object
+                [ ( "kind", Encode.string "AddTopNote" )
+                ]
+
+        Rhythmed ->
+            Encode.object
+                [ ( "kind", Encode.string "Rhythmed" )
+                ]
+
+
+encodeChord a =
+    Encode.string <| chordToString a
+
+
+encodeConfiguration config =
+    Encode.object
+        [ ( "topics", Encode.list encodeTopic config.topics )
+        , ( "roots", Encode.list encodeRoot config.roots )
+        , ( "scales", Encode.list encodeScale config.scales )
+        , ( "intervals", Encode.list encodeInterval config.intervals )
+        , ( "ranges", Encode.list encodeRange config.ranges )
+        , ( "bowings", Encode.list encodeBowing config.bowings )
+        , ( "chords", Encode.list encodeChord config.chords )
+        ]
+
+
+encodeInterval interval =
+    Encode.string <| intervalToString interval
+
+
+encodeScale scale =
+    Encode.string <| scaleToString scale
+
+
+encodeRange range =
+    Encode.string <| rangeToString range
+
+
+encodeRoot root =
+    Encode.string <| rootToString root
+
+
+encodeTopic topic =
+    Encode.string <| topicToString topic
+
+
+decodeBowing =
+    Decode.field "kind" Decode.string |> Decode.andThen decodeBowingHelp
+
+
+decodeBowingHelp kind =
+    case kind of
+        "Slured" ->
+            Decode.map
+                Slured
+                (Decode.field "times" Decode.int)
+
+        "RepeatedStaccato" ->
+            Decode.map
+                RepeatedStaccato
+                (Decode.field "times" Decode.int)
+
+        "RepeatedTenuto" ->
+            Decode.map
+                RepeatedTenuto
+                (Decode.field "times" Decode.int)
+
+        "BowStaccato" ->
+            Decode.map
+                BowStaccato
+                (Decode.field "times" Decode.int)
+
+        "Sequenced" ->
+            Decode.succeed Sequenced
+
+        "AddTopNote" ->
+            Decode.succeed AddTopNote
+
+        "Rhythmed" ->
+            Decode.succeed Rhythmed
+
+        other ->
+            Decode.fail <| "Unknown constructor for type Bowing: " ++ other
+
+
+decodeChord =
+    let
+        recover x =
+            case x of
+                "Major" ->
+                    Decode.succeed Major
+
+                "Minor" ->
+                    Decode.succeed Minor
+
+                "Dim" ->
+                    Decode.succeed Dim
+
+                "Augm" ->
+                    Decode.succeed Aug
+
+                "Sus2" ->
+                    Decode.succeed Sus2
+
+                "Sus4" ->
+                    Decode.succeed Sus4
+
+                "Maj7" ->
+                    Decode.succeed Maj7
+
+                "Min7" ->
+                    Decode.succeed Min7
+
+                "Dom7" ->
+                    Decode.succeed Dom7
+
+                "MinMaj7" ->
+                    Decode.succeed MinMaj7
+
+                "HalfDim7" ->
+                    Decode.succeed HalfDim7
+
+                "Dim7" ->
+                    Decode.succeed Dim7
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Chord: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeConfiguration =
+    Decode.map7
+        Configuration
+        (Decode.field "topics" (Decode.list decodeTopic))
+        (Decode.field "roots" (Decode.list decodeRoot))
+        (Decode.field "scales" (Decode.list decodeScale))
+        (Decode.field "intervals" (Decode.list decodeInterval))
+        (Decode.field "ranges" (Decode.list decodeRange))
+        (Decode.field "bowings" (Decode.list decodeBowing))
+        (Decode.field "chords" (Decode.list decodeChord))
+
+
+decodeInterval =
+    let
+        recover x =
+            case x of
+                "6ths" ->
+                    Decode.succeed Sixths
+
+                "3rds" ->
+                    Decode.succeed Thirds
+
+                "8ths" ->
+                    Decode.succeed Octaves
+
+                "parallel 4ths" ->
+                    Decode.succeed Fourths
+
+                "parallel 5ths" ->
+                    Decode.succeed Fifths
+
+                "10ths" ->
+                    Decode.succeed Tenths
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Interval: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeScale =
+    let
+        recover x =
+            case x of
+                "Major (Ionian)" ->
+                    Decode.succeed Ionian
+
+                "Dorian" ->
+                    Decode.succeed Dorian
+
+                "Phrygian" ->
+                    Decode.succeed Phrygian
+
+                "Lydian" ->
+                    Decode.succeed Lydian
+
+                "Mixolydian" ->
+                    Decode.succeed Mixolydian
+
+                "Minor (Natural, Aeolian)" ->
+                    Decode.succeed Aeolian
+
+                "Mandalorian" ->
+                    Decode.succeed Mandalorian
+
+                "Melodic Minor" ->
+                    Decode.succeed MelodicMinor
+
+                "Harmonic Minor" ->
+                    Decode.succeed HarmonicMinor
+
+                "Major Pentatonic" ->
+                    Decode.succeed MajorPentatonic
+
+                "Minor Pentatonic" ->
+                    Decode.succeed MinorPentatonic
+
+                "Chromatic" ->
+                    Decode.succeed Chromatic
+
+                "Wholestep" ->
+                    Decode.succeed Wholestep
+
+                "Blues" ->
+                    Decode.succeed Blues
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Key: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeRange =
+    let
+        recover x =
+            case x of
+                "No Empty Strings" ->
+                    Decode.succeed NoEmptyStrings
+
+                "Empty Strings where possible" ->
+                    Decode.succeed AllEmptyStrings
+
+                "Play on A String" ->
+                    Decode.succeed AString
+
+                "Play on D String" ->
+                    Decode.succeed DString
+
+                "Play on G String" ->
+                    Decode.succeed GString
+
+                "Play on C String" ->
+                    Decode.succeed CString
+
+                "Go up D String" ->
+                    Decode.succeed NoAString
+
+                "Go up G String" ->
+                    Decode.succeed NoADString
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Range: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeRoot =
+    let
+        recover x =
+            case x of
+                "A" ->
+                    Decode.succeed A
+
+                "Bb" ->
+                    Decode.succeed Bb
+
+                "B" ->
+                    Decode.succeed B
+
+                "C" ->
+                    Decode.succeed C
+
+                "C# / Db" ->
+                    Decode.succeed Cis
+
+                "D" ->
+                    Decode.succeed D
+
+                "Eb / D#" ->
+                    Decode.succeed Dis
+
+                "E" ->
+                    Decode.succeed E
+
+                "F" ->
+                    Decode.succeed F
+
+                "F# / Gb" ->
+                    Decode.succeed Fis
+
+                "G" ->
+                    Decode.succeed G
+
+                "G# / Ab" ->
+                    Decode.succeed Gis
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Root: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeTopic =
+    let
+        recover x =
+            case x of
+                "Scales" ->
+                    Decode.succeed Scales
+
+                "Chords" ->
+                    Decode.succeed Chords
+
+                "Doublestops" ->
+                    Decode.succeed Doublestops
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
