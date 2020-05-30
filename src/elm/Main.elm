@@ -5,7 +5,8 @@ import Browser.Events exposing (onKeyDown)
 import Html exposing (Attribute, Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
-import Json.Decode as Decode
+import Json.Decode as D
+import Json.Encode as E
 import Random
 import Random.List
 import Time
@@ -18,6 +19,23 @@ import Time
 port printToConsole : String -> Cmd msg
 
 
+port setStorage : E.Value -> Cmd msg
+
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg oldModel =
+    let
+        ( newModel, cmds ) =
+            update msg oldModel
+
+        configuration =
+            createConfiguration newModel
+    in
+    ( newModel
+    , Cmd.batch [ setStorage (encodeConfiguration configuration), cmds ]
+    )
+
+
 
 -- main
 
@@ -27,7 +45,7 @@ main =
     Browser.element
         { init = init
         , view = view
-        , update = update
+        , update = updateWithStorage
         , subscriptions = subscriptions
         }
 
@@ -131,6 +149,31 @@ type Preset
     | All
     | None
     | Custom
+
+
+type alias Configuration =
+    { topics : List Topic
+
+    -- , roots : List Root
+    -- , keys : List Key
+    -- , intervals : List Interval
+    -- , ranges : List Range
+    -- , bowings : List Bowing
+    -- , chords : List Chord
+    }
+
+
+createConfiguration : Model -> Configuration
+createConfiguration model =
+    { topics = model.topics
+
+    -- , roots = model.roots
+    -- , keys = model.roots
+    -- , intervals = model.roots
+    -- , ranges = model.roots
+    -- , bowings = model.roots
+    -- , chords = model.roots
+    }
 
 
 
@@ -1072,9 +1115,9 @@ shuffleChords chords =
 -- subscriptions
 
 
-keyDecoder : Decode.Decoder Msg
+keyDecoder : D.Decoder Msg
 keyDecoder =
-    Decode.map KeyPressed (Decode.field "key" Decode.string)
+    D.map KeyPressed (D.field "key" D.string)
 
 
 subscriptions : Model -> Sub Msg
@@ -1470,3 +1513,34 @@ header model =
             , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
+
+
+
+-- JSON ENCODE/DECODE
+
+
+encodeConfiguration : Configuration -> E.Value
+encodeConfiguration config =
+    E.object
+        [ ( "topics", E.list topicEncoder config.topics )
+
+        -- , ( "roots", rootsEncoder config.roots )
+        -- , ( "keys", keysEncoder config.keys )
+        -- , ( "intervals", intervalsEncoder config.intervals )
+        -- , ( "ranges", rangesEncoder config.ranges )
+        -- , ( "bowings", bowingsEncoder config.bowings )
+        -- , ( "chords", chordsEncoder config.chords )
+        ]
+
+
+topicEncoder : Topic -> E.Value
+topicEncoder topic =
+    case topic of
+        Scales ->
+            E.string "Scales"
+
+        Chords ->
+            E.string "Chords"
+
+        Doublestops ->
+            E.string "Doublestops"
