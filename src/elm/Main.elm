@@ -408,13 +408,13 @@ intervalToString interval =
             "8ths"
 
         Fourths ->
-            "parallel parallel 4ths"
+            "parallel 4ths"
 
         Fifths ->
             "parallel 5ths"
 
         Tenths ->
-            "10th"
+            "10ths"
 
 
 scalePatternToString : Key -> String
@@ -961,7 +961,7 @@ applyPreset model =
                 , keys = [ Ionian ]
                 , ranges = []
                 , roots = [ G, C, F ]
-                , topics = [ Chords, Scales ]
+                , topics = [ Scales, Chords ]
             }
 
         All ->
@@ -1122,25 +1122,33 @@ selection model =
             selectionItem model.chords chordToString SkipChord "Chord: "
 
         ranges =
-            selectionItem model.ranges rangeToString SkipRange "Range: "
+            selectionItem model.ranges rangeToString SkipRange "Extra challenge: "
 
         bowings =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
-        fingerings toStringFunction =
-            selectionItem model.keys toStringFunction SkipKey "Fingering: "
+        scalePatterns =
+            selectionItem model.keys scalePatternToString SkipKey "Scale pattern: "
+
+        doublestopPatterns =
+            selectionItem model.keys doublestopPatternToString SkipKey "Doublestop pattern: "
+
+        spacing =
+            div [ class "container text-left bg-gray mb-1 p-2" ]
+                []
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
-         , div [ class "container text-left bg-gray mb-1 p-2" ]
-            []
+         , spacing
          ]
             ++ (case List.head model.topics of
                     Just Scales ->
                         [ roots
                         , keys
-                        , fingerings scalePatternToString
+                        , scalePatterns
+                        , spacing
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
@@ -1148,6 +1156,7 @@ selection model =
                         [ roots
                         , chords
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
@@ -1155,9 +1164,10 @@ selection model =
                         [ intervals
                         , roots
                         , keys
-
-                        -- , fingerings doublestopFingeringToString
+                        , doublestopPatterns
+                        , spacing
                         , bowings
+                        , spacing
                         , ranges
                         ]
 
