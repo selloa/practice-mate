@@ -1102,6 +1102,7 @@ shuffleEverything model =
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
+        , shuffleChords model.chords
         ]
 
 
