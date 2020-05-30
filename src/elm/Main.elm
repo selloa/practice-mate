@@ -76,7 +76,7 @@ type Root
     | Gis
 
 
-type Key
+type Scale
     = Ionian
     | Dorian
     | Phrygian
@@ -154,7 +154,7 @@ type Preset
 type alias Configuration =
     { topics : List Topic
     , roots : List Root
-    , keys : List Key
+    , scales : List Scale
     , intervals : List Interval
     , ranges : List Range
     , bowings : List Bowing
@@ -166,7 +166,7 @@ createConfiguration : Model -> Configuration
 createConfiguration model =
     { topics = model.topics
     , roots = model.roots
-    , keys = model.keys
+    , scales = model.scales
     , intervals = model.intervals
     , ranges = model.ranges
     , bowings = model.bowings
@@ -193,7 +193,7 @@ type alias Model =
     --
     , topics : List Topic
     , roots : List Root
-    , keys : List Key
+    , scales : List Scale
     , intervals : List Interval
     , ranges : List Range
     , bowings : List Bowing
@@ -263,7 +263,7 @@ rootToString root =
             "G# / Ab"
 
 
-allScales : List Key
+allScales : List Scale
 allScales =
     [ Ionian
     , Aeolian
@@ -372,9 +372,9 @@ chordToString chord =
             "Dim7"
 
 
-keyToString : Key -> String
-keyToString key =
-    case key of
+scaleToString : Scale -> String
+scaleToString scale =
+    case scale of
         Ionian ->
             "Major (Ionian)"
 
@@ -465,9 +465,9 @@ intervalToString interval =
             "10ths"
 
 
-scalePatternToString : Key -> String
-scalePatternToString key =
-    case key of
+scalePatternToString : Scale -> String
+scalePatternToString scale =
+    case scale of
         Ionian ->
             "X^X 2 2 3"
 
@@ -511,9 +511,9 @@ scalePatternToString key =
             "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
 
 
-doublestopPatternToString : Key -> String
-doublestopPatternToString key =
-    case key of
+doublestopPatternToString : Scale -> String
+doublestopPatternToString scale =
+    case scale of
         Ionian ->
             "m M M m - m M M m"
 
@@ -662,7 +662,7 @@ initialModel flags =
                     { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
                     , chords = [ Major ]
                     , intervals = []
-                    , keys = [ Ionian ]
+                    , scales = [ Ionian ]
                     , ranges = []
                     , roots = [ G, C, F ]
                     , topics = [ Scales, Chords ]
@@ -685,7 +685,7 @@ initialModel flags =
     -- , topics = [ Scales, Chords, Doublestops ]
     , topics = configuration.topics
     , roots = configuration.roots
-    , keys = configuration.keys
+    , scales = configuration.scales
     , intervals = configuration.intervals
     , ranges = configuration.ranges
     , bowings = configuration.bowings
@@ -704,7 +704,7 @@ type Msg
     | KeyPressed String
     | NewExercise
     | NewRootsGenerated (List Root)
-    | NewKeysGenerated (List Key)
+    | NewScalesGenerated (List Scale)
     | NewIntervalsGenerated (List Interval)
     | NewRangesGenerated (List Range)
     | NewBowingsGenerated (List Bowing)
@@ -715,7 +715,7 @@ type Msg
     | TogglePracticeMode PracticeMode
     | ToggleRoot Root
     | ToggleChord Chord
-    | ToggleKey Key
+    | ToggleScale Scale
     | ToggleBowing Bowing
     | ToggleRange Range
     | ToggleInterval Interval
@@ -723,7 +723,7 @@ type Msg
     | ToggleAllTopics
     | ToggleAllRoots
     | ToggleAllChords
-    | ToggleAllKeys
+    | ToggleAllScales
     | ToggleAllBowings
     | ToggleAllRanges
     | ToggleAllIntervals
@@ -731,7 +731,7 @@ type Msg
     | SkipTopic
     | SkipRoot
     | SkipChord
-    | SkipKey
+    | SkipScale
     | SkipBowing
     | SkipRange
     | SkipInterval
@@ -851,8 +851,8 @@ update msg model =
                 [] ->
                     ( model, Cmd.none )
 
-        NewKeysGenerated keys ->
-            ( { model | keys = keys }, Cmd.none )
+        NewScalesGenerated scales ->
+            ( { model | scales = scales }, Cmd.none )
 
         NewRootsGenerated roots ->
             ( { model | roots = roots }, Cmd.none )
@@ -894,9 +894,9 @@ update msg model =
             , shuffleRanges (toggle range model.ranges)
             )
 
-        ToggleKey key ->
+        ToggleScale scale ->
             ( { model | preset = Custom }
-            , shuffleKeys (toggle key model.keys)
+            , shuffleScales (toggle scale model.scales)
             )
 
         TogglePracticeMode practiceMode ->
@@ -926,8 +926,8 @@ update msg model =
         ToggleAllIntervals ->
             ( { model | intervals = toggleList model.intervals allIntervals, preset = Custom }, Cmd.none )
 
-        ToggleAllKeys ->
-            ( { model | keys = toggleList model.keys allScales, preset = Custom }, Cmd.none )
+        ToggleAllScales ->
+            ( { model | scales = toggleList model.scales allScales, preset = Custom }, Cmd.none )
 
         ToggleAllRanges ->
             ( { model | ranges = toggleList model.ranges allRanges, preset = Custom }, Cmd.none )
@@ -947,8 +947,8 @@ update msg model =
         SkipRange ->
             ( { model | ranges = appendFirstItem model.ranges }, Cmd.none )
 
-        SkipKey ->
-            ( { model | keys = appendFirstItem model.keys }, Cmd.none )
+        SkipScale ->
+            ( { model | scales = appendFirstItem model.scales }, Cmd.none )
 
         SkipChord ->
             ( { model | chords = appendFirstItem model.chords }, Cmd.none )
@@ -991,7 +991,7 @@ update msg model =
                         { bowings = model.bowings
                         , topics = model.topics
                         , roots = model.roots
-                        , keys = model.keys
+                        , scales = model.scales
                         , chords = model.chords
                         , ranges = model.ranges
                         , intervals = model.intervals
@@ -1025,7 +1025,7 @@ applyPreset model =
                 | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
                 , chords = [ Major ]
                 , intervals = []
-                , keys = [ Ionian ]
+                , scales = [ Ionian ]
                 , ranges = []
                 , roots = [ G, C, F ]
                 , topics = [ Scales, Chords ]
@@ -1035,7 +1035,7 @@ applyPreset model =
             { model
                 | topics = [ Scales, Chords, Doublestops ]
                 , roots = allRoots
-                , keys = allScales
+                , scales = allScales
                 , intervals = allIntervals
                 , ranges = allRanges
                 , bowings = allBowings
@@ -1046,7 +1046,7 @@ applyPreset model =
             { model
                 | topics = []
                 , roots = []
-                , keys = []
+                , scales = []
                 , intervals = []
                 , ranges = []
                 , bowings = []
@@ -1098,7 +1098,7 @@ shuffleEverything : Model -> Cmd Msg
 shuffleEverything model =
     Cmd.batch
         [ shuffleIntervals model.intervals
-        , shuffleKeys model.keys
+        , shuffleScales model.scales
         , shuffleBowings model.bowings
         , shuffleRanges model.ranges
         , shuffleRoots model.roots
@@ -1116,9 +1116,9 @@ shuffleRanges ranges =
     Random.generate NewRangesGenerated (Random.List.shuffle ranges)
 
 
-shuffleKeys : List Key -> Cmd Msg
-shuffleKeys keys =
-    Random.generate NewKeysGenerated (Random.List.shuffle keys)
+shuffleScales : List Scale -> Cmd Msg
+shuffleScales scales =
+    Random.generate NewScalesGenerated (Random.List.shuffle scales)
 
 
 shuffleIntervals : List Interval -> Cmd Msg
@@ -1183,8 +1183,8 @@ selection model =
         roots =
             selectionItem model.roots rootToString SkipRoot "Root: "
 
-        keys =
-            selectionItem model.keys keyToString SkipKey "Key: "
+        scales =
+            selectionItem model.scales scaleToString SkipScale "Scale: "
 
         chords =
             selectionItem model.chords chordToString SkipChord "Chord: "
@@ -1196,10 +1196,10 @@ selection model =
             selectionItem model.bowings bowingToString SkipBowing "Bowings: "
 
         scalePatterns =
-            selectionItem model.keys scalePatternToString SkipKey "Scale pattern: "
+            selectionItem model.scales scalePatternToString SkipScale "Scale pattern: "
 
         doublestopPatterns =
-            selectionItem model.keys doublestopPatternToString SkipKey "Doublestop pattern: "
+            selectionItem model.scales doublestopPatternToString SkipScale "Doublestop pattern: "
 
         spacing =
             div [ class "container text-left bg-gray mb-1 p-2" ]
@@ -1212,7 +1212,7 @@ selection model =
             ++ (case List.head model.topics of
                     Just Scales ->
                         [ roots
-                        , keys
+                        , scales
                         , scalePatterns
                         , spacing
                         , bowings
@@ -1231,7 +1231,7 @@ selection model =
                     Just Doublestops ->
                         [ intervals
                         , roots
-                        , keys
+                        , scales
                         , doublestopPatterns
                         , spacing
                         , bowings
@@ -1375,7 +1375,7 @@ settings model =
                 , settingsFor model.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
                 , settingsFor model.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
                 , settingsFor model.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
-                , settingsFor model.keys allScales keyToString ToggleKey ToggleAllKeys "Keys"
+                , settingsFor model.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
                 , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
                 -- :: showRangeSliderSetting model
@@ -1590,15 +1590,15 @@ encodeChord a =
     Encode.string <| chordToString a
 
 
-encodeConfiguration a =
+encodeConfiguration config =
     Encode.object
-        [ ( "topics", Encode.list encodeTopic a.topics )
-        , ( "roots", Encode.list encodeRoot a.roots )
-        , ( "keys", Encode.list encodeKey a.keys )
-        , ( "intervals", Encode.list encodeInterval a.intervals )
-        , ( "ranges", Encode.list encodeRange a.ranges )
-        , ( "bowings", Encode.list encodeBowing a.bowings )
-        , ( "chords", Encode.list encodeChord a.chords )
+        [ ( "topics", Encode.list encodeTopic config.topics )
+        , ( "roots", Encode.list encodeRoot config.roots )
+        , ( "scales", Encode.list encodeScale config.scales )
+        , ( "intervals", Encode.list encodeInterval config.intervals )
+        , ( "ranges", Encode.list encodeRange config.ranges )
+        , ( "bowings", Encode.list encodeBowing config.bowings )
+        , ( "chords", Encode.list encodeChord config.chords )
         ]
 
 
@@ -1606,8 +1606,8 @@ encodeInterval interval =
     Encode.string <| intervalToString interval
 
 
-encodeKey interval =
-    Encode.string <| keyToString interval
+encodeScale scale =
+    Encode.string <| scaleToString scale
 
 
 encodeRange range =
@@ -1712,7 +1712,7 @@ decodeConfiguration =
         Configuration
         (Decode.field "topics" (Decode.list decodeTopic))
         (Decode.field "roots" (Decode.list decodeRoot))
-        (Decode.field "keys" (Decode.list decodeKey))
+        (Decode.field "scales" (Decode.list decodeScale))
         (Decode.field "intervals" (Decode.list decodeInterval))
         (Decode.field "ranges" (Decode.list decodeRange))
         (Decode.field "bowings" (Decode.list decodeBowing))
@@ -1747,7 +1747,7 @@ decodeInterval =
     Decode.string |> Decode.andThen recover
 
 
-decodeKey =
+decodeScale =
     let
         recover x =
             case x of
