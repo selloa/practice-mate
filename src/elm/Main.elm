@@ -40,7 +40,7 @@ updateWithStorage msg oldModel =
 -- main
 
 
-main : Program () Model Msg
+main : Program E.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -203,9 +203,13 @@ type alias Model =
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( initialModel, shuffleEverything initialModel )
+init : E.Value -> ( Model, Cmd Msg )
+init flags =
+    let
+        localInitialModel =
+            initialModel flags
+    in
+    ( localInitialModel, shuffleEverything localInitialModel )
 
 
 allRoots : List Root
@@ -645,8 +649,17 @@ allBowings =
     ]
 
 
-initialModel : Model
-initialModel =
+initialModel : E.Value -> Model
+initialModel flags =
+    let
+        configuration =
+            case D.decodeValue decodeConfiguration flags of
+                Ok config ->
+                    config
+
+                Err _ ->
+                    { topics = [ Scales ] }
+    in
     { elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
@@ -656,10 +669,13 @@ initialModel =
 
     -- selection
     , practiceMode = TimeLimit 5
-    , topic = Scales
+    , topic =
+        List.head configuration.topics
+            |> Maybe.withDefault Scales
 
     --
-    , topics = [ Scales, Chords, Doublestops ]
+    -- , topics = [ Scales, Chords, Doublestops ]
+    , topics = configuration.topics
     , roots = allRoots
     , keys = allScales
     , intervals = allIntervals
@@ -1544,3 +1560,28 @@ topicEncoder topic =
 
         Doublestops ->
             E.string "Doublestops"
+
+
+decodeConfiguration : D.Decoder Configuration
+decodeConfiguration =
+    D.map Configuration
+        (D.field "topics" (D.list decodeTopic))
+
+
+decodeTopic =
+    let
+        recover x =
+            case x of
+                "Scales" ->
+                    D.succeed Scales
+
+                "Chords" ->
+                    D.succeed Chords
+
+                "Doublestops" ->
+                    D.succeed Doublestops
+
+                other ->
+                    D.fail <| "Unknown constructor for type Topic: " ++ other
+    in
+    D.string |> D.andThen recover
