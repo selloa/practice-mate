@@ -1116,7 +1116,7 @@ selection model =
             selectionItem model.roots rootToString SkipRoot "Root: "
 
         keys =
-            selectionItem model.keys keyToString SkipKey "Key: "
+            selectionItem model.keys keyToString SkipKey "Scale: "
 
         chords =
             selectionItem model.chords chordToString SkipChord "Chord: "
@@ -1297,7 +1297,7 @@ settings model =
                 , settingsFor model.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
                 , settingsFor model.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
                 , settingsFor model.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
-                , settingsFor model.keys allScales keyToString ToggleKey ToggleAllKeys "Keys"
+                , settingsFor model.keys allScales keyToString ToggleKey ToggleAllKeys "Scales"
                 , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
                 -- :: showRangeSliderSetting model
