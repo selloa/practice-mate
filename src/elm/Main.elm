@@ -653,29 +653,20 @@ allBowings =
 initialModel : Encode.Value -> Model
 initialModel flags =
     let
-        a =
-            case Decode.decodeValue decodeConfiguration flags of
-                Ok config ->
-                    Debug.log "went fine" "yo"
-
-                Err e ->
-                    Debug.log "urgh" (Debug.toString e)
-
         configuration =
             case Decode.decodeValue decodeConfiguration flags of
                 Ok config ->
-                    Debug.log "" config
+                    config
 
                 Err _ ->
-                    Debug.log "error"
-                        { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
-                        , chords = [ Major ]
-                        , intervals = []
-                        , keys = [ Ionian ]
-                        , ranges = []
-                        , roots = [ G, C, F ]
-                        , topics = [ Scales, Chords ]
-                        }
+                    { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+                    , chords = [ Major ]
+                    , intervals = []
+                    , keys = [ Ionian ]
+                    , ranges = []
+                    , roots = [ G, C, F ]
+                    , topics = [ Scales, Chords ]
+                    }
     in
     { elapsedTime = 0
     , completedExercises = 0
