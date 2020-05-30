@@ -5,8 +5,8 @@ import Browser.Events exposing (onKeyDown)
 import Html exposing (Attribute, Html, button, div, h1, input, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
-import Json.Decode as D
-import Json.Encode as E
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Random
 import Random.List
 import Time
@@ -19,7 +19,7 @@ import Time
 port printToConsole : String -> Cmd msg
 
 
-port setStorage : E.Value -> Cmd msg
+port setStorage : Encode.Value -> Cmd msg
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
@@ -40,7 +40,7 @@ updateWithStorage msg oldModel =
 -- main
 
 
-main : Program E.Value Model Msg
+main : Program Encode.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -153,26 +153,24 @@ type Preset
 
 type alias Configuration =
     { topics : List Topic
-
-    -- , roots : List Root
-    -- , keys : List Key
-    -- , intervals : List Interval
-    -- , ranges : List Range
-    -- , bowings : List Bowing
-    -- , chords : List Chord
+    , roots : List Root
+    , keys : List Key
+    , intervals : List Interval
+    , ranges : List Range
+    , bowings : List Bowing
+    , chords : List Chord
     }
 
 
 createConfiguration : Model -> Configuration
 createConfiguration model =
     { topics = model.topics
-
-    -- , roots = model.roots
-    -- , keys = model.roots
-    -- , intervals = model.roots
-    -- , ranges = model.roots
-    -- , bowings = model.roots
-    -- , chords = model.roots
+    , roots = model.roots
+    , keys = model.keys
+    , intervals = model.intervals
+    , ranges = model.ranges
+    , bowings = model.bowings
+    , chords = model.chords
     }
 
 
@@ -203,13 +201,16 @@ type alias Model =
     }
 
 
-init : E.Value -> ( Model, Cmd Msg )
+init : Encode.Value -> ( Model, Cmd Msg )
 init flags =
     let
         localInitialModel =
             initialModel flags
     in
-    ( localInitialModel, shuffleEverything localInitialModel )
+    ( localInitialModel
+    , Cmd.none
+      -- , shuffleEverything localInitialModel
+    )
 
 
 allRoots : List Root
@@ -649,16 +650,32 @@ allBowings =
     ]
 
 
-initialModel : E.Value -> Model
+initialModel : Encode.Value -> Model
 initialModel flags =
     let
-        configuration =
-            case D.decodeValue decodeConfiguration flags of
+        a =
+            case Decode.decodeValue decodeConfiguration flags of
                 Ok config ->
-                    config
+                    Debug.log "went fine" "yo"
+
+                Err e ->
+                    Debug.log "urgh" (Debug.toString e)
+
+        configuration =
+            case Decode.decodeValue decodeConfiguration flags of
+                Ok config ->
+                    Debug.log "" config
 
                 Err _ ->
-                    { topics = [ Scales ] }
+                    Debug.log "error"
+                        { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+                        , chords = [ Major ]
+                        , intervals = []
+                        , keys = [ Ionian ]
+                        , ranges = []
+                        , roots = [ G, C, F ]
+                        , topics = [ Scales, Chords ]
+                        }
     in
     { elapsedTime = 0
     , completedExercises = 0
@@ -676,12 +693,12 @@ initialModel flags =
     --
     -- , topics = [ Scales, Chords, Doublestops ]
     , topics = configuration.topics
-    , roots = allRoots
-    , keys = allScales
-    , intervals = allIntervals
-    , ranges = allRanges
-    , bowings = allBowings
-    , chords = allChords
+    , roots = configuration.roots
+    , keys = configuration.keys
+    , intervals = configuration.intervals
+    , ranges = configuration.ranges
+    , bowings = configuration.bowings
+    , chords = configuration.chords
     }
 
 
@@ -1131,9 +1148,9 @@ shuffleChords chords =
 -- subscriptions
 
 
-keyDecoder : D.Decoder Msg
+keyDecoder : Decode.Decoder Msg
 keyDecoder =
-    D.map KeyPressed (D.field "key" D.string)
+    Decode.map KeyPressed (Decode.field "key" Decode.string)
 
 
 subscriptions : Model -> Sub Msg
@@ -1535,37 +1552,339 @@ header model =
 -- JSON ENCODE/DECODE
 
 
-encodeConfiguration : Configuration -> E.Value
-encodeConfiguration config =
-    E.object
-        [ ( "topics", E.list topicEncoder config.topics )
+encodeBowing a =
+    case a of
+        Slured times ->
+            Encode.object
+                [ ( "kind", Encode.string "Slured" )
+                , ( "times", Encode.int times )
+                ]
 
-        -- , ( "roots", rootsEncoder config.roots )
-        -- , ( "keys", keysEncoder config.keys )
-        -- , ( "intervals", intervalsEncoder config.intervals )
-        -- , ( "ranges", rangesEncoder config.ranges )
-        -- , ( "bowings", bowingsEncoder config.bowings )
-        -- , ( "chords", chordsEncoder config.chords )
+        RepeatedStaccato times ->
+            Encode.object
+                [ ( "kind", Encode.string "RepeatedStaccato" )
+                , ( "times", Encode.int times )
+                ]
+
+        RepeatedTenuto times ->
+            Encode.object
+                [ ( "kind", Encode.string "RepeatedTenuto" )
+                , ( "times", Encode.int times )
+                ]
+
+        BowStaccato times ->
+            Encode.object
+                [ ( "kind", Encode.string "BowStaccato" )
+                , ( "times", Encode.int times )
+                ]
+
+        Sequenced ->
+            Encode.object
+                [ ( "kind", Encode.string "Sequenced" )
+                ]
+
+        AddTopNote ->
+            Encode.object
+                [ ( "kind", Encode.string "AddTopNote" )
+                ]
+
+        Rhythmed ->
+            Encode.object
+                [ ( "kind", Encode.string "Rhythmed" )
+                ]
+
+
+encodeChord a =
+    Encode.string <| chordToString a
+
+
+encodeConfiguration a =
+    Encode.object
+        [ ( "topics", Encode.list encodeTopic a.topics )
+        , ( "roots", Encode.list encodeRoot a.roots )
+        , ( "keys", Encode.list encodeKey a.keys )
+        , ( "intervals", Encode.list encodeInterval a.intervals )
+        , ( "ranges", Encode.list encodeRange a.ranges )
+        , ( "bowings", Encode.list encodeBowing a.bowings )
+        , ( "chords", Encode.list encodeChord a.chords )
         ]
 
 
-topicEncoder : Topic -> E.Value
-topicEncoder topic =
-    case topic of
-        Scales ->
-            E.string "Scales"
-
-        Chords ->
-            E.string "Chords"
-
-        Doublestops ->
-            E.string "Doublestops"
+encodeInterval interval =
+    Encode.string <| intervalToString interval
 
 
-decodeConfiguration : D.Decoder Configuration
+encodeKey interval =
+    Encode.string <| keyToString interval
+
+
+encodeRange range =
+    Encode.string <| rangeToString range
+
+
+encodeRoot root =
+    Encode.string <| rootToString root
+
+
+encodeTopic topic =
+    Encode.string <| topicToString topic
+
+
+decodeBowing =
+    Decode.field "kind" Decode.string |> Decode.andThen decodeBowingHelp
+
+
+decodeBowingHelp kind =
+    case kind of
+        "Slured" ->
+            Decode.map
+                Slured
+                (Decode.field "times" Decode.int)
+
+        "RepeatedStaccato" ->
+            Decode.map
+                RepeatedStaccato
+                (Decode.field "times" Decode.int)
+
+        "RepeatedTenuto" ->
+            Decode.map
+                RepeatedTenuto
+                (Decode.field "times" Decode.int)
+
+        "BowStaccato" ->
+            Decode.map
+                BowStaccato
+                (Decode.field "times" Decode.int)
+
+        "Sequenced" ->
+            Decode.succeed Sequenced
+
+        "AddTopNote" ->
+            Decode.succeed AddTopNote
+
+        "Rhythmed" ->
+            Decode.succeed Rhythmed
+
+        other ->
+            Decode.fail <| "Unknown constructor for type Bowing: " ++ other
+
+
+decodeChord =
+    let
+        recover x =
+            case x of
+                "Major" ->
+                    Decode.succeed Major
+
+                "Minor" ->
+                    Decode.succeed Minor
+
+                "Dim" ->
+                    Decode.succeed Dim
+
+                "Augm" ->
+                    Decode.succeed Aug
+
+                "Sus2" ->
+                    Decode.succeed Sus2
+
+                "Sus4" ->
+                    Decode.succeed Sus4
+
+                "Maj7" ->
+                    Decode.succeed Maj7
+
+                "Min7" ->
+                    Decode.succeed Min7
+
+                "Dom7" ->
+                    Decode.succeed Dom7
+
+                "MinMaj7" ->
+                    Decode.succeed MinMaj7
+
+                "HalfDim7" ->
+                    Decode.succeed HalfDim7
+
+                "Dim7" ->
+                    Decode.succeed Dim7
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Chord: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
 decodeConfiguration =
-    D.map Configuration
-        (D.field "topics" (D.list decodeTopic))
+    Decode.map7
+        Configuration
+        (Decode.field "topics" (Decode.list decodeTopic))
+        (Decode.field "roots" (Decode.list decodeRoot))
+        (Decode.field "keys" (Decode.list decodeKey))
+        (Decode.field "intervals" (Decode.list decodeInterval))
+        (Decode.field "ranges" (Decode.list decodeRange))
+        (Decode.field "bowings" (Decode.list decodeBowing))
+        (Decode.field "chords" (Decode.list decodeChord))
+
+
+decodeInterval =
+    let
+        recover x =
+            case x of
+                "6ths" ->
+                    Decode.succeed Sixths
+
+                "3rds" ->
+                    Decode.succeed Thirds
+
+                "8ths" ->
+                    Decode.succeed Octaves
+
+                "parallel 4ths" ->
+                    Decode.succeed Fourths
+
+                "parallel 5ths" ->
+                    Decode.succeed Fifths
+
+                "10ths" ->
+                    Decode.succeed Tenths
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Interval: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeKey =
+    let
+        recover x =
+            case x of
+                "Major (Ionian)" ->
+                    Decode.succeed Ionian
+
+                "Dorian" ->
+                    Decode.succeed Dorian
+
+                "Phrygian" ->
+                    Decode.succeed Phrygian
+
+                "Lydian" ->
+                    Decode.succeed Lydian
+
+                "Mixolydian" ->
+                    Decode.succeed Mixolydian
+
+                "Minor (Natural, Aeolian)" ->
+                    Decode.succeed Aeolian
+
+                "Mandalorian" ->
+                    Decode.succeed Mandalorian
+
+                "Melodic Minor" ->
+                    Decode.succeed MelodicMinor
+
+                "Harmonic Minor" ->
+                    Decode.succeed HarmonicMinor
+
+                "Major Pentatonic" ->
+                    Decode.succeed MajorPentatonic
+
+                "Minor Pentatonic" ->
+                    Decode.succeed MinorPentatonic
+
+                "Chromatic" ->
+                    Decode.succeed Chromatic
+
+                "Wholestep" ->
+                    Decode.succeed Wholestep
+
+                "Blues" ->
+                    Decode.succeed Blues
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Key: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeRange =
+    let
+        recover x =
+            case x of
+                "No Empty Strings" ->
+                    Decode.succeed NoEmptyStrings
+
+                "Empty Strings where possible" ->
+                    Decode.succeed AllEmptyStrings
+
+                "Play on A String" ->
+                    Decode.succeed AString
+
+                "Play on D String" ->
+                    Decode.succeed DString
+
+                "Play on G String" ->
+                    Decode.succeed GString
+
+                "Play on C String" ->
+                    Decode.succeed CString
+
+                "Go up D String" ->
+                    Decode.succeed NoAString
+
+                "Go up G String" ->
+                    Decode.succeed NoADString
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Range: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodeRoot =
+    let
+        recover x =
+            case x of
+                "A" ->
+                    Decode.succeed A
+
+                "Bb" ->
+                    Decode.succeed Bb
+
+                "B" ->
+                    Decode.succeed B
+
+                "C" ->
+                    Decode.succeed C
+
+                "C# / Db" ->
+                    Decode.succeed Cis
+
+                "D" ->
+                    Decode.succeed D
+
+                "Eb / D#" ->
+                    Decode.succeed Dis
+
+                "E" ->
+                    Decode.succeed E
+
+                "F" ->
+                    Decode.succeed F
+
+                "F# / Gb" ->
+                    Decode.succeed Fis
+
+                "G" ->
+                    Decode.succeed G
+
+                "G# / Ab" ->
+                    Decode.succeed Gis
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Root: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
 
 
 decodeTopic =
@@ -1573,15 +1892,15 @@ decodeTopic =
         recover x =
             case x of
                 "Scales" ->
-                    D.succeed Scales
+                    Decode.succeed Scales
 
                 "Chords" ->
-                    D.succeed Chords
+                    Decode.succeed Chords
 
                 "Doublestops" ->
-                    D.succeed Doublestops
+                    Decode.succeed Doublestops
 
                 other ->
-                    D.fail <| "Unknown constructor for type Topic: " ++ other
+                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
     in
-    D.string |> D.andThen recover
+    Decode.string |> Decode.andThen recover
