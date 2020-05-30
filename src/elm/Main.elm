@@ -1274,7 +1274,7 @@ slider model =
     [ input
         [ type_ "range"
         , A.min "5"
-        , A.max "20"
+        , A.max "60"
         , value <| String.fromInt (getValue model.practiceMode)
         , onInput UpdatedSlider
         , class "text-black mr-2 px-2 rounded"
