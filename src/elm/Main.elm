@@ -718,9 +718,10 @@ type Msg
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
+    | SwitchPracticeMode
+      -- toggle elements
     | ToggleSettings
     | ToggleTopic Topic
-    | TogglePracticeMode PracticeMode
     | ToggleRoot Root
     | ToggleChord Chord
     | ToggleScale Scale
@@ -908,8 +909,17 @@ update msg model =
             , shuffleScales (toggle scale model.scales)
             )
 
-        TogglePracticeMode practiceMode ->
-            ( { model | practiceMode = practiceMode }, Cmd.none )
+        SwitchPracticeMode ->
+            let
+                newPracticeMode =
+                    case model.practiceMode of
+                        TimeLimit n ->
+                            ExerciseLimit n
+
+                        ExerciseLimit n ->
+                            TimeLimit n
+            in
+            ( { model | practiceMode = newPracticeMode }, Cmd.none )
 
         ToggleTopic topic ->
             -- let
@@ -1370,12 +1380,12 @@ settings model =
                     [ div [ class "container" ] [ text "Practice mode" ]
                     , button
                         [ class buttonTimeLimit
-                        , onClick (TogglePracticeMode <| TimeLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Time limit" ]
                     , button
                         [ class buttonExercises
-                        , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Exercise limit" ]
                     ]
@@ -1505,7 +1515,7 @@ header model =
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         [ div [ class "container flex justify-end items-start" ]
-            [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
+            [ button [ class elementClass, onClick SwitchPracticeMode ] [ text (practiceModeToString model.practiceMode) ]
             , progressBar model
             , button [ class buttonPassive, onClick ToggleTimer ]
                 [ text <|
