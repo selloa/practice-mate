@@ -1251,7 +1251,7 @@ selection model =
                     , button
                         [ class <|
                             if List.length model.topics < 2 then
-                                secondaryButton
+                                buttonPassive
 
                             else
                                 primaryButton
@@ -1387,8 +1387,7 @@ settings model =
                 , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
                 , div [ class "container m-2" ]
                     [ button
-                        [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-yellow-700 hover:border-yellow-500 rounded"""
+                        [ class <| coloredButton "yellow" 400 500 700
                         , onClick PrintConfiguration
                         ]
                         [ text "EXPORT" ]
@@ -1443,14 +1442,19 @@ coloredButton color light normal dark =
         ++ " rounded"
 
 
+buttonActive : String
 buttonActive =
-    """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-green-700 hover:border-green-500 rounded"""
+    coloredButton "green" 400 500 700
 
 
+buttonPassive : String
 buttonPassive =
-    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-gray-700 hover:border-gray-500 rounded"""
+    coloredButton "gray" 400 500 700
+
+
+primaryButton : String
+primaryButton =
+    coloredButton "pink" 400 500 700
 
 
 showRangeSliderSetting model =
@@ -1489,18 +1493,6 @@ showSetting toString elements selectedElements msg =
         elements
 
 
-primaryButton : String
-primaryButton =
-    """bg-pink-500 hover:bg-pink-400 cursor-pointer text-white 
-    font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"""
-
-
-secondaryButton : String
-secondaryButton =
-    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
-    font-bold py-2 px-4 border-b-4 border-gray-700 hover:border-gray-500 rounded"""
-
-
 header : Model -> Html Msg
 header model =
     let
@@ -1519,10 +1511,6 @@ header model =
 
         elementClass =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
-
-        buttonClass =
-            """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
-            font-bold mr-2 px-2 border-b-2 border-gray-700 hover:border-gray-500 rounded"""
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         [ div [ class "container flex justify-end items-start" ]
@@ -1530,7 +1518,7 @@ header model =
             , div [ class elementClass ]
                 [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
                 ]
-            , button [ class buttonClass, onClick ToggleTimer ]
+            , button [ class buttonPassive, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
                         "pause"
@@ -1538,8 +1526,8 @@ header model =
                     else
                         "start"
                 ]
-            , button [ class buttonClass, onClick ClearTimer ] [ text "■" ]
-            , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
+            , button [ class buttonPassive, onClick ClearTimer ] [ text "■" ]
+            , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
 
