@@ -1061,6 +1061,7 @@ applyPreset model =
             model
 
 
+toggle : a -> List a -> List a
 toggle element list =
     if List.member element list then
         List.filter ((/=) element) list
@@ -1325,17 +1326,14 @@ selectionItem items toString skip label =
         |> (\string ->
                 if String.isEmpty string then
                     div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded select-none" ]
-                        [ text "-/-"
-                        ]
+                        [ text "-/-" ]
 
                 else
                     div
                         [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded select-none"
                         , onClick skip
                         ]
-                        [ text label
-                        , text string
-                        ]
+                        [ text label, text string ]
            )
 
 
