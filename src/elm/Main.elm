@@ -305,10 +305,15 @@ practiceModeToString : PracticeMode -> String
 practiceModeToString mode =
     case mode of
         TimeLimit duration ->
-            "⏲️ " ++ String.fromInt duration
+            "⏲️ "
 
+        --++ String.fromInt duration
         ExerciseLimit exercises ->
-            "✔ " ++ String.fromInt exercises
+            "📓 "
+
+
+
+--++ String.fromInt exercises
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
