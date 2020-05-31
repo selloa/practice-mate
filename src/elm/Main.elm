@@ -1607,34 +1607,42 @@ encodeConfiguration config =
         ]
 
 
+encodeInterval : Interval -> Encode.Value
 encodeInterval interval =
     Encode.string <| intervalToString interval
 
 
+encodeScale : Scale -> Encode.Value
 encodeScale scale =
     Encode.string <| scaleToString scale
 
 
+encodeRange : Range -> Encode.Value
 encodeRange range =
     Encode.string <| rangeToString range
 
 
+encodeRoot : Root -> Encode.Value
 encodeRoot root =
     Encode.string <| rootToString root
 
 
+encodeTopic : Topic -> Encode.Value
 encodeTopic topic =
     Encode.string <| topicToString topic
 
 
+encodePreset : Preset -> Encode.Value
 encodePreset preset =
     Encode.string <| presetToString preset
 
 
+decodeBowing : Decode.Decoder Bowing
 decodeBowing =
     Decode.field "kind" Decode.string |> Decode.andThen decodeBowingHelp
 
 
+decodeBowingHelp : String -> Decode.Decoder Bowing
 decodeBowingHelp kind =
     case kind of
         "Slured" ->
@@ -1670,6 +1678,7 @@ decodeBowingHelp kind =
             Decode.fail <| "Unknown constructor for type Bowing: " ++ other
 
 
+decodeChord : Decode.Decoder Chord
 decodeChord =
     let
         recover x =
@@ -1716,6 +1725,7 @@ decodeChord =
     Decode.string |> Decode.andThen recover
 
 
+decodeConfiguration : Decode.Decoder Configuration
 decodeConfiguration =
     Decode.map8
         Configuration
@@ -1729,6 +1739,7 @@ decodeConfiguration =
         (Decode.field "preset" decodePreset)
 
 
+decodeInterval : Decode.Decoder Interval
 decodeInterval =
     let
         recover x =
@@ -1757,6 +1768,7 @@ decodeInterval =
     Decode.string |> Decode.andThen recover
 
 
+decodeScale : Decode.Decoder Scale
 decodeScale =
     let
         recover x =
@@ -1809,6 +1821,7 @@ decodeScale =
     Decode.string |> Decode.andThen recover
 
 
+decodeRange : Decode.Decoder Range
 decodeRange =
     let
         recover x =
@@ -1843,6 +1856,7 @@ decodeRange =
     Decode.string |> Decode.andThen recover
 
 
+decodeRoot : Decode.Decoder Root
 decodeRoot =
     let
         recover x =
@@ -1889,6 +1903,7 @@ decodeRoot =
     Decode.string |> Decode.andThen recover
 
 
+decodeTopic : Decode.Decoder Topic
 decodeTopic =
     let
         recover x =
@@ -1908,6 +1923,7 @@ decodeTopic =
     Decode.string |> Decode.andThen recover
 
 
+decodePreset : Decode.Decoder Preset
 decodePreset =
     let
         recover x =
