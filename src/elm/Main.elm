@@ -159,6 +159,7 @@ type alias Configuration =
     , ranges : List Range
     , bowings : List Bowing
     , chords : List Chord
+    , preset : Preset
     }
 
 
@@ -171,6 +172,7 @@ createConfiguration model =
     , ranges = model.ranges
     , bowings = model.bowings
     , chords = model.chords
+    , preset = model.preset
     }
 
 
@@ -570,16 +572,16 @@ presetToString : Preset -> String
 presetToString preset =
     case preset of
         Basic ->
-            "BASIC"
+            "Basic"
 
         All ->
-            "ALL"
+            "All"
 
         None ->
-            "NONE"
+            "None"
 
         Custom ->
-            "CUSTOM"
+            "Custom"
 
 
 rangeToString : Range -> String
@@ -666,6 +668,7 @@ initialModel flags =
                     , ranges = []
                     , roots = [ G, C, F ]
                     , topics = [ Scales, Chords ]
+                    , preset = Basic
                     }
     in
     { elapsedTime = 0
@@ -1415,7 +1418,7 @@ presetButton preset model =
                 buttonPassive
         , onClick (ChangePreset preset)
         ]
-        [ text <| presetToString preset ]
+        [ text <| String.toUpper <| presetToString preset ]
 
 
 coloredButton : String -> Int -> Int -> Int -> String
@@ -1600,6 +1603,7 @@ encodeConfiguration config =
         , ( "ranges", Encode.list encodeRange config.ranges )
         , ( "bowings", Encode.list encodeBowing config.bowings )
         , ( "chords", Encode.list encodeChord config.chords )
+        , ( "preset", encodePreset config.preset )
         ]
 
 
@@ -1621,6 +1625,10 @@ encodeRoot root =
 
 encodeTopic topic =
     Encode.string <| topicToString topic
+
+
+encodePreset preset =
+    Encode.string <| presetToString preset
 
 
 decodeBowing =
@@ -1709,7 +1717,7 @@ decodeChord =
 
 
 decodeConfiguration =
-    Decode.map7
+    Decode.map8
         Configuration
         (Decode.field "topics" (Decode.list decodeTopic))
         (Decode.field "roots" (Decode.list decodeRoot))
@@ -1718,6 +1726,7 @@ decodeConfiguration =
         (Decode.field "ranges" (Decode.list decodeRange))
         (Decode.field "bowings" (Decode.list decodeBowing))
         (Decode.field "chords" (Decode.list decodeChord))
+        (Decode.field "preset" decodePreset)
 
 
 decodeInterval =
@@ -1892,6 +1901,28 @@ decodeTopic =
 
                 "Doublestops" ->
                     Decode.succeed Doublestops
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodePreset =
+    let
+        recover x =
+            case x of
+                "Basic" ->
+                    Decode.succeed Basic
+
+                "All" ->
+                    Decode.succeed All
+
+                "None" ->
+                    Decode.succeed None
+
+                "Custom" ->
+                    Decode.succeed Custom
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Topic: " ++ other
