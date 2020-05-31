@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html exposing (Attribute, Html, button, div, h1, input, progress, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -1494,28 +1494,13 @@ showSetting toString elements selectedElements msg =
 header : Model -> Html Msg
 header model =
     let
-        minutes =
-            String.fromInt (model.elapsedTime // 60)
-
-        seconds =
-            String.fromInt (remainderBy 60 model.elapsedTime)
-
-        toDoubleDigits number =
-            if String.length number < 2 then
-                "0" ++ number
-
-            else
-                number
-
         elementClass =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         [ div [ class "container flex justify-end items-start" ]
             [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
-            , div [ class elementClass ]
-                [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
-                ]
+            , progressBar model
             , button [ class buttonPassive, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
@@ -1528,6 +1513,22 @@ header model =
             , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
+
+
+progressBar : Model -> Html Msg
+progressBar model =
+    let
+        ( maximum, value_ ) =
+            (case model.practiceMode of
+                TimeLimit time ->
+                    ( time * 60, model.elapsedTime )
+
+                ExerciseLimit exercises ->
+                    ( exercises, model.completedExercises )
+            )
+                |> Tuple.mapBoth String.fromInt String.fromInt
+    in
+    progress [ A.max <| maximum, value value_, class "mt-1 mr-2" ] []
 
 
 
