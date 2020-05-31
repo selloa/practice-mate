@@ -676,7 +676,7 @@ initialModel flags =
     , isRunning = False
     , showSettings = True
     , message = Nothing
-    , preset = All
+    , preset = configuration.preset
 
     -- selection
     , practiceMode = TimeLimit 5
