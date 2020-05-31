@@ -308,7 +308,7 @@ practiceModeToString mode =
             "⏲️ " ++ String.fromInt duration
 
         ExerciseLimit exercises ->
-            "✔ (" ++ String.fromInt exercises ++ ")"
+            "✔ " ++ String.fromInt exercises
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
