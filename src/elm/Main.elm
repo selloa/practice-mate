@@ -703,7 +703,7 @@ initialModel flags =
 type Msg
     = Tick Time.Posix
     | ToggleTimer
-    | ClearTimer
+    | ClearProgress
     | KeyPressed String
     | NewExercise
     | NewRootsGenerated (List Root)
@@ -811,8 +811,8 @@ update msg model =
         ToggleTimer ->
             toggleTimer model
 
-        ClearTimer ->
-            clearTimer model
+        ClearProgress ->
+            clearProgress model
 
         KeyPressed key ->
             if key == " " then
@@ -1079,11 +1079,12 @@ toggleList items allItems =
         []
 
 
-clearTimer : Model -> ( Model, Cmd Msg )
-clearTimer model =
+clearProgress : Model -> ( Model, Cmd Msg )
+clearProgress model =
     ( { model
         | isRunning = False
         , elapsedTime = 0
+        , completedExercises = 0
         , message = Nothing
       }
     , Cmd.none
@@ -1509,7 +1510,7 @@ header model =
                     else
                         "start"
                 ]
-            , button [ class buttonPassive, onClick ClearTimer ] [ text "■" ]
+            , button [ class buttonPassive, onClick ClearProgress ] [ text "■" ]
             , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
