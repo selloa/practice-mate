@@ -503,12 +503,12 @@ allScales =
     , Phrygian
     , Lydian
     , Mixolydian
-    , Mandalorian
     , MajorPentatonic
     , MinorPentatonic
     , Chromatic
     , Wholestep
     , Blues
+    , Mandalorian
     ]
 
 
@@ -1435,19 +1435,67 @@ settings model =
                         [ presets model
                         , Html.br [] []
                         , practiceMode model
-                        , settingsFor configuration.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
+                        , settingsFor configuration.topics
+                            allTopics
+                            topicToString
+                            ToggleTopic
+                            ToggleAllTopics
+                            "Topics"
+                            4
                         ]
-                    , div [ class "container" ]
-                        [ settingsFor configuration.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
-                        , settingsFor configuration.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
+                    , div [ class "container pl-10" ]
+                        [ settingsFor configuration.roots
+                            allRoots
+                            rootToString
+                            ToggleRoot
+                            ToggleAllRoots
+                            "Roots"
+                            4
+                        , settingsFor configuration.intervals
+                            allIntervals
+                            intervalToString
+                            ToggleInterval
+                            ToggleAllIntervals
+                            "Intervals"
+                            3
                         ]
                     ]
-                , settingsFor configuration.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
-                , settingsFor configuration.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
+                , div [ class "container flex" ]
+                    [ div [ class "container" ]
+                        [ settingsFor configuration.scales
+                            allScales
+                            scaleToString
+                            ToggleScale
+                            ToggleAllScales
+                            "Scales"
+                            2
+                        ]
+                    , div [ class "container pl-10" ]
+                        [ settingsFor configuration.chords
+                            allChords
+                            chordToString
+                            ToggleChord
+                            ToggleAllChords
+                            "Chords"
+                            2
+                        ]
+                    ]
 
                 -- :: showRangeSliderSetting model
-                , settingsFor configuration.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
-                , settingsFor configuration.challenges allChallenges challengeToString ToggleChallenge ToggleAllChallenges "Challenges"
+                , settingsFor configuration.bowings
+                    allBowings
+                    bowingToString
+                    ToggleBowing
+                    ToggleAllBowings
+                    "Bowings"
+                    4
+                , settingsFor configuration.challenges
+                    allChallenges
+                    challengeToString
+                    ToggleChallenge
+                    ToggleAllChallenges
+                    "Challenges"
+                    4
                 , div [ class "container m-2" ]
                     [ button
                         [ class <| coloredButton "yellow" 400 500 700
@@ -1503,11 +1551,11 @@ presets model =
         ]
 
 
-settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Html Msg
-settingsFor currentItems allItems itemToString toggleSingle toggleAllMsg label =
+settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Int -> Html Msg
+settingsFor currentItems allItems itemToString toggleSingle toggleAllMsg label divideAt =
     div [ class "container m-2" ] <|
         div [ class "container" ] [ button [ onClick toggleAllMsg ] [ text label ] ]
-            :: showSetting itemToString allItems currentItems toggleSingle
+            :: showSetting divideAt itemToString allItems currentItems toggleSingle
 
 
 presetButton : Preset -> Model -> Html Msg
@@ -1583,11 +1631,11 @@ showRangeSliderSetting model =
         ++ slider model
 
 
-showSetting : (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
-showSetting toString elements selectedElements msg =
+showSetting : Int -> (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
+showSetting divideAt toString elements selectedElements msg =
     List.indexedMap
         (\i element ->
-            if remainderBy 4 i == 0 then
+            if remainderBy divideAt i == 0 then
                 [ Html.br [] []
                 , button
                     [ class <|
