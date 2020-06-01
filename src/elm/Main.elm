@@ -108,7 +108,7 @@ type Chord
     | Dim7
 
 
-type Range
+type Challenge
     = NoEmptyStrings
     | AllEmptyStrings
     | AString
@@ -151,7 +151,7 @@ type alias Configuration =
     , roots : List Root
     , scales : List Scale
     , intervals : List Interval
-    , ranges : List Range
+    , challenges : List Challenge
     , bowings : List Bowing
     , chords : List Chord
     , preset : Preset
@@ -164,7 +164,7 @@ createConfiguration model =
     , roots = model.roots
     , scales = model.scales
     , intervals = model.intervals
-    , ranges = model.ranges
+    , challenges = model.challenges
     , bowings = model.bowings
     , chords = model.chords
     , preset = model.preset
@@ -192,7 +192,7 @@ type alias Model =
     , roots : List Root
     , scales : List Scale
     , intervals : List Interval
-    , ranges : List Range
+    , challenges : List Challenge
     , bowings : List Bowing
     , chords : List Chord
     }
@@ -540,8 +540,8 @@ allIntervals =
     [ Sixths, Thirds, Octaves, Fourths, Fifths, Tenths ]
 
 
-allRanges : List Range
-allRanges =
+allChallenges : List Challenge
+allChallenges =
     [ NoEmptyStrings
     , AllEmptyStrings
     , AString
@@ -569,9 +569,9 @@ presetToString preset =
             "Custom"
 
 
-rangeToString : Range -> String
-rangeToString range =
-    case range of
+challengeToString : Challenge -> String
+challengeToString challenge =
+    case challenge of
         NoEmptyStrings ->
             "No Empty Strings"
 
@@ -631,7 +631,7 @@ initialModel flags =
                     , chords = [ Major ]
                     , intervals = []
                     , scales = [ Ionian ]
-                    , ranges = []
+                    , challenges = []
                     , roots = [ G, C, F ]
                     , topics = [ Scales, Chords ]
                     , preset = Basic
@@ -656,7 +656,7 @@ initialModel flags =
     , roots = configuration.roots
     , scales = configuration.scales
     , intervals = configuration.intervals
-    , ranges = configuration.ranges
+    , challenges = configuration.challenges
     , bowings = configuration.bowings
     , chords = configuration.chords
     }
@@ -675,7 +675,7 @@ type Msg
     | NewRootsGenerated (List Root)
     | NewScalesGenerated (List Scale)
     | NewIntervalsGenerated (List Interval)
-    | NewRangesGenerated (List Range)
+    | NewChallengesGenerated (List Challenge)
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
@@ -687,7 +687,7 @@ type Msg
     | ToggleChord Chord
     | ToggleScale Scale
     | ToggleBowing Bowing
-    | ToggleRange Range
+    | ToggleChallenge Challenge
     | ToggleInterval Interval
       -- toggle everything for a setting
     | ToggleAllTopics
@@ -695,7 +695,7 @@ type Msg
     | ToggleAllChords
     | ToggleAllScales
     | ToggleAllBowings
-    | ToggleAllRanges
+    | ToggleAllChallenges
     | ToggleAllIntervals
       -- skip setting
     | SkipTopic
@@ -703,7 +703,7 @@ type Msg
     | SkipChord
     | SkipScale
     | SkipBowing
-    | SkipRange
+    | SkipChallenge
     | SkipInterval
       --
     | ChangePreset Preset
@@ -837,8 +837,8 @@ update msg model =
         NewChordsGenerated chords ->
             ( { model | chords = chords }, Cmd.none )
 
-        NewRangesGenerated ranges ->
-            ( { model | ranges = ranges }, Cmd.none )
+        NewChallengesGenerated challenges ->
+            ( { model | challenges = challenges }, Cmd.none )
 
         ToggleBowing bowing ->
             ( { model | preset = Custom }
@@ -860,9 +860,9 @@ update msg model =
             , shuffleIntervals (toggle interval model.intervals)
             )
 
-        ToggleRange range ->
+        ToggleChallenge challenge ->
             ( { model | preset = Custom }
-            , shuffleRanges (toggle range model.ranges)
+            , shuffleChallenges (toggle challenge model.challenges)
             )
 
         ToggleScale scale ->
@@ -909,8 +909,8 @@ update msg model =
         ToggleAllScales ->
             ( { model | scales = toggleList model.scales allScales, preset = Custom }, Cmd.none )
 
-        ToggleAllRanges ->
-            ( { model | ranges = toggleList model.ranges allRanges, preset = Custom }, Cmd.none )
+        ToggleAllChallenges ->
+            ( { model | challenges = toggleList model.challenges allChallenges, preset = Custom }, Cmd.none )
 
         ToggleAllBowings ->
             ( { model | bowings = toggleList model.bowings allBowings, preset = Custom }, Cmd.none )
@@ -924,8 +924,8 @@ update msg model =
         SkipInterval ->
             ( { model | intervals = appendFirstItem model.intervals }, Cmd.none )
 
-        SkipRange ->
-            ( { model | ranges = appendFirstItem model.ranges }, Cmd.none )
+        SkipChallenge ->
+            ( { model | challenges = appendFirstItem model.challenges }, Cmd.none )
 
         SkipScale ->
             ( { model | scales = appendFirstItem model.scales }, Cmd.none )
@@ -973,7 +973,7 @@ update msg model =
                         , roots = model.roots
                         , scales = model.scales
                         , chords = model.chords
-                        , ranges = model.ranges
+                        , challenges = model.challenges
                         , intervals = model.intervals
                         }
                         |> String.replace "], " "]\n---\n"
@@ -1006,7 +1006,7 @@ applyPreset model =
                 , chords = [ Major ]
                 , intervals = []
                 , scales = [ Ionian ]
-                , ranges = []
+                , challenges = []
                 , roots = [ G, C, F ]
                 , topics = [ Scales, Chords ]
             }
@@ -1017,7 +1017,7 @@ applyPreset model =
                 , roots = allRoots
                 , scales = allScales
                 , intervals = allIntervals
-                , ranges = allRanges
+                , challenges = allChallenges
                 , bowings = allBowings
                 , chords = allChords
             }
@@ -1028,7 +1028,7 @@ applyPreset model =
                 , roots = []
                 , scales = []
                 , intervals = []
-                , ranges = []
+                , challenges = []
                 , bowings = []
                 , chords = []
             }
@@ -1082,7 +1082,7 @@ shuffleEverything model =
         [ shuffleIntervals model.intervals
         , shuffleScales model.scales
         , shuffleBowings model.bowings
-        , shuffleRanges model.ranges
+        , shuffleChallenges model.challenges
         , shuffleRoots model.roots
         , shuffleChords model.chords
         ]
@@ -1093,9 +1093,9 @@ shuffleRoots roots =
     Random.generate NewRootsGenerated (Random.List.shuffle roots)
 
 
-shuffleRanges : List Range -> Cmd Msg
-shuffleRanges ranges =
-    Random.generate NewRangesGenerated (Random.List.shuffle ranges)
+shuffleChallenges : List Challenge -> Cmd Msg
+shuffleChallenges challenges =
+    Random.generate NewChallengesGenerated (Random.List.shuffle challenges)
 
 
 shuffleScales : List Scale -> Cmd Msg
@@ -1171,11 +1171,11 @@ selection model =
         chords =
             selectionItem model.chords chordToString SkipChord "Chord: "
 
-        ranges =
-            selectionItem model.ranges rangeToString SkipRange "Extra challenge: "
+        challenges =
+            selectionItem model.challenges challengeToString SkipChallenge "Extra challenge: "
 
         bowings =
-            selectionItem model.bowings bowingToString SkipBowing "Bowings: "
+            selectionItem model.bowings bowingToString SkipBowing "Bowing: "
 
         scalePatterns =
             selectionItem model.scales scalePatternToString SkipScale "Scale pattern: "
@@ -1199,7 +1199,7 @@ selection model =
                         , spacing
                         , bowings
                         , spacing
-                        , ranges
+                        , challenges
                         ]
 
                     Just Chords ->
@@ -1207,7 +1207,7 @@ selection model =
                         , chords
                         , bowings
                         , spacing
-                        , ranges
+                        , challenges
                         ]
 
                     Just Doublestops ->
@@ -1218,7 +1218,7 @@ selection model =
                         , spacing
                         , bowings
                         , spacing
-                        , ranges
+                        , challenges
                         ]
 
                     _ ->
@@ -1254,7 +1254,7 @@ slider model =
                     number
     in
     [ input
-        [ type_ "range"
+        [ type_ "challenge"
         , A.min "5"
         , A.max "60"
         , value <| String.fromInt (getValue model.practiceMode)
@@ -1357,9 +1357,9 @@ settings model =
                 , settingsFor model.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
                 , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
-                -- :: showRangeSliderSetting model
+                -- :: showChallengeSliderSetting model
                 , settingsFor model.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
-                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
+                , settingsFor model.challenges allChallenges challengeToString ToggleChallenge ToggleAllChallenges "Challenges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class <| coloredButton "yellow" 400 500 700
@@ -1432,21 +1432,21 @@ primaryButton =
     coloredButton "pink" 400 500 700
 
 
-showRangeSliderSetting model =
+showChallengeSliderSetting model =
     List.map
         (\element ->
             button
                 [ class <|
-                    if List.member element model.ranges then
+                    if List.member element model.challenges then
                         buttonActive
 
                     else
                         buttonPassive
-                , onClick (ToggleRange element)
+                , onClick (ToggleChallenge element)
                 ]
-                [ text <| rangeToString element ]
+                [ text <| challengeToString element ]
         )
-        allRanges
+        allChallenges
         ++ slider model
 
 
@@ -1537,7 +1537,7 @@ encodeConfiguration config =
         , ( "roots", Encode.list encodeRoot config.roots )
         , ( "scales", Encode.list encodeScale config.scales )
         , ( "intervals", Encode.list encodeInterval config.intervals )
-        , ( "ranges", Encode.list encodeRange config.ranges )
+        , ( "challenges", Encode.list encodeChallenge config.challenges )
         , ( "bowings", Encode.list encodeBowing config.bowings )
         , ( "chords", Encode.list encodeChord config.chords )
         , ( "preset", encodePreset config.preset )
@@ -1554,9 +1554,9 @@ encodeScale scale =
     Encode.string <| scaleToString scale
 
 
-encodeRange : Range -> Encode.Value
-encodeRange range =
-    Encode.string <| rangeToString range
+encodeChallenge : Challenge -> Encode.Value
+encodeChallenge challenge =
+    Encode.string <| challengeToString challenge
 
 
 encodeRoot : Root -> Encode.Value
@@ -1651,7 +1651,7 @@ decodeConfiguration =
         (Decode.field "roots" (Decode.list decodeRoot))
         (Decode.field "scales" (Decode.list decodeScale))
         (Decode.field "intervals" (Decode.list decodeInterval))
-        (Decode.field "ranges" (Decode.list decodeRange))
+        (Decode.field "challenges" (Decode.list decodeChallenge))
         (Decode.field "bowings" (Decode.list decodeBowing))
         (Decode.field "chords" (Decode.list decodeChord))
         (Decode.field "preset" decodePreset)
@@ -1739,8 +1739,8 @@ decodeScale =
     Decode.string |> Decode.andThen recover
 
 
-decodeRange : Decode.Decoder Range
-decodeRange =
+decodeChallenge : Decode.Decoder Challenge
+decodeChallenge =
     let
         recover x =
             case x of
@@ -1769,7 +1769,7 @@ decodeRange =
                     Decode.succeed NoADString
 
                 other ->
-                    Decode.fail <| "Unknown constructor for type Range: " ++ other
+                    Decode.fail <| "Unknown constructor for type Challenge: " ++ other
     in
     Decode.string |> Decode.andThen recover
 
