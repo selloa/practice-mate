@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html exposing (Attribute, Html, button, div, h1, input, progress, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -159,6 +159,7 @@ type alias Configuration =
     , ranges : List Range
     , bowings : List Bowing
     , chords : List Chord
+    , preset : Preset
     }
 
 
@@ -171,6 +172,7 @@ createConfiguration model =
     , ranges = model.ranges
     , bowings = model.bowings
     , chords = model.chords
+    , preset = model.preset
     }
 
 
@@ -303,10 +305,15 @@ practiceModeToString : PracticeMode -> String
 practiceModeToString mode =
     case mode of
         TimeLimit duration ->
-            "⏲️ " ++ String.fromInt duration
+            "⏲️ "
 
+        --++ String.fromInt duration
         ExerciseLimit exercises ->
-            "✔ (" ++ String.fromInt exercises ++ ")"
+            "📓 "
+
+
+
+--++ String.fromInt exercises
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
@@ -570,16 +577,16 @@ presetToString : Preset -> String
 presetToString preset =
     case preset of
         Basic ->
-            "BASIC"
+            "Basic"
 
         All ->
-            "ALL"
+            "All"
 
         None ->
-            "NONE"
+            "None"
 
         Custom ->
-            "CUSTOM"
+            "Custom"
 
 
 rangeToString : Range -> String
@@ -666,6 +673,7 @@ initialModel flags =
                     , ranges = []
                     , roots = [ G, C, F ]
                     , topics = [ Scales, Chords ]
+                    , preset = Basic
                     }
     in
     { elapsedTime = 0
@@ -673,7 +681,7 @@ initialModel flags =
     , isRunning = False
     , showSettings = True
     , message = Nothing
-    , preset = All
+    , preset = configuration.preset
 
     -- selection
     , practiceMode = TimeLimit 5
@@ -700,7 +708,7 @@ initialModel flags =
 type Msg
     = Tick Time.Posix
     | ToggleTimer
-    | ClearTimer
+    | ClearProgress
     | KeyPressed String
     | NewExercise
     | NewRootsGenerated (List Root)
@@ -710,9 +718,10 @@ type Msg
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
+    | SwitchPracticeMode
+      -- toggle elements
     | ToggleSettings
     | ToggleTopic Topic
-    | TogglePracticeMode PracticeMode
     | ToggleRoot Root
     | ToggleChord Chord
     | ToggleScale Scale
@@ -808,8 +817,8 @@ update msg model =
         ToggleTimer ->
             toggleTimer model
 
-        ClearTimer ->
-            clearTimer model
+        ClearProgress ->
+            clearProgress model
 
         KeyPressed key ->
             if key == " " then
@@ -900,8 +909,17 @@ update msg model =
             , shuffleScales (toggle scale model.scales)
             )
 
-        TogglePracticeMode practiceMode ->
-            ( { model | practiceMode = practiceMode }, Cmd.none )
+        SwitchPracticeMode ->
+            let
+                newPracticeMode =
+                    case model.practiceMode of
+                        TimeLimit n ->
+                            ExerciseLimit n
+
+                        ExerciseLimit n ->
+                            TimeLimit n
+            in
+            ( { model | practiceMode = newPracticeMode }, Cmd.none )
 
         ToggleTopic topic ->
             -- let
@@ -1058,6 +1076,7 @@ applyPreset model =
             model
 
 
+toggle : a -> List a -> List a
 toggle element list =
     if List.member element list then
         List.filter ((/=) element) list
@@ -1075,11 +1094,12 @@ toggleList items allItems =
         []
 
 
-clearTimer : Model -> ( Model, Cmd Msg )
-clearTimer model =
+clearProgress : Model -> ( Model, Cmd Msg )
+clearProgress model =
     ( { model
         | isRunning = False
         , elapsedTime = 0
+        , completedExercises = 0
         , message = Nothing
       }
     , Cmd.none
@@ -1248,7 +1268,7 @@ selection model =
                     , button
                         [ class <|
                             if List.length model.topics < 2 then
-                                secondaryButton
+                                buttonPassive
 
                             else
                                 primaryButton
@@ -1322,17 +1342,14 @@ selectionItem items toString skip label =
         |> (\string ->
                 if String.isEmpty string then
                     div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded select-none" ]
-                        [ text "-/-"
-                        ]
+                        [ text "-/-" ]
 
                 else
                     div
                         [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded select-none"
                         , onClick skip
                         ]
-                        [ text label
-                        , text string
-                        ]
+                        [ text label, text string ]
            )
 
 
@@ -1363,12 +1380,12 @@ settings model =
                     [ div [ class "container" ] [ text "Practice mode" ]
                     , button
                         [ class buttonTimeLimit
-                        , onClick (TogglePracticeMode <| TimeLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Time limit" ]
                     , button
                         [ class buttonExercises
-                        , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Exercise limit" ]
                     ]
@@ -1384,8 +1401,7 @@ settings model =
                 , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
                 , div [ class "container m-2" ]
                     [ button
-                        [ class """bg-yellow-500 hover:bg-yellow-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-yellow-700 hover:border-yellow-500 rounded"""
+                        [ class <| coloredButton "yellow" 400 500 700
                         , onClick PrintConfiguration
                         ]
                         [ text "EXPORT" ]
@@ -1415,7 +1431,7 @@ presetButton preset model =
                 buttonPassive
         , onClick (ChangePreset preset)
         ]
-        [ text <| presetToString preset ]
+        [ text <| String.toUpper <| presetToString preset ]
 
 
 coloredButton : String -> Int -> Int -> Int -> String
@@ -1440,14 +1456,19 @@ coloredButton color light normal dark =
         ++ " rounded"
 
 
+buttonActive : String
 buttonActive =
-    """bg-green-500 hover:bg-green-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-green-700 hover:border-green-500 rounded"""
+    coloredButton "green" 400 500 700
 
 
+buttonPassive : String
 buttonPassive =
-    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white font-bold mr-2 mb-1 px-2 
-    border-b-2 border-gray-700 hover:border-gray-500 rounded"""
+    coloredButton "gray" 400 500 700
+
+
+primaryButton : String
+primaryButton =
+    coloredButton "pink" 400 500 700
 
 
 showRangeSliderSetting model =
@@ -1486,48 +1507,17 @@ showSetting toString elements selectedElements msg =
         elements
 
 
-primaryButton : String
-primaryButton =
-    """bg-pink-500 hover:bg-pink-400 cursor-pointer text-white 
-    font-bold py-2 px-4 border-b-4 border-pink-700 hover:border-pink-500 rounded"""
-
-
-secondaryButton : String
-secondaryButton =
-    """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
-    font-bold py-2 px-4 border-b-4 border-gray-700 hover:border-gray-500 rounded"""
-
-
 header : Model -> Html Msg
 header model =
     let
-        minutes =
-            String.fromInt (model.elapsedTime // 60)
-
-        seconds =
-            String.fromInt (remainderBy 60 model.elapsedTime)
-
-        toDoubleDigits number =
-            if String.length number < 2 then
-                "0" ++ number
-
-            else
-                number
-
         elementClass =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
-
-        buttonClass =
-            """bg-gray-500 hover:bg-gray-400 cursor-pointer text-white 
-            font-bold mr-2 px-2 border-b-2 border-gray-700 hover:border-gray-500 rounded"""
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         [ div [ class "container flex justify-end items-start" ]
-            [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
-            , div [ class elementClass ]
-                [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
-                ]
-            , button [ class buttonClass, onClick ToggleTimer ]
+            [ button [ class elementClass, onClick SwitchPracticeMode ] [ text (practiceModeToString model.practiceMode) ]
+            , progressBar model
+            , button [ class buttonPassive, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
                         "pause"
@@ -1535,10 +1525,26 @@ header model =
                     else
                         "start"
                 ]
-            , button [ class buttonClass, onClick ClearTimer ] [ text "■" ]
-            , button [ class buttonClass, onClick ToggleSettings ] [ text "..." ]
+            , button [ class buttonPassive, onClick ClearProgress ] [ text "■" ]
+            , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
+
+
+progressBar : Model -> Html Msg
+progressBar model =
+    let
+        ( maximum, value_ ) =
+            (case model.practiceMode of
+                TimeLimit time ->
+                    ( time * 60, model.elapsedTime )
+
+                ExerciseLimit exercises ->
+                    ( exercises, model.completedExercises )
+            )
+                |> Tuple.mapBoth String.fromInt String.fromInt
+    in
+    progress [ A.max <| maximum, value value_, class "mt-1 mr-2" ] []
 
 
 
@@ -1600,33 +1606,46 @@ encodeConfiguration config =
         , ( "ranges", Encode.list encodeRange config.ranges )
         , ( "bowings", Encode.list encodeBowing config.bowings )
         , ( "chords", Encode.list encodeChord config.chords )
+        , ( "preset", encodePreset config.preset )
         ]
 
 
+encodeInterval : Interval -> Encode.Value
 encodeInterval interval =
     Encode.string <| intervalToString interval
 
 
+encodeScale : Scale -> Encode.Value
 encodeScale scale =
     Encode.string <| scaleToString scale
 
 
+encodeRange : Range -> Encode.Value
 encodeRange range =
     Encode.string <| rangeToString range
 
 
+encodeRoot : Root -> Encode.Value
 encodeRoot root =
     Encode.string <| rootToString root
 
 
+encodeTopic : Topic -> Encode.Value
 encodeTopic topic =
     Encode.string <| topicToString topic
 
 
+encodePreset : Preset -> Encode.Value
+encodePreset preset =
+    Encode.string <| presetToString preset
+
+
+decodeBowing : Decode.Decoder Bowing
 decodeBowing =
     Decode.field "kind" Decode.string |> Decode.andThen decodeBowingHelp
 
 
+decodeBowingHelp : String -> Decode.Decoder Bowing
 decodeBowingHelp kind =
     case kind of
         "Slured" ->
@@ -1662,6 +1681,7 @@ decodeBowingHelp kind =
             Decode.fail <| "Unknown constructor for type Bowing: " ++ other
 
 
+decodeChord : Decode.Decoder Chord
 decodeChord =
     let
         recover x =
@@ -1708,8 +1728,9 @@ decodeChord =
     Decode.string |> Decode.andThen recover
 
 
+decodeConfiguration : Decode.Decoder Configuration
 decodeConfiguration =
-    Decode.map7
+    Decode.map8
         Configuration
         (Decode.field "topics" (Decode.list decodeTopic))
         (Decode.field "roots" (Decode.list decodeRoot))
@@ -1718,8 +1739,10 @@ decodeConfiguration =
         (Decode.field "ranges" (Decode.list decodeRange))
         (Decode.field "bowings" (Decode.list decodeBowing))
         (Decode.field "chords" (Decode.list decodeChord))
+        (Decode.field "preset" decodePreset)
 
 
+decodeInterval : Decode.Decoder Interval
 decodeInterval =
     let
         recover x =
@@ -1748,6 +1771,7 @@ decodeInterval =
     Decode.string |> Decode.andThen recover
 
 
+decodeScale : Decode.Decoder Scale
 decodeScale =
     let
         recover x =
@@ -1800,6 +1824,7 @@ decodeScale =
     Decode.string |> Decode.andThen recover
 
 
+decodeRange : Decode.Decoder Range
 decodeRange =
     let
         recover x =
@@ -1834,6 +1859,7 @@ decodeRange =
     Decode.string |> Decode.andThen recover
 
 
+decodeRoot : Decode.Decoder Root
 decodeRoot =
     let
         recover x =
@@ -1880,6 +1906,7 @@ decodeRoot =
     Decode.string |> Decode.andThen recover
 
 
+decodeTopic : Decode.Decoder Topic
 decodeTopic =
     let
         recover x =
@@ -1892,6 +1919,29 @@ decodeTopic =
 
                 "Doublestops" ->
                     Decode.succeed Doublestops
+
+                other ->
+                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
+    in
+    Decode.string |> Decode.andThen recover
+
+
+decodePreset : Decode.Decoder Preset
+decodePreset =
+    let
+        recover x =
+            case x of
+                "Basic" ->
+                    Decode.succeed Basic
+
+                "All" ->
+                    Decode.succeed All
+
+                "None" ->
+                    Decode.succeed None
+
+                "Custom" ->
+                    Decode.succeed Custom
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Topic: " ++ other
