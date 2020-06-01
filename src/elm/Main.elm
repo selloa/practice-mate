@@ -109,14 +109,8 @@ type Chord
 
 
 type Challenge
-    = NoEmptyStrings
-    | AllEmptyStrings
-    | AString
+    = AString
     | DString
-    | GString
-    | CString
-    | NoAString
-    | NoADString
 
 
 type Interval
@@ -542,14 +536,8 @@ allIntervals =
 
 allChallenges : List Challenge
 allChallenges =
-    [ NoEmptyStrings
-    , AllEmptyStrings
-    , AString
+    [ AString
     , DString
-    , GString
-    , CString
-    , NoAString
-    , NoADString
     ]
 
 
@@ -572,29 +560,11 @@ presetToString preset =
 challengeToString : Challenge -> String
 challengeToString challenge =
     case challenge of
-        NoEmptyStrings ->
-            "No Empty Strings"
-
-        AllEmptyStrings ->
-            "Empty Strings where possible"
-
         AString ->
             "Play on A String"
 
         DString ->
             "Play on D String"
-
-        GString ->
-            "Play on G String"
-
-        CString ->
-            "Play on C String"
-
-        NoAString ->
-            "Go up D String"
-
-        NoADString ->
-            "Go up G String"
 
 
 allBowings : List Bowing
@@ -1744,29 +1714,11 @@ decodeChallenge =
     let
         recover x =
             case x of
-                "No Empty Strings" ->
-                    Decode.succeed NoEmptyStrings
-
-                "Empty Strings where possible" ->
-                    Decode.succeed AllEmptyStrings
-
                 "Play on A String" ->
                     Decode.succeed AString
 
                 "Play on D String" ->
                     Decode.succeed DString
-
-                "Play on G String" ->
-                    Decode.succeed GString
-
-                "Play on C String" ->
-                    Decode.succeed CString
-
-                "Go up D String" ->
-                    Decode.succeed NoAString
-
-                "Go up G String" ->
-                    Decode.succeed NoADString
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Challenge: " ++ other
