@@ -278,6 +278,11 @@ updateRanges ranges configuration =
     { configuration | ranges = ranges }
 
 
+updatePreset : Preset -> Configuration -> Configuration
+updatePreset preset configuration =
+    { configuration | preset = preset }
+
+
 updateChords : List Chord -> Configuration -> Configuration
 updateChords chords configuration =
     { configuration | chords = chords }
@@ -393,6 +398,33 @@ getScales =
     .scales
 
 
+getPreset : Configuration -> Preset
+getPreset =
+    .preset
+
+
+toggleAll : (Configuration -> List a) -> List a -> (List a -> Configuration -> Configuration) -> Configuration -> Configuration
+toggleAll getter allElements setter configuration =
+    configuration
+        |> getter
+        |> toggleList allElements
+        |> flip setter configuration
+
+
+shuffleConfig : (Configuration -> msg) -> Configuration -> Cmd msg
+shuffleConfig toMsg config =
+    Random.Extra.map6 Configuration
+        (Random.constant config.topics)
+        (Random.List.shuffle config.roots)
+        (Random.List.shuffle config.scales)
+        (Random.List.shuffle config.intervals)
+        (Random.List.shuffle config.ranges)
+        (Random.List.shuffle config.bowings)
+        |> Random.Extra.andMap (Random.List.shuffle config.chords)
+        |> Random.Extra.andMap (Random.constant config.preset)
+        |> Random.generate toMsg
+
+
 
 -- Model
 
@@ -403,7 +435,6 @@ type alias Model =
     , isRunning : Bool
     , showSettings : Bool
     , message : Maybe Message
-    , preset : Preset
 
     -- selection
     , practiceMode : PracticeMode
@@ -890,7 +921,6 @@ initialModel flags =
     , isRunning = False
     , showSettings = True
     , message = Nothing
-    , preset = configuration.preset
 
     -- selection
     , practiceMode = TimeLimit 5
@@ -1080,34 +1110,28 @@ update msg model =
             ( { model | configuration = configuration }, Cmd.none )
 
         ToggleBowing bowing ->
-            ( { model | preset = Custom }
-            , shuffleBowings (toggleBowing bowing model.configuration)
-            )
+            ( model, shuffleBowings (toggleBowing bowing model.configuration) )
+                |> setToCustomPreset
 
         ToggleChord chord ->
-            ( { model | preset = Custom }
-            , shuffleChords (toggleChord chord model.configuration)
-            )
+            ( model, shuffleChords (toggleChord chord model.configuration) )
+                |> setToCustomPreset
 
         ToggleRoot root ->
-            ( { model | preset = Custom }
-            , shuffleRoots (toggleRoot root model.configuration)
-            )
+            ( model, shuffleRoots (toggleRoot root model.configuration) )
+                |> setToCustomPreset
 
         ToggleInterval interval ->
-            ( { model | preset = Custom }
-            , shuffleIntervals (toggleInterval interval model.configuration)
-            )
+            ( model, shuffleIntervals (toggleInterval interval model.configuration) )
+                |> setToCustomPreset
 
         ToggleRange range ->
-            ( { model | preset = Custom }
-            , shuffleRanges (toggleRange range model.configuration)
-            )
+            ( model, shuffleRanges (toggleRange range model.configuration) )
+                |> setToCustomPreset
 
         ToggleScale scale ->
-            ( { model | preset = Custom }
-            , shuffleRanges (toggleScale scale model.configuration)
-            )
+            ( model, shuffleScales (toggleScale scale model.configuration) )
+                |> setToCustomPreset
 
         SwitchPracticeMode ->
             let
@@ -1122,30 +1146,36 @@ update msg model =
             ( { model | practiceMode = newPracticeMode }, Cmd.none )
 
         ToggleTopic topic ->
-            ( { model | preset = Custom, configuration = toggleTopic topic model.configuration }
-            , Cmd.none
-            )
+            ( { model | configuration = toggleTopic topic model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllTopics ->
-            ( { model | configuration = toggleAll getTopics allTopics updateTopics model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getTopics allTopics updateTopics model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllRoots ->
-            ( { model | configuration = toggleAll getRoots allRoots updateRoots model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getRoots allRoots updateRoots model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllIntervals ->
-            ( { model | configuration = toggleAll getIntervals allIntervals updateIntervals model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getIntervals allIntervals updateIntervals model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllScales ->
-            ( { model | configuration = toggleAll getScales allScales updateScales model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getScales allScales updateScales model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllRanges ->
-            ( { model | configuration = toggleAll getRanges allRanges updateRanges model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getRanges allRanges updateRanges model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllBowings ->
-            ( { model | configuration = toggleAll getBowings allBowings updateBowings model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getBowings allBowings updateBowings model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         ToggleAllChords ->
-            ( { model | configuration = toggleAll getChords allChords updateChords model.configuration, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getChords allChords updateChords model.configuration }, Cmd.none )
+                |> setToCustomPreset
 
         SkipTopic ->
             ( { model | configuration = nextTopic model.configuration }, Cmd.none )
@@ -1169,8 +1199,12 @@ update msg model =
             ( { model | configuration = nextRoot model.configuration }, Cmd.none )
 
         ChangePreset preset ->
-            ( { model | configuration = configurationFor preset }
-            , shuffleConfig NewConfigurationGenerated model.configuration
+            let
+                newConfiguration =
+                    configurationFor preset
+            in
+            ( { model | configuration = newConfiguration }
+            , shuffleConfig NewConfigurationGenerated newConfiguration
             )
 
         UpdatedSlider newValue ->
@@ -1207,12 +1241,9 @@ update msg model =
             ( model, cmd )
 
 
-toggleAll : (Configuration -> List a) -> List a -> (List a -> Configuration -> Configuration) -> Configuration -> Configuration
-toggleAll getter allElements setter configuration =
-    configuration
-        |> getter
-        |> toggleList allElements
-        |> flip setter configuration
+setToCustomPreset : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+setToCustomPreset ( model, cmds ) =
+    ( { model | configuration = updatePreset Custom model.configuration }, cmds )
 
 
 appendFirstItem : List a -> List a
@@ -1267,20 +1298,6 @@ toggleTimer model =
 
     else
         ( { model | isRunning = True }, Cmd.none )
-
-
-shuffleConfig : (Configuration -> msg) -> Configuration -> Cmd msg
-shuffleConfig toMsg config =
-    Random.Extra.map6 Configuration
-        (Random.constant config.topics)
-        (Random.List.shuffle config.roots)
-        (Random.List.shuffle config.scales)
-        (Random.List.shuffle config.intervals)
-        (Random.List.shuffle config.ranges)
-        (Random.List.shuffle config.bowings)
-        |> Random.Extra.andMap (Random.List.shuffle config.chords)
-        |> Random.Extra.andMap (Random.constant config.preset)
-        |> Random.generate toMsg
 
 
 shuffleList : (List a -> Msg) -> List a -> Cmd Msg
@@ -1561,7 +1578,7 @@ presetButton : Preset -> Model -> Html Msg
 presetButton preset model =
     button
         [ class <|
-            if model.preset == preset then
+            if getPreset model.configuration == preset then
                 coloredButton "indigo" 300 400 700
 
             else
