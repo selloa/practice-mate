@@ -1041,12 +1041,12 @@ applyPreset model =
     case model.preset of
         Basic ->
             { model
-                | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
-                , chords = [ Major ]
-                , intervals = []
-                , scales = [ Ionian ]
+                | bowings = [ Slured 1, Slured 2, Slured 3, Slured 4, Slured 5, Slured 6, Slured 7, Slured 8 ]
+                , chords = [ Major, Minor ]
+                , intervals = [ Sixths, Thirds, Octaves ]
+                , scales = [ Ionian, Aeolian, MelodicMinor, HarmonicMinor ]
                 , ranges = []
-                , roots = [ G, C, F ]
+                , roots = [ A, Bb, Dis, C, D, F, G ]
                 , topics = [ Scales, Chords ]
             }
 
