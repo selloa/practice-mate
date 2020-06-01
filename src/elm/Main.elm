@@ -8,6 +8,7 @@ import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Random
+import Random.Extra
 import Random.List
 import Time
 
@@ -27,12 +28,9 @@ updateWithStorage msg oldModel =
     let
         ( newModel, cmds ) =
             update msg oldModel
-
-        configuration =
-            createConfiguration newModel
     in
     ( newModel
-    , Cmd.batch [ setStorage (encodeConfiguration configuration), cmds ]
+    , Cmd.batch [ setStorage (encodeConfiguration newModel.configuration), cmds ]
     )
 
 
@@ -151,6 +149,10 @@ type Preset
     | Custom
 
 
+
+-- Configuration
+
+
 type alias Configuration =
     { topics : List Topic
     , roots : List Root
@@ -163,17 +165,232 @@ type alias Configuration =
     }
 
 
-createConfiguration : Model -> Configuration
-createConfiguration model =
-    { topics = model.topics
-    , roots = model.roots
-    , scales = model.scales
-    , intervals = model.intervals
-    , ranges = model.ranges
-    , bowings = model.bowings
-    , chords = model.chords
-    , preset = model.preset
-    }
+configurationFor : Preset -> Configuration
+configurationFor preset =
+    case preset of
+        None ->
+            { topics = []
+            , roots = []
+            , scales = []
+            , intervals = []
+            , ranges = []
+            , bowings = []
+            , chords = []
+            , preset = None
+            }
+
+        Basic ->
+            { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
+            , chords = [ Major ]
+            , intervals = []
+            , scales = [ Ionian ]
+            , ranges = []
+            , roots = [ G, C, F ]
+            , topics = [ Scales, Chords ]
+            , preset = Basic
+            }
+
+        All ->
+            { topics = [ Scales, Chords, Doublestops ]
+            , roots = allRoots
+            , scales = allScales
+            , intervals = allIntervals
+            , ranges = allRanges
+            , bowings = allBowings
+            , chords = allChords
+            , preset = All
+            }
+
+        Custom ->
+            { topics = []
+            , roots = []
+            , scales = []
+            , intervals = []
+            , ranges = []
+            , bowings = []
+            , chords = []
+            , preset = Custom
+            }
+
+
+next : List a -> List a
+next elements =
+    case elements of
+        first :: second :: rest ->
+            second :: rest ++ [ first ]
+
+        _ ->
+            elements
+
+
+nextTopic : Configuration -> Configuration
+nextTopic configuration =
+    { configuration | topics = next configuration.topics }
+
+
+nextScale : Configuration -> Configuration
+nextScale configuration =
+    { configuration | scales = next configuration.scales }
+
+
+nextBowing : Configuration -> Configuration
+nextBowing configuration =
+    { configuration | bowings = next configuration.bowings }
+
+
+nextInterval : Configuration -> Configuration
+nextInterval configuration =
+    { configuration | intervals = next configuration.intervals }
+
+
+nextChord : Configuration -> Configuration
+nextChord configuration =
+    { configuration | chords = next configuration.chords }
+
+
+nextRange : Configuration -> Configuration
+nextRange configuration =
+    { configuration | ranges = next configuration.ranges }
+
+
+nextRoot : Configuration -> Configuration
+nextRoot configuration =
+    { configuration | roots = next configuration.roots }
+
+
+updateScales : List Scale -> Configuration -> Configuration
+updateScales scales configuration =
+    { configuration | scales = scales }
+
+
+updateRoots : List Root -> Configuration -> Configuration
+updateRoots roots configuration =
+    { configuration | roots = roots }
+
+
+updateBowings : List Bowing -> Configuration -> Configuration
+updateBowings bowings configuration =
+    { configuration | bowings = bowings }
+
+
+updateRanges : List Range -> Configuration -> Configuration
+updateRanges ranges configuration =
+    { configuration | ranges = ranges }
+
+
+updateChords : List Chord -> Configuration -> Configuration
+updateChords chords configuration =
+    { configuration | chords = chords }
+
+
+updateTopics : List Topic -> Configuration -> Configuration
+updateTopics topics configuration =
+    { configuration | topics = topics }
+
+
+updateIntervals : List Interval -> Configuration -> Configuration
+updateIntervals intervals configuration =
+    { configuration | intervals = intervals }
+
+
+toggleBowing : Bowing -> Configuration -> Configuration
+toggleBowing bowing configuration =
+    { configuration | bowings = toggle bowing configuration.bowings }
+
+
+toggleChord : Chord -> Configuration -> Configuration
+toggleChord chord configuration =
+    { configuration | chords = toggle chord configuration.chords }
+
+
+toggleTopic : Topic -> Configuration -> Configuration
+toggleTopic topic configuration =
+    { configuration | topics = toggle topic configuration.topics }
+
+
+toggleScale : Scale -> Configuration -> Configuration
+toggleScale scale configuration =
+    { configuration | scales = toggle scale configuration.scales }
+
+
+toggleInterval : Interval -> Configuration -> Configuration
+toggleInterval interval configuration =
+    { configuration | intervals = toggle interval configuration.intervals }
+
+
+toggleRange : Range -> Configuration -> Configuration
+toggleRange range configuration =
+    { configuration | ranges = toggle range configuration.ranges }
+
+
+toggleRoot : Root -> Configuration -> Configuration
+toggleRoot root configuration =
+    { configuration | roots = toggle root configuration.roots }
+
+
+shuffleBowings : Configuration -> Cmd Msg
+shuffleBowings configuration =
+    shuffleList NewBowingsGenerated configuration.bowings
+
+
+shuffleRanges : Configuration -> Cmd Msg
+shuffleRanges configuration =
+    shuffleList NewRangesGenerated configuration.ranges
+
+
+shuffleScales : Configuration -> Cmd Msg
+shuffleScales configuration =
+    shuffleList NewScalesGenerated configuration.scales
+
+
+shuffleIntervals : Configuration -> Cmd Msg
+shuffleIntervals configuration =
+    shuffleList NewIntervalsGenerated configuration.intervals
+
+
+shuffleRoots : Configuration -> Cmd Msg
+shuffleRoots configuration =
+    shuffleList NewRootsGenerated configuration.roots
+
+
+shuffleChords : Configuration -> Cmd Msg
+shuffleChords configuration =
+    shuffleList NewChordsGenerated configuration.chords
+
+
+getTopics : Configuration -> List Topic
+getTopics =
+    .topics
+
+
+getRoots : Configuration -> List Root
+getRoots =
+    .roots
+
+
+getRanges : Configuration -> List Range
+getRanges =
+    .ranges
+
+
+getChords : Configuration -> List Chord
+getChords =
+    .chords
+
+
+getIntervals : Configuration -> List Interval
+getIntervals =
+    .intervals
+
+
+getBowings : Configuration -> List Bowing
+getBowings =
+    .bowings
+
+
+getScales : Configuration -> List Scale
+getScales =
+    .scales
 
 
 
@@ -191,15 +408,7 @@ type alias Model =
     -- selection
     , practiceMode : PracticeMode
     , topic : Topic
-
-    --
-    , topics : List Topic
-    , roots : List Root
-    , scales : List Scale
-    , intervals : List Interval
-    , ranges : List Range
-    , bowings : List Bowing
-    , chords : List Chord
+    , configuration : Configuration
     }
 
 
@@ -688,16 +897,7 @@ initialModel flags =
     , topic =
         List.head configuration.topics
             |> Maybe.withDefault Scales
-
-    --
-    -- , topics = [ Scales, Chords, Doublestops ]
-    , topics = configuration.topics
-    , roots = configuration.roots
-    , scales = configuration.scales
-    , intervals = configuration.intervals
-    , ranges = configuration.ranges
-    , bowings = configuration.bowings
-    , chords = configuration.chords
+    , configuration = configuration
     }
 
 
@@ -711,6 +911,7 @@ type Msg
     | ClearProgress
     | KeyPressed String
     | NewExercise
+    | NewConfigurationGenerated Configuration
     | NewRootsGenerated (List Root)
     | NewScalesGenerated (List Scale)
     | NewIntervalsGenerated (List Interval)
@@ -825,7 +1026,7 @@ update msg model =
                 ( { model
                     | completedExercises = model.completedExercises + 1
                   }
-                , shuffleEverything model
+                , shuffleConfig NewConfigurationGenerated model.configuration
                 )
 
             else
@@ -835,7 +1036,7 @@ update msg model =
             ( { model
                 | completedExercises = model.completedExercises + 1
               }
-            , shuffleEverything model
+            , shuffleConfig NewConfigurationGenerated model.configuration
             )
 
         ToggleSettings ->
@@ -846,67 +1047,66 @@ update msg model =
             )
 
         NextTopic ->
-            case model.topics of
-                _ :: [] ->
-                    ( model, Cmd.none )
-
-                current :: next :: rest ->
-                    ( { model
-                        | completedExercises = model.completedExercises + 1
-                        , topics = next :: rest ++ [ current ]
-                      }
-                    , shuffleEverything model
-                    )
-
-                [] ->
-                    ( model, Cmd.none )
+            let
+                newConfiguration =
+                    nextTopic model.configuration
+            in
+            ( { model
+                | completedExercises = model.completedExercises + 1
+                , configuration = newConfiguration
+              }
+            , shuffleConfig NewConfigurationGenerated newConfiguration
+            )
 
         NewScalesGenerated scales ->
-            ( { model | scales = scales }, Cmd.none )
+            ( { model | configuration = updateScales scales model.configuration }, Cmd.none )
 
         NewRootsGenerated roots ->
-            ( { model | roots = roots }, Cmd.none )
+            ( { model | configuration = updateRoots roots model.configuration }, Cmd.none )
 
         NewBowingsGenerated bowings ->
-            ( { model | bowings = bowings }, Cmd.none )
+            ( { model | configuration = updateBowings bowings model.configuration }, Cmd.none )
 
         NewIntervalsGenerated intervals ->
-            ( { model | intervals = intervals }, Cmd.none )
+            ( { model | configuration = updateIntervals intervals model.configuration }, Cmd.none )
 
         NewChordsGenerated chords ->
-            ( { model | chords = chords }, Cmd.none )
+            ( { model | configuration = updateChords chords model.configuration }, Cmd.none )
 
         NewRangesGenerated ranges ->
-            ( { model | ranges = ranges }, Cmd.none )
+            ( { model | configuration = updateRanges ranges model.configuration }, Cmd.none )
+
+        NewConfigurationGenerated configuration ->
+            ( { model | configuration = configuration }, Cmd.none )
 
         ToggleBowing bowing ->
             ( { model | preset = Custom }
-            , shuffleBowings (toggle bowing model.bowings)
+            , shuffleBowings (toggleBowing bowing model.configuration)
             )
 
         ToggleChord chord ->
             ( { model | preset = Custom }
-            , shuffleChords (toggle chord model.chords)
+            , shuffleChords (toggleChord chord model.configuration)
             )
 
         ToggleRoot root ->
             ( { model | preset = Custom }
-            , shuffleRoots (toggle root model.roots)
+            , shuffleRoots (toggleRoot root model.configuration)
             )
 
         ToggleInterval interval ->
             ( { model | preset = Custom }
-            , shuffleIntervals (toggle interval model.intervals)
+            , shuffleIntervals (toggleInterval interval model.configuration)
             )
 
         ToggleRange range ->
             ( { model | preset = Custom }
-            , shuffleRanges (toggle range model.ranges)
+            , shuffleRanges (toggleRange range model.configuration)
             )
 
         ToggleScale scale ->
             ( { model | preset = Custom }
-            , shuffleScales (toggle scale model.scales)
+            , shuffleRanges (toggleScale scale model.configuration)
             )
 
         SwitchPracticeMode ->
@@ -922,68 +1122,56 @@ update msg model =
             ( { model | practiceMode = newPracticeMode }, Cmd.none )
 
         ToggleTopic topic ->
-            -- let
-            --     length =
-            --         List.length model.topics
-            -- in
-            -- ( if length /= 1 then
-            --     { model | topics = toggle topic model.topics }
-            --   else if length == 1 && not (List.member topic model.topics) then
-            --     { model | topics = toggle topic model.topics }
-            --   else
-            --     model
-            ( { model | topics = toggle topic model.topics, preset = Custom }
+            ( { model | preset = Custom, configuration = toggleTopic topic model.configuration }
             , Cmd.none
             )
 
         ToggleAllTopics ->
-            ( { model | topics = toggleList model.topics allTopics, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getTopics allTopics updateTopics model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllRoots ->
-            ( { model | roots = toggleList model.roots allRoots, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getRoots allRoots updateRoots model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllIntervals ->
-            ( { model | intervals = toggleList model.intervals allIntervals, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getIntervals allIntervals updateIntervals model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllScales ->
-            ( { model | scales = toggleList model.scales allScales, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getScales allScales updateScales model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllRanges ->
-            ( { model | ranges = toggleList model.ranges allRanges, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getRanges allRanges updateRanges model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllBowings ->
-            ( { model | bowings = toggleList model.bowings allBowings, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getBowings allBowings updateBowings model.configuration, preset = Custom }, Cmd.none )
 
         ToggleAllChords ->
-            ( { model | chords = toggleList model.chords allChords, preset = Custom }, Cmd.none )
+            ( { model | configuration = toggleAll getChords allChords updateChords model.configuration, preset = Custom }, Cmd.none )
 
         SkipTopic ->
-            ( { model | topics = appendFirstItem model.topics }, Cmd.none )
+            ( { model | configuration = nextTopic model.configuration }, Cmd.none )
 
         SkipInterval ->
-            ( { model | intervals = appendFirstItem model.intervals }, Cmd.none )
+            ( { model | configuration = nextInterval model.configuration }, Cmd.none )
 
         SkipRange ->
-            ( { model | ranges = appendFirstItem model.ranges }, Cmd.none )
+            ( { model | configuration = nextRange model.configuration }, Cmd.none )
 
         SkipScale ->
-            ( { model | scales = appendFirstItem model.scales }, Cmd.none )
+            ( { model | configuration = nextScale model.configuration }, Cmd.none )
 
         SkipChord ->
-            ( { model | chords = appendFirstItem model.chords }, Cmd.none )
+            ( { model | configuration = nextChord model.configuration }, Cmd.none )
 
         SkipBowing ->
-            ( { model | bowings = appendFirstItem model.bowings }, Cmd.none )
+            ( { model | configuration = nextBowing model.configuration }, Cmd.none )
 
         SkipRoot ->
-            ( { model | roots = appendFirstItem model.roots }, Cmd.none )
+            ( { model | configuration = nextRoot model.configuration }, Cmd.none )
 
         ChangePreset preset ->
-            let
-                newModel =
-                    { model | preset = preset } |> applyPreset
-            in
-            ( newModel, shuffleEverything newModel )
+            ( { model | configuration = configurationFor preset }
+            , shuffleConfig NewConfigurationGenerated model.configuration
+            )
 
         UpdatedSlider newValue ->
             ( { model
@@ -1007,14 +1195,7 @@ update msg model =
                 cmd =
                     -- in order to build, the following code needs to be commented out
                     Debug.toString
-                        { bowings = model.bowings
-                        , topics = model.topics
-                        , roots = model.roots
-                        , scales = model.scales
-                        , chords = model.chords
-                        , ranges = model.ranges
-                        , intervals = model.intervals
-                        }
+                        model.configuration
                         |> String.replace "], " "]\n---\n"
                         |> String.replace "{ " ""
                         |> String.replace "}" ""
@@ -1024,6 +1205,14 @@ update msg model =
                 -- Cmd.none
             in
             ( model, cmd )
+
+
+toggleAll : (Configuration -> List a) -> List a -> (List a -> Configuration -> Configuration) -> Configuration -> Configuration
+toggleAll getter allElements setter configuration =
+    configuration
+        |> getter
+        |> toggleList allElements
+        |> flip setter configuration
 
 
 appendFirstItem : List a -> List a
@@ -1036,44 +1225,9 @@ appendFirstItem items =
             []
 
 
-applyPreset : Model -> Model
-applyPreset model =
-    case model.preset of
-        Basic ->
-            { model
-                | bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
-                , chords = [ Major ]
-                , intervals = []
-                , scales = [ Ionian ]
-                , ranges = []
-                , roots = [ G, C, F ]
-                , topics = [ Scales, Chords ]
-            }
-
-        All ->
-            { model
-                | topics = [ Scales, Chords, Doublestops ]
-                , roots = allRoots
-                , scales = allScales
-                , intervals = allIntervals
-                , ranges = allRanges
-                , bowings = allBowings
-                , chords = allChords
-            }
-
-        None ->
-            { model
-                | topics = []
-                , roots = []
-                , scales = []
-                , intervals = []
-                , ranges = []
-                , bowings = []
-                , chords = []
-            }
-
-        Custom ->
-            model
+flip : (a -> b -> c) -> b -> a -> c
+flip f arg1 arg2 =
+    f arg2 arg1
 
 
 toggle : a -> List a -> List a
@@ -1086,7 +1240,7 @@ toggle element list =
 
 
 toggleList : List a -> List a -> List a
-toggleList items allItems =
+toggleList allItems items =
     if List.isEmpty items then
         allItems
 
@@ -1115,46 +1269,23 @@ toggleTimer model =
         ( { model | isRunning = True }, Cmd.none )
 
 
-shuffleEverything : Model -> Cmd Msg
-shuffleEverything model =
-    Cmd.batch
-        [ shuffleIntervals model.intervals
-        , shuffleScales model.scales
-        , shuffleBowings model.bowings
-        , shuffleRanges model.ranges
-        , shuffleRoots model.roots
-        , shuffleChords model.chords
-        ]
+shuffleConfig : (Configuration -> msg) -> Configuration -> Cmd msg
+shuffleConfig toMsg config =
+    Random.Extra.map6 Configuration
+        (Random.List.shuffle config.topics)
+        (Random.List.shuffle config.roots)
+        (Random.List.shuffle config.scales)
+        (Random.List.shuffle config.intervals)
+        (Random.List.shuffle config.ranges)
+        (Random.List.shuffle config.bowings)
+        |> Random.Extra.andMap (Random.List.shuffle config.chords)
+        |> Random.Extra.andMap (Random.constant config.preset)
+        |> Random.generate toMsg
 
 
-shuffleRoots : List Root -> Cmd Msg
-shuffleRoots roots =
-    Random.generate NewRootsGenerated (Random.List.shuffle roots)
-
-
-shuffleRanges : List Range -> Cmd Msg
-shuffleRanges ranges =
-    Random.generate NewRangesGenerated (Random.List.shuffle ranges)
-
-
-shuffleScales : List Scale -> Cmd Msg
-shuffleScales scales =
-    Random.generate NewScalesGenerated (Random.List.shuffle scales)
-
-
-shuffleIntervals : List Interval -> Cmd Msg
-shuffleIntervals intervals =
-    Random.generate NewIntervalsGenerated (Random.List.shuffle intervals)
-
-
-shuffleBowings : List Bowing -> Cmd Msg
-shuffleBowings bowings =
-    Random.generate NewBowingsGenerated (Random.List.shuffle bowings)
-
-
-shuffleChords : List Chord -> Cmd Msg
-shuffleChords chords =
-    Random.generate NewChordsGenerated (Random.List.shuffle chords)
+shuffleList : (List a -> Msg) -> List a -> Cmd Msg
+shuffleList toMsg items =
+    Random.generate toMsg (Random.List.shuffle items)
 
 
 
@@ -1198,39 +1329,42 @@ selectionContainer model =
 selection : Model -> Html Msg
 selection model =
     let
+        configuration =
+            model.configuration
+
         intervals =
-            selectionItem model.intervals intervalToString SkipInterval "Interval: "
+            selectionItem configuration.intervals intervalToString SkipInterval "Interval: "
 
         roots =
-            selectionItem model.roots rootToString SkipRoot "Root: "
+            selectionItem configuration.roots rootToString SkipRoot "Root: "
 
         scales =
-            selectionItem model.scales scaleToString SkipScale "Scale: "
+            selectionItem configuration.scales scaleToString SkipScale "Scale: "
 
         chords =
-            selectionItem model.chords chordToString SkipChord "Chord: "
+            selectionItem configuration.chords chordToString SkipChord "Chord: "
 
         ranges =
-            selectionItem model.ranges rangeToString SkipRange "Extra challenge: "
+            selectionItem configuration.ranges rangeToString SkipRange "Extra challenge: "
 
         bowings =
-            selectionItem model.bowings bowingToString SkipBowing "Bowings: "
+            selectionItem configuration.bowings bowingToString SkipBowing "Bowings: "
 
         scalePatterns =
-            selectionItem model.scales scalePatternToString SkipScale "Scale pattern: "
+            selectionItem configuration.scales scalePatternToString SkipScale "Scale pattern: "
 
         doublestopPatterns =
-            selectionItem model.scales doublestopPatternToString SkipScale "Doublestop pattern: "
+            selectionItem configuration.scales doublestopPatternToString SkipScale "Doublestop pattern: "
 
         spacing =
             div [ class "container text-left bg-gray mb-1 p-2" ]
                 []
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        ([ selectionItem model.topics (String.toUpper << topicToString) SkipTopic ""
+        ([ selectionItem configuration.topics (String.toUpper << topicToString) SkipTopic ""
          , spacing
          ]
-            ++ (case List.head model.topics of
+            ++ (case List.head configuration.topics of
                     Just Scales ->
                         [ roots
                         , scales
@@ -1267,7 +1401,7 @@ selection model =
                     [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
                     , button
                         [ class <|
-                            if List.length model.topics < 2 then
+                            if List.length configuration.topics < 2 then
                                 buttonPassive
 
                             else
@@ -1356,6 +1490,9 @@ selectionItem items toString skip label =
 settings : Model -> Html Msg
 settings model =
     let
+        configuration =
+            model.configuration
+
         ( buttonTimeLimit, buttonExercises ) =
             case model.practiceMode of
                 TimeLimit _ ->
@@ -1390,15 +1527,15 @@ settings model =
                         [ text "Exercise limit" ]
                     ]
                         ++ slider model
-                , settingsFor model.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
-                , settingsFor model.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
-                , settingsFor model.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
-                , settingsFor model.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
-                , settingsFor model.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
+                , settingsFor configuration.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
+                , settingsFor configuration.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
+                , settingsFor configuration.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
+                , settingsFor configuration.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
+                , settingsFor configuration.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
                 -- :: showRangeSliderSetting model
-                , settingsFor model.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
-                , settingsFor model.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
+                , settingsFor configuration.bowings allBowings bowingToString ToggleBowing ToggleAllBowings "Bowings"
+                , settingsFor configuration.ranges allRanges rangeToString ToggleRange ToggleAllRanges "Challenges"
                 , div [ class "container m-2" ]
                     [ button
                         [ class <| coloredButton "yellow" 400 500 700
@@ -1414,9 +1551,9 @@ settings model =
 
 
 settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Html Msg
-settingsFor currentItems allItems itemToString toggleSingle toggleAll label =
+settingsFor currentItems allItems itemToString toggleSingle toggleAllMsg label =
     div [ class "container m-2" ] <|
-        div [ class "container" ] [ button [ onClick toggleAll ] [ text label ] ]
+        div [ class "container" ] [ button [ onClick toggleAllMsg ] [ text label ] ]
             :: showSetting itemToString allItems currentItems toggleSingle
 
 
@@ -1472,11 +1609,15 @@ primaryButton =
 
 
 showRangeSliderSetting model =
+    let
+        configuration =
+            model.configuration
+    in
     List.map
         (\element ->
             button
                 [ class <|
-                    if List.member element model.ranges then
+                    if List.member element configuration.ranges then
                         buttonActive
 
                     else
