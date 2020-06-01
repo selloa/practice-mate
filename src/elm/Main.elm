@@ -22,17 +22,6 @@ port printToConsole : String -> Cmd msg
 port setStorage : Encode.Value -> Cmd msg
 
 
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg oldModel =
-    let
-        ( newModel, cmds ) =
-            update msg oldModel
-    in
-    ( newModel
-    , Cmd.batch [ setStorage (encodeConfiguration newModel.configuration), cmds ]
-    )
-
-
 
 -- main
 
@@ -57,10 +46,7 @@ type alias Model =
     , isRunning : Bool
     , showSettings : Bool
     , message : Maybe Message
-
-    -- selection
     , practiceMode : PracticeMode
-    , topic : Topic
     , configuration : Configuration
     }
 
@@ -73,7 +59,6 @@ init flags =
     in
     ( localInitialModel
     , Cmd.none
-      -- , shuffleEverything localInitialModel
     )
 
 
@@ -86,27 +71,14 @@ initialModel flags =
                     config
 
                 Err _ ->
-                    { bowings = [ Slured 2, Slured 3, Slured 1, Slured 4 ]
-                    , chords = [ Major ]
-                    , intervals = []
-                    , scales = [ Ionian ]
-                    , challenges = []
-                    , roots = [ G, C, F ]
-                    , topics = [ Scales, Chords ]
-                    , preset = Basic
-                    }
+                    configurationFor Basic
     in
     { elapsedTime = 0
     , completedExercises = 0
     , isRunning = False
     , showSettings = True
     , message = Nothing
-
-    -- selection
     , practiceMode = TimeLimit 5
-    , topic =
-        List.head configuration.topics
-            |> Maybe.withDefault Scales
     , configuration = configuration
     }
 
@@ -121,6 +93,7 @@ type Msg
     | ClearProgress
     | KeyPressed String
     | NewExercise
+      --
     | NewConfigurationGenerated Configuration
     | NewRootsGenerated (List Root)
     | NewScalesGenerated (List Scale)
@@ -130,7 +103,7 @@ type Msg
     | NewChordsGenerated (List Chord)
     | NextTopic
     | SwitchPracticeMode
-      -- toggle elements
+      --
     | ToggleSettings
     | ToggleTopic Topic
     | ToggleRoot Root
@@ -139,7 +112,7 @@ type Msg
     | ToggleBowing Bowing
     | ToggleChallenge Challenge
     | ToggleInterval Interval
-      -- toggle everything for a setting
+      --
     | ToggleAllTopics
     | ToggleAllRoots
     | ToggleAllChords
@@ -147,7 +120,7 @@ type Msg
     | ToggleAllBowings
     | ToggleAllChallenges
     | ToggleAllIntervals
-      -- skip setting
+      --
     | SkipTopic
     | SkipRoot
     | SkipChord
@@ -159,6 +132,17 @@ type Msg
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
+
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg oldModel =
+    let
+        ( newModel, cmds ) =
+            update msg oldModel
+    in
+    ( newModel
+    , Cmd.batch [ setStorage (encodeConfiguration newModel.configuration), cmds ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
