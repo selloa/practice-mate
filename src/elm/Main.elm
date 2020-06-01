@@ -1426,44 +1426,22 @@ settings model =
     let
         configuration =
             model.configuration
-
-        ( buttonTimeLimit, buttonExercises ) =
-            case model.practiceMode of
-                TimeLimit _ ->
-                    ( buttonActive, buttonPassive )
-
-                ExerciseLimit _ ->
-                    ( buttonPassive, buttonActive )
     in
     if model.showSettings then
         div [ class "container bg-gray-200 px-5 py-5 rounded" ]
             [ div [ class "container bg-gray-200 font-mono rounded" ] <|
-                [ div [ class "container mx-2" ]
-                    [ div [ class "container" ] [ text "Presets" ]
-                    , presetButton Basic model
-                    , presetButton All model
-                    , presetButton None model
-                    , presetButton Custom model
-                    ]
-                , div
-                    [ class "container mx-2" ]
-                  <|
-                    [ div [ class "container" ] [ text "Practice mode" ]
-                    , button
-                        [ class buttonTimeLimit
-                        , onClick SwitchPracticeMode
+                [ div [ class "container rounded flex" ]
+                    [ div [ class "container" ]
+                        [ presets model
+                        , Html.br [] []
+                        , practiceMode model
+                        , settingsFor configuration.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
                         ]
-                        [ text "Time limit" ]
-                    , button
-                        [ class buttonExercises
-                        , onClick SwitchPracticeMode
+                    , div [ class "container" ]
+                        [ settingsFor configuration.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
+                        , settingsFor configuration.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
                         ]
-                        [ text "Exercise limit" ]
                     ]
-                        ++ slider model
-                , settingsFor configuration.topics allTopics topicToString ToggleTopic ToggleAllTopics "Topics"
-                , settingsFor configuration.roots allRoots rootToString ToggleRoot ToggleAllRoots "Roots"
-                , settingsFor configuration.intervals allIntervals intervalToString ToggleInterval ToggleAllIntervals "Intervals"
                 , settingsFor configuration.scales allScales scaleToString ToggleScale ToggleAllScales "Scales"
                 , settingsFor configuration.chords allChords chordToString ToggleChord ToggleAllChords "Chords"
 
@@ -1482,6 +1460,47 @@ settings model =
 
     else
         div [] []
+
+
+practiceMode : Model -> Html Msg
+practiceMode model =
+    let
+        ( buttonTimeLimit, buttonExercises ) =
+            case model.practiceMode of
+                TimeLimit _ ->
+                    ( buttonActive, buttonPassive )
+
+                ExerciseLimit _ ->
+                    ( buttonPassive, buttonActive )
+    in
+    div
+        [ class "container mx-2" ]
+    <|
+        [ div [ class "container" ] [ text "Practice mode" ]
+        , Html.br [] []
+        , button
+            [ class buttonTimeLimit
+            , onClick SwitchPracticeMode
+            ]
+            [ text "Time limit" ]
+        , button
+            [ class buttonExercises
+            , onClick SwitchPracticeMode
+            ]
+            [ text "Exercise limit" ]
+        ]
+            ++ slider model
+
+
+presets : Model -> Html Msg
+presets model =
+    div [ class "container mx-2" ]
+        [ div [ class "container" ] [ text "Presets" ]
+        , presetButton Basic model
+        , presetButton All model
+        , presetButton None model
+        , presetButton Custom model
+        ]
 
 
 settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Html Msg
@@ -1566,20 +1585,37 @@ showRangeSliderSetting model =
 
 showSetting : (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
 showSetting toString elements selectedElements msg =
-    List.map
-        (\element ->
-            button
-                [ class <|
-                    if List.member element selectedElements then
-                        buttonActive
+    List.indexedMap
+        (\i element ->
+            if remainderBy 4 i == 0 then
+                [ Html.br [] []
+                , button
+                    [ class <|
+                        if List.member element selectedElements then
+                            buttonActive
 
-                    else
-                        buttonPassive
-                , onClick (msg element)
+                        else
+                            buttonPassive
+                    , onClick (msg element)
+                    ]
+                    [ text <| toString element ]
                 ]
-                [ text <| toString element ]
+
+            else
+                [ button
+                    [ class <|
+                        if List.member element selectedElements then
+                            buttonActive
+
+                        else
+                            buttonPassive
+                    , onClick (msg element)
+                    ]
+                    [ text <| toString element ]
+                ]
         )
         elements
+        |> List.concat
 
 
 header : Model -> Html Msg
