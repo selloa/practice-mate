@@ -421,7 +421,7 @@ bowingToString bowing =
             String.fromInt n ++ " to a bow"
 
         Repeated n ->
-            "Repeat each note " ++ String.fromInt n ++ " times"
+            "Play each note " ++ String.fromInt n ++ " times"
 
 
 intervalToString : Interval -> String
