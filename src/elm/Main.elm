@@ -136,12 +136,7 @@ type Message
 
 type Bowing
     = Slured Int
-    | RepeatedStaccato Int
-    | RepeatedTenuto Int
-    | BowStaccato Int
-    | Sequenced
-    | AddTopNote
-    | Rhythmed
+    | Repeated Int
 
 
 type Preset
@@ -429,25 +424,10 @@ bowingToString : Bowing -> String
 bowingToString bowing =
     case bowing of
         Slured n ->
-            "Slured " ++ String.fromInt n
+            String.fromInt n ++ " to a bow"
 
-        RepeatedStaccato n ->
-            "Repeated Staccato " ++ String.fromInt n
-
-        RepeatedTenuto n ->
-            "Repeated Tenuto " ++ String.fromInt n
-
-        BowStaccato n ->
-            "Bow Staccato " ++ String.fromInt n
-
-        Sequenced ->
-            "Sequenced"
-
-        AddTopNote ->
-            "AddTopNote"
-
-        Rhythmed ->
-            "Rhythmed"
+        Repeated n ->
+            "Repeat each note " ++ String.fromInt n ++ " times"
 
 
 intervalToString : Interval -> String
@@ -627,33 +607,14 @@ allBowings =
     , Slured 6
     , Slured 7
     , Slured 8
-    , RepeatedStaccato 1
-    , RepeatedStaccato 2
-    , RepeatedStaccato 3
-    , RepeatedStaccato 4
-    , RepeatedStaccato 5
-    , RepeatedStaccato 6
-    , RepeatedStaccato 7
-    , RepeatedStaccato 8
-    , RepeatedTenuto 1
-    , RepeatedTenuto 2
-    , RepeatedTenuto 3
-    , RepeatedTenuto 4
-    , RepeatedTenuto 5
-    , RepeatedTenuto 6
-    , RepeatedTenuto 7
-    , RepeatedTenuto 8
-    , BowStaccato 1
-    , BowStaccato 2
-    , BowStaccato 3
-    , BowStaccato 4
-    , BowStaccato 5
-    , BowStaccato 6
-    , BowStaccato 7
-    , BowStaccato 8
-    , Sequenced
-    , AddTopNote
-    , Rhythmed
+    , Repeated 1
+    , Repeated 2
+    , Repeated 3
+    , Repeated 4
+    , Repeated 5
+    , Repeated 6
+    , Repeated 7
+    , Repeated 8
     ]
 
 
@@ -1559,37 +1520,10 @@ encodeBowing a =
                 , ( "times", Encode.int times )
                 ]
 
-        RepeatedStaccato times ->
+        Repeated times ->
             Encode.object
-                [ ( "kind", Encode.string "RepeatedStaccato" )
+                [ ( "kind", Encode.string "Repeated" )
                 , ( "times", Encode.int times )
-                ]
-
-        RepeatedTenuto times ->
-            Encode.object
-                [ ( "kind", Encode.string "RepeatedTenuto" )
-                , ( "times", Encode.int times )
-                ]
-
-        BowStaccato times ->
-            Encode.object
-                [ ( "kind", Encode.string "BowStaccato" )
-                , ( "times", Encode.int times )
-                ]
-
-        Sequenced ->
-            Encode.object
-                [ ( "kind", Encode.string "Sequenced" )
-                ]
-
-        AddTopNote ->
-            Encode.object
-                [ ( "kind", Encode.string "AddTopNote" )
-                ]
-
-        Rhythmed ->
-            Encode.object
-                [ ( "kind", Encode.string "Rhythmed" )
                 ]
 
 
@@ -1653,29 +1587,10 @@ decodeBowingHelp kind =
                 Slured
                 (Decode.field "times" Decode.int)
 
-        "RepeatedStaccato" ->
+        "Repeated" ->
             Decode.map
-                RepeatedStaccato
+                Repeated
                 (Decode.field "times" Decode.int)
-
-        "RepeatedTenuto" ->
-            Decode.map
-                RepeatedTenuto
-                (Decode.field "times" Decode.int)
-
-        "BowStaccato" ->
-            Decode.map
-                BowStaccato
-                (Decode.field "times" Decode.int)
-
-        "Sequenced" ->
-            Decode.succeed Sequenced
-
-        "AddTopNote" ->
-            Decode.succeed AddTopNote
-
-        "Rhythmed" ->
-            Decode.succeed Rhythmed
 
         other ->
             Decode.fail <| "Unknown constructor for type Bowing: " ++ other
