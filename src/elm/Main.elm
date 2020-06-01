@@ -1272,7 +1272,7 @@ toggleTimer model =
 shuffleConfig : (Configuration -> msg) -> Configuration -> Cmd msg
 shuffleConfig toMsg config =
     Random.Extra.map6 Configuration
-        (Random.List.shuffle config.topics)
+        (Random.constant config.topics)
         (Random.List.shuffle config.roots)
         (Random.List.shuffle config.scales)
         (Random.List.shuffle config.intervals)
