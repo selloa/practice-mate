@@ -119,7 +119,6 @@ type Interval
     | Octaves
     | Fourths
     | Fifths
-    | Tenths
 
 
 type Message
@@ -442,9 +441,6 @@ intervalToString interval =
         Fifths ->
             "parallel 5ths"
 
-        Tenths ->
-            "10ths"
-
 
 scalePatternToString : Scale -> String
 scalePatternToString scale =
@@ -531,7 +527,7 @@ doublestopPatternToString scale =
 
 allIntervals : List Interval
 allIntervals =
-    [ Sixths, Thirds, Octaves, Fourths, Fifths, Tenths ]
+    [ Sixths, Thirds, Octaves, Fourths, Fifths ]
 
 
 allChallenges : List Challenge
@@ -1646,9 +1642,6 @@ decodeInterval =
 
                 "parallel 5ths" ->
                     Decode.succeed Fifths
-
-                "10ths" ->
-                    Decode.succeed Tenths
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Interval: " ++ other
