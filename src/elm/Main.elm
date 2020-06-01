@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Browser
 import Browser.Events exposing (onKeyDown)
-import Html exposing (Attribute, Html, button, div, h1, input, text)
+import Html exposing (Attribute, Html, button, div, h1, input, progress, text)
 import Html.Attributes as A exposing (class, max, min, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
@@ -305,10 +305,15 @@ practiceModeToString : PracticeMode -> String
 practiceModeToString mode =
     case mode of
         TimeLimit duration ->
-            "⏲️ " ++ String.fromInt duration
+            "⏲️ "
 
+        --++ String.fromInt duration
         ExerciseLimit exercises ->
-            "✔ (" ++ String.fromInt exercises ++ ")"
+            "📓 "
+
+
+
+--++ String.fromInt exercises
 
 
 practiceModeToStringWithoutNumber : PracticeMode -> String
@@ -703,7 +708,7 @@ initialModel flags =
 type Msg
     = Tick Time.Posix
     | ToggleTimer
-    | ClearTimer
+    | ClearProgress
     | KeyPressed String
     | NewExercise
     | NewRootsGenerated (List Root)
@@ -713,9 +718,10 @@ type Msg
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
+    | SwitchPracticeMode
+      -- toggle elements
     | ToggleSettings
     | ToggleTopic Topic
-    | TogglePracticeMode PracticeMode
     | ToggleRoot Root
     | ToggleChord Chord
     | ToggleScale Scale
@@ -811,8 +817,8 @@ update msg model =
         ToggleTimer ->
             toggleTimer model
 
-        ClearTimer ->
-            clearTimer model
+        ClearProgress ->
+            clearProgress model
 
         KeyPressed key ->
             if key == " " then
@@ -903,8 +909,17 @@ update msg model =
             , shuffleScales (toggle scale model.scales)
             )
 
-        TogglePracticeMode practiceMode ->
-            ( { model | practiceMode = practiceMode }, Cmd.none )
+        SwitchPracticeMode ->
+            let
+                newPracticeMode =
+                    case model.practiceMode of
+                        TimeLimit n ->
+                            ExerciseLimit n
+
+                        ExerciseLimit n ->
+                            TimeLimit n
+            in
+            ( { model | practiceMode = newPracticeMode }, Cmd.none )
 
         ToggleTopic topic ->
             -- let
@@ -1079,11 +1094,12 @@ toggleList items allItems =
         []
 
 
-clearTimer : Model -> ( Model, Cmd Msg )
-clearTimer model =
+clearProgress : Model -> ( Model, Cmd Msg )
+clearProgress model =
     ( { model
         | isRunning = False
         , elapsedTime = 0
+        , completedExercises = 0
         , message = Nothing
       }
     , Cmd.none
@@ -1364,12 +1380,12 @@ settings model =
                     [ div [ class "container" ] [ text "Practice mode" ]
                     , button
                         [ class buttonTimeLimit
-                        , onClick (TogglePracticeMode <| TimeLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Time limit" ]
                     , button
                         [ class buttonExercises
-                        , onClick (TogglePracticeMode <| ExerciseLimit 5)
+                        , onClick SwitchPracticeMode
                         ]
                         [ text "Exercise limit" ]
                     ]
@@ -1494,28 +1510,13 @@ showSetting toString elements selectedElements msg =
 header : Model -> Html Msg
 header model =
     let
-        minutes =
-            String.fromInt (model.elapsedTime // 60)
-
-        seconds =
-            String.fromInt (remainderBy 60 model.elapsedTime)
-
-        toDoubleDigits number =
-            if String.length number < 2 then
-                "0" ++ number
-
-            else
-                number
-
         elementClass =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
         [ div [ class "container flex justify-end items-start" ]
-            [ div [ class elementClass ] [ text (practiceModeToString model.practiceMode) ]
-            , div [ class elementClass ]
-                [ text (toDoubleDigits minutes ++ ":" ++ toDoubleDigits seconds)
-                ]
+            [ button [ class elementClass, onClick SwitchPracticeMode ] [ text (practiceModeToString model.practiceMode) ]
+            , progressBar model
             , button [ class buttonPassive, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
@@ -1524,10 +1525,26 @@ header model =
                     else
                         "start"
                 ]
-            , button [ class buttonPassive, onClick ClearTimer ] [ text "■" ]
+            , button [ class buttonPassive, onClick ClearProgress ] [ text "■" ]
             , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
             ]
         ]
+
+
+progressBar : Model -> Html Msg
+progressBar model =
+    let
+        ( maximum, value_ ) =
+            (case model.practiceMode of
+                TimeLimit time ->
+                    ( time * 60, model.elapsedTime )
+
+                ExerciseLimit exercises ->
+                    ( exercises, model.completedExercises )
+            )
+                |> Tuple.mapBoth String.fromInt String.fromInt
+    in
+    progress [ A.max <| maximum, value value_, class "mt-1 mr-2" ] []
 
 
 
