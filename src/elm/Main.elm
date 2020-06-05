@@ -78,7 +78,7 @@ initialModel flags =
     , isRunning = False
     , showSettings = True
     , message = Nothing
-    , practiceMode = TimeLimit 5
+    , practiceMode = TimeLimit 15
     , configuration = configuration
     }
 
