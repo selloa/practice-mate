@@ -323,10 +323,10 @@ intervalToString interval =
             "8ths"
 
         Fourths ->
-            "parallel 4ths"
+            "4ths"
 
         Fifths ->
-            "parallel 5ths"
+            "5ths"
 
 
 scalePatternToString : Scale -> String
