@@ -1081,10 +1081,10 @@ decodeInterval =
                 "8ths" ->
                     Decode.succeed Octaves
 
-                "parallel 4ths" ->
+                "4ths" ->
                     Decode.succeed Fourths
 
-                "parallel 5ths" ->
+                "5ths" ->
                     Decode.succeed Fifths
 
                 other ->
