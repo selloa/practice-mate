@@ -78,7 +78,7 @@ initialModel flags =
     , isRunning = False
     , showSettings = True
     , message = Nothing
-    , practiceMode = TimeLimit 5
+    , practiceMode = TimeLimit 15
     , configuration = configuration
     }
 
@@ -1081,10 +1081,10 @@ decodeInterval =
                 "8ths" ->
                     Decode.succeed Octaves
 
-                "parallel 4ths" ->
+                "4ths" ->
                     Decode.succeed Fourths
 
-                "parallel 5ths" ->
+                "5ths" ->
                     Decode.succeed Fifths
 
                 other ->
