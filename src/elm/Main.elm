@@ -392,15 +392,14 @@ update msg model =
             let
                 cmd =
                     -- in order to build, the following code needs to be commented out
-                    Debug.toString
-                        model.configuration
-                        |> String.replace "], " "]\n---\n"
-                        |> String.replace "{ " ""
-                        |> String.replace "}" ""
-                        |> printToConsole
-
-                -- and this needds to be commented in
-                -- Cmd.none
+                    -- Debug.toString
+                    --     model.configuration
+                    --     |> String.replace "], " "]\n---\n"
+                    --     |> String.replace "{ " ""
+                    --     |> String.replace "}" ""
+                    --     |> printToConsole
+                    -- and this needds to be commented in
+                    Cmd.none
             in
             ( model, cmd )
 
