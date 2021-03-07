@@ -1,8 +1,8 @@
 # mac 
 .DS_Store
 
-/node_modules
-/elm-stuff
+node_modules/
+elm-stuff/
 .cache/
 dev-temp/
-/compiled
+compiled/
