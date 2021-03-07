@@ -1,4 +1,3 @@
-import "../css/tailwind.css";
 import { Elm } from "../elm/Main.elm";
 
 const STORAGE_ID = "configuration";
@@ -11,9 +10,11 @@ const app = Elm.Main.init({
   flags: flags,
 });
 
-app.ports.printToConsole.subscribe(function (message) {
-  console.log(message);
-});
+app.ports &&
+  app.ports.printToConsole &&
+  app.ports.printToConsole.subscribe(function (message) {
+    console.log(message);
+  });
 
 app.ports.setStorage.subscribe(function (configuration) {
   localStorage.setItem(STORAGE_ID, JSON.stringify(configuration));
