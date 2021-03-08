@@ -586,10 +586,10 @@ selection model =
                         , class "m-2"
                         , onClick ToggleAutoNextExercise
                         ]
-                        [ text "🚔" ]
+                        [ text "⌛️" ]
                     , button
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
-                        [ text "Done" ]
+                        [ text "Hit me!" ]
                     , button
                         [ class <| coloredButton "gray" 300 400 800
                         , class "flex-end m-2"
@@ -1228,13 +1228,13 @@ decodeRoot =
                 "C" ->
                     Decode.succeed C
 
-                "C# / Db" ->
+                "Db" ->
                     Decode.succeed Cis
 
                 "D" ->
                     Decode.succeed D
 
-                "Eb / D#" ->
+                "Eb" ->
                     Decode.succeed Dis
 
                 "E" ->
@@ -1243,13 +1243,13 @@ decodeRoot =
                 "F" ->
                     Decode.succeed F
 
-                "F# / Gb" ->
+                "F#" ->
                     Decode.succeed Fis
 
                 "G" ->
                     Decode.succeed G
 
-                "G# / Ab" ->
+                "Ab" ->
                     Decode.succeed Gis
 
                 other ->

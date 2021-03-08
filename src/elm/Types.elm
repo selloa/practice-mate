@@ -116,13 +116,13 @@ rootToString root =
             "C"
 
         Cis ->
-            "C# / Db"
+            "Db"
 
         D ->
             "D"
 
         Dis ->
-            "Eb / D#"
+            "Eb"
 
         E ->
             "E"
@@ -131,13 +131,13 @@ rootToString root =
             "F"
 
         Fis ->
-            "F# / Gb"
+            "F#"
 
         G ->
             "G"
 
         Gis ->
-            "G# / Ab"
+            "Ab"
 
 
 allScales : List Scale
