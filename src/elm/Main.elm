@@ -392,14 +392,14 @@ update msg model =
             let
                 cmd =
                     -- in order to build, the following code needs to be commented out
-                    -- Debug.toString
-                    --     model.configuration
-                    --     |> String.replace "], " "]\n---\n"
-                    --     |> String.replace "{ " ""
-                    --     |> String.replace "}" ""
-                    --     |> printToConsole
+                    Debug.toString
+                        model.configuration
+                        |> String.replace "], " "]\n---\n"
+                        |> String.replace "{ " ""
+                        |> String.replace "}" ""
+                        |> printToConsole
                     -- and this needds to be commented in
-                    Cmd.none
+                    -- Cmd.none
             in
             ( model, cmd )
 
@@ -510,8 +510,8 @@ selection model =
                     Just Scales ->
                         [ roots
                         , scales
-                        , scalePatterns
                         , spacing
+                        , scalePatterns
                         , bowings
                         , spacing
                         , challenges
@@ -529,8 +529,8 @@ selection model =
                         [ intervals
                         , roots
                         , scales
-                        , doublestopPatterns
                         , spacing
+                        , doublestopPatterns
                         , bowings
                         , spacing
                         , challenges
@@ -540,7 +540,14 @@ selection model =
                         []
                )
             ++ [ div [ class "container p-3 flex" ]
-                    [ button [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] [ text "New exercise" ]
+                    [
+                        
+                     button 
+                        [ class primaryButton, class "m-2", onClick NewExercise ] 
+                        [ text "🚔" ]
+                    ,     button 
+                        [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] 
+                        [ text "Done" ]
                     , button
                         [ class <|
                             if List.length configuration.topics < 2 then
@@ -548,17 +555,17 @@ selection model =
 
                             else
                                 primaryButton
-                        , class "flex-auto m-2"
+                        , class "flex-end m-2"
                         , onClick NextTopic
                         ]
-                        [ text "Next topic" ]
+                        [ text "->" ]
                     ]
                ]
         )
 
 
-slider : Model -> List (Html Msg)
-slider model =
+practiceModeSlider : Model -> List (Html Msg)
+practiceModeSlider model =
     let
         getValue mode =
             case mode of
@@ -745,7 +752,7 @@ practiceMode model =
             ]
             [ text "Exercise limit" ]
         ]
-            ++ slider model
+            ++ practiceModeSlider model
 
 
 presets : Model -> Html Msg
@@ -836,7 +843,7 @@ showRangeSliderSetting model =
                 [ text <| challengeToString element ]
         )
         allChallenges
-        ++ slider model
+        ++ practiceModeSlider model
 
 
 showSetting : Int -> (a -> String) -> List a -> List a -> (a -> Msg) -> List (Html Msg)
