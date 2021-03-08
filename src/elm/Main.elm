@@ -4,7 +4,7 @@ import Browser
 import Browser.Events exposing (onKeyDown)
 import Configuration exposing (..)
 import Html exposing (Html, button, div, input, progress, text)
-import Html.Attributes as A exposing (class, max, min, type_, value)
+import Html.Attributes as A exposing (class, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -495,15 +495,20 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "font-mono bg-gray-200 px-5 py-5 min-h-screen flex items-start" ]
-        [ selectionContainer model
-        , settings model
-        ]
+    div [ class "bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
+        if model.showSettings then
+            [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20", onClick ToggleSettings ]
+                [ text "back" ]
+            , settings model
+            ]
+
+        else
+            [ selectionContainer model ]
 
 
 selectionContainer : Model -> Html Msg
 selectionContainer model =
-    div [ class "container bg-gray-200 px-5 py-5 max-w-lg rounded" ]
+    div [ class "container bg-gray-200 px-5 py-5 max-w-lg rounded w-screen" ]
         [ header model
         , infoBox model.message
         , selection model
@@ -685,14 +690,14 @@ selectionItem items toString skip label =
                     div [] []
 
                 else
-                    div [class "container mb-10"] [
-                        text label 
-                    , Html.span
-                        [ class "text-left bg-white p-1 border-gray-400 border-b-2 rounded select-none"
-                        , onClick skip
+                    div [ class "container mb-10" ]
+                        [ text label
+                        , Html.span
+                            [ class "text-left bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                            , onClick skip
+                            ]
+                            [ text string ]
                         ]
-                        [ text string ]
-                    ]
            )
 
 
@@ -703,10 +708,11 @@ settings model =
             model.configuration
     in
     if model.showSettings then
-        div [ class "container bg-gray-200 px-5 py-5 rounded" ]
-            [ div [ class "container bg-gray-200 font-mono rounded" ] <|
-                [ div [ class "container rounded flex" ]
-                    [ div [ class "container" ]
+        div [ class "container flex flex-wrap bg-gray-200 px-5 rounded" ]
+            [ Html.h1 [ class "text-5xl" ] [ text "Settings" ]
+            , div [ class "container flex flex-wrap bg-gray-200 rounded" ] <|
+                [ div [ class "container rounded flex flex-col md:flex-row" ]
+                    [ div [ class "container flex flex-wrap " ]
                         [ presets model
                         , Html.br [] []
                         , practiceMode model
@@ -718,7 +724,7 @@ settings model =
                             "Topics"
                             4
                         ]
-                    , div [ class "container pl-10" ]
+                    , div [ class "container md:pl-10" ]
                         [ settingsFor configuration.roots
                             allRoots
                             rootToString
@@ -735,18 +741,21 @@ settings model =
                             3
                         ]
                     ]
-                , div [ class "container flex" ]
+                , div [ class "container flex flex-col md:flex-row" ]
                     [ div [ class "container" ]
-                        [ settingsFor configuration.scales
-                            allScales
-                            scaleToString
-                            ToggleScale
-                            ToggleAllScales
-                            "Scales"
-                            1
-                        , button
-                            [ onClick ToggleShowScalePattern ]
-                            [ text "👀" ]
+                        [ let
+                            scaleSettings =
+                                div [ class "container m-6" ] <|
+                                    div [ class "container" ]
+                                        [ button [ class "font-bold", onClick ToggleAllScales ]
+                                            [ text "Scales" ]
+                                        , button
+                                            [ class "ml-2", onClick ToggleShowScalePattern ]
+                                            [ text <| if model.showScalePattern then "🤫" else "👀" ]
+                                        ]
+                                        :: showSetting 1 scaleToString allScales configuration.scales ToggleScale
+                          in
+                          scaleSettings
                         , settingsFor configuration.challenges
                             allChallenges
                             challengeToString
@@ -755,7 +764,7 @@ settings model =
                             "Challenges"
                             4
                         ]
-                    , div [ class "container pl-10" ]
+                    , div [ class "container md:pl-10" ]
                         [ settingsFor configuration.chords
                             allChords
                             chordToString
@@ -807,6 +816,7 @@ practiceMode model =
             , onClick SwitchPracticeMode
             ]
             [ text "Exercise limit" ]
+        , Html.br [] []
         ]
             ++ practiceModeSlider model
 
@@ -814,7 +824,7 @@ practiceMode model =
 presets : Model -> Html Msg
 presets model =
     div [ class "container m-6" ]
-        [ div [ class "container font-bold" ] [ text "Presets" ]
+        [ div [ class "container flex font-bold" ] [ text "Presets" ]
         , Html.br [] []
         , presetButton Basic model
         , presetButton All model
@@ -951,7 +961,7 @@ header model =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
     in
     div [ class "container inline-flex flex flex-row font-mono" ]
-        [ div [ class "container flex justify-end items-start" ]
+        [ div [ class "container flex justify-between items-start" ]
             [ button [ class elementClass, onClick SwitchPracticeMode ] [ text (practiceModeToString model.practiceMode) ]
             , progressBar model
             , button [ class buttonPassive, onClick ToggleTimer ]
@@ -963,7 +973,9 @@ header model =
                         "start"
                 ]
             , button [ class buttonPassive, onClick ClearProgress ] [ text "■" ]
-            , button [ class buttonPassive, onClick ToggleSettings ] [ text "..." ]
+            , button [ class buttonPassive, onClick ToggleSettings ]
+                [ text "..."
+                ]
             ]
         ]
 
