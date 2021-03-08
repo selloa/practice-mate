@@ -48,6 +48,7 @@ type alias Model =
     , message : Maybe Message
     , practiceMode : PracticeMode
     , configuration : Configuration
+    , showScalePattern : Bool
     }
 
 
@@ -80,6 +81,7 @@ initialModel flags =
     , message = Nothing
     , practiceMode = TimeLimit 15
     , configuration = configuration
+    , showScalePattern = False
     }
 
 
@@ -120,6 +122,7 @@ type Msg
     | ToggleAllBowings
     | ToggleAllChallenges
     | ToggleAllIntervals
+    | ToggleShowScalePattern
       --
     | SkipTopic
     | SkipRoot
@@ -297,6 +300,9 @@ update msg model =
             ( model, shuffleScales NewScalesGenerated (toggleScale scale model.configuration) )
                 |> setToCustomPreset
 
+        ToggleShowScalePattern ->
+            ( { model | showScalePattern = not model.showScalePattern }, Cmd.none )
+
         SwitchPracticeMode ->
             let
                 newPracticeMode =
@@ -398,8 +404,9 @@ update msg model =
                         |> String.replace "{ " ""
                         |> String.replace "}" ""
                         |> printToConsole
-                    -- and this needds to be commented in
-                    -- Cmd.none
+
+                -- and this needds to be commented in
+                -- Cmd.none
             in
             ( model, cmd )
 
@@ -493,7 +500,12 @@ selection model =
             selectionItem configuration.bowings bowingToString SkipBowing "Bowings: "
 
         scalePatterns =
-            selectionItem configuration.scales scalePatternToString SkipScale "Scale pattern: "
+            if model.showScalePattern then
+                selectionItem configuration.scales scalePatternToString SkipScale "Scale pattern: "
+
+            else
+                div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded select-none" ]
+                    [ text "-/-" ]
 
         doublestopPatterns =
             selectionItem configuration.scales doublestopPatternToString SkipScale "Doublestop pattern: "
@@ -540,13 +552,11 @@ selection model =
                         []
                )
             ++ [ div [ class "container p-3 flex" ]
-                    [
-                        
-                     button 
-                        [ class primaryButton, class "m-2", onClick NewExercise ] 
+                    [ button
+                        [ class primaryButton, class "m-2", onClick NewExercise ]
                         [ text "🚔" ]
-                    ,     button 
-                        [ class primaryButton, class "flex-auto m-2", onClick NewExercise ] 
+                    , button
+                        [ class primaryButton, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Done" ]
                     , button
                         [ class <|
@@ -684,6 +694,9 @@ settings model =
                             ToggleAllScales
                             "Scales"
                             2
+                        , button
+                            [ onClick ToggleShowScalePattern ]
+                            [ text "👀" ]
                         ]
                     , div [ class "container pl-10" ]
                         [ settingsFor configuration.chords
