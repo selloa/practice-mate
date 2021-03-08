@@ -537,9 +537,18 @@ selection model =
         spacing =
             div [ class "container text-left bg-gray mb-1 p-2" ]
                 []
+
+        showTopic = 
+                List.head configuration.topics
+                    |> Maybe.map topicToString
+                    |> Maybe.withDefault ""
+                    |> \topic -> div
+                        [ class "container text-left text-3xl mb-1 p-2 rounded select-none"
+                        ]
+                        [ text topic]
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
-        ([ selectionItem configuration.topics (String.toUpper << topicToString) SkipTopic ""
+        ([ showTopic
          , spacing
          ]
             ++ (case List.head configuration.topics of
