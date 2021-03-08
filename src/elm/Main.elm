@@ -675,7 +675,7 @@ settings model =
                             ToggleRoot
                             ToggleAllRoots
                             "Roots"
-                            4
+                            3
                         , settingsFor configuration.intervals
                             allIntervals
                             intervalToString
@@ -693,7 +693,7 @@ settings model =
                             ToggleScale
                             ToggleAllScales
                             "Scales"
-                            2
+                            1
                         , button
                             [ onClick ToggleShowScalePattern ]
                             [ text "👀" ]
@@ -810,9 +810,9 @@ coloredButton color light normal dark =
         ++ color
         ++ "-"
         ++ String.fromInt light
-        ++ " cursor-pointer text-white"
-        ++ " font-bold mr-2 mb-1 px-2 border-b-2 border-"
-        ++ color
+        ++ " cursor-pointer text-black"
+        ++ " font-regular mr-2 mb-2 px-2 border-b-2 border-"
+        ++ String.fromInt ( String.toInt color |> Maybe.withDefault 200 |>  (-) 100)
         ++ "-"
         ++ String.fromInt dark
         ++ " hover:border-"
@@ -829,7 +829,7 @@ buttonActive =
 
 buttonPassive : String
 buttonPassive =
-    coloredButton "gray" 400 500 700
+    coloredButton "gray" 100 200 700
 
 
 primaryButton : String
