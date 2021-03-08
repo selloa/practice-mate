@@ -180,10 +180,10 @@ update msg model =
                             0
                     , message =
                         if newTime == timeLimitInSeconds // 3 then
-                            Just (Info "One third, amazing! 🥳" 5)
+                            Just (Info "One third, amazing! \u{1F973}" 5)
 
                         else if newTime == timeLimitInSeconds // 2 then
-                            Just (Info "Halftime, keep going! 👯‍♂️" 5)
+                            Just (Info "Halftime, keep going! 👯\u{200D}♂️" 5)
 
                         else if newTime == 2 * (timeLimitInSeconds // 3) then
                             Just (Info "Two thirds, almost done! 💃" 5)
@@ -198,21 +198,21 @@ update msg model =
                                         Nothing
 
                                     else
-                                        Just (Info text (time))
+                                        Just (Info text time)
 
                                 Just (Error text time) ->
                                     if time == 0 then
                                         Nothing
 
                                     else
-                                        Just (Error text (time))
+                                        Just (Error text time)
 
                                 Just (Success text time) ->
                                     if time == 0 then
                                         Nothing
 
                                     else
-                                        Just (Success text (time))
+                                        Just (Success text time)
 
                                 Nothing ->
                                     Nothing
@@ -418,8 +418,7 @@ update msg model =
                     --     |> String.replace "{ " ""
                     --     |> String.replace "}" ""
                     --     |> printToConsole
-
-                -- and this needds to be commented in
+                    -- and this needds to be commented in
                     Cmd.none
             in
             ( model, cmd )
@@ -528,8 +527,7 @@ selection model =
                 selectionItem configuration.scales scalePatternToString SkipScale "Scale pattern: "
 
             else
-                div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded select-none" ]
-                    [ text "-/-" ]
+                div [] []
 
         doublestopPatterns =
             selectionItem configuration.scales doublestopPatternToString SkipScale "Doublestop pattern: "
@@ -538,14 +536,16 @@ selection model =
             div [ class "container text-left bg-gray mb-1 p-2" ]
                 []
 
-        showTopic = 
-                List.head configuration.topics
-                    |> Maybe.map topicToString
-                    |> Maybe.withDefault ""
-                    |> \topic -> div
-                        [ class "container text-left text-3xl mb-1 p-2 rounded select-none"
-                        ]
-                        [ text topic]
+        showTopic =
+            List.head configuration.topics
+                |> Maybe.map topicToString
+                |> Maybe.withDefault ""
+                |> (\topic ->
+                        div
+                            [ class "container text-left text-3xl mb-1 p-2 rounded select-none"
+                            ]
+                            [ text topic ]
+                   )
     in
     div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
         ([ showTopic
@@ -670,8 +670,7 @@ selectionItem items toString skip label =
         |> Maybe.withDefault ""
         |> (\string ->
                 if String.isEmpty string then
-                    div [ class "container text-center bg-gray-200 mb-1 p-2 border-gray-400 border-b-2 rounded select-none" ]
-                        [ text "-/-" ]
+                    div [] []
 
                 else
                     div
@@ -807,13 +806,11 @@ presets model =
         , presetButton None model
         , presetButton Custom model
         , Html.br [] []
-        , 
-             button
-                [ class <| coloredButton "yellow" 400 500 700
-                , onClick PrintConfiguration
-                ]
-                [ text "EXPORT" ]
-            
+        , button
+            [ class <| coloredButton "yellow" 400 500 700
+            , onClick PrintConfiguration
+            ]
+            [ text "EXPORT" ]
         ]
 
 
