@@ -49,6 +49,8 @@ type alias Model =
     , practiceMode : PracticeMode
     , configuration : Configuration
     , showScalePattern : Bool
+    , autoNextExercise : Bool
+    , elapsedExerciseTime : Int
     }
 
 
@@ -82,6 +84,8 @@ initialModel flags =
     , practiceMode = TimeLimit 15
     , configuration = configuration
     , showScalePattern = False
+    , autoNextExercise = False
+    , elapsedExerciseTime = 0
     }
 
 
@@ -123,6 +127,7 @@ type Msg
     | ToggleAllChallenges
     | ToggleAllIntervals
     | ToggleShowScalePattern
+    | ToggleAutoNextExercise
       --
     | SkipTopic
     | SkipRoot
@@ -167,6 +172,12 @@ update msg model =
             if model.isRunning then
                 ( { model
                     | elapsedTime = newTime
+                    , elapsedExerciseTime =
+                        if model.autoNextExercise then
+                            model.elapsedExerciseTime + 1
+
+                        else
+                            0
                     , message =
                         if newTime == timeLimitInSeconds // 3 then
                             Just (Info "Finished 1/3, continue to the next topic if you like" 5)
@@ -303,6 +314,9 @@ update msg model =
         ToggleShowScalePattern ->
             ( { model | showScalePattern = not model.showScalePattern }, Cmd.none )
 
+        ToggleAutoNextExercise ->
+            ( { model | autoNextExercise = not model.autoNextExercise }, Cmd.none )
+
         SwitchPracticeMode ->
             let
                 newPracticeMode =
@@ -409,6 +423,16 @@ update msg model =
                 -- Cmd.none
             in
             ( model, cmd )
+
+
+
+-- toggleNextExercise (model, cmd) =
+--     let
+--         (newModel, newCmd) = if model.elapsedExerciseTime > 60 then
+--                                     ({model | elapsedExerciseTime = 0}, ToggleAutoNextExercise)
+--                              else (model, Cmd.none)
+--     in
+--     (newModel, newCmd)
 
 
 setToCustomPreset : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
@@ -553,7 +577,15 @@ selection model =
                )
             ++ [ div [ class "container p-3 flex" ]
                     [ button
-                        [ class primaryButton, class "m-2", onClick NewExercise ]
+                        [ class <|
+                            if model.autoNextExercise then
+                                primaryButton
+
+                            else
+                                buttonPassive
+                        , class "m-2"
+                        , onClick ToggleAutoNextExercise
+                        ]
                         [ text "🚔" ]
                     , button
                         [ class primaryButton, class "flex-auto m-2", onClick NewExercise ]
@@ -697,6 +729,13 @@ settings model =
                         , button
                             [ onClick ToggleShowScalePattern ]
                             [ text "👀" ]
+                        , settingsFor configuration.challenges
+                            allChallenges
+                            challengeToString
+                            ToggleChallenge
+                            ToggleAllChallenges
+                            "Challenges"
+                            4
                         ]
                     , div [ class "container pl-10" ]
                         [ settingsFor configuration.chords
@@ -706,24 +745,17 @@ settings model =
                             ToggleAllChords
                             "Chords"
                             2
+                        , settingsFor configuration.bowings
+                            allBowings
+                            bowingToString
+                            ToggleBowing
+                            ToggleAllBowings
+                            "Bowings"
+                            2
                         ]
                     ]
 
                 -- :: showRangeSliderSetting model
-                , settingsFor configuration.bowings
-                    allBowings
-                    bowingToString
-                    ToggleBowing
-                    ToggleAllBowings
-                    "Bowings"
-                    4
-                , settingsFor configuration.challenges
-                    allChallenges
-                    challengeToString
-                    ToggleChallenge
-                    ToggleAllChallenges
-                    "Challenges"
-                    4
                 , div [ class "container m-2" ]
                     [ button
                         [ class <| coloredButton "yellow" 400 500 700
@@ -750,9 +782,9 @@ practiceMode model =
                     ( buttonPassive, buttonActive )
     in
     div
-        [ class "container mx-2" ]
+        [ class "container m-6" ]
     <|
-        [ div [ class "container" ] [ text "Practice mode" ]
+        [ div [ class "container font-bold" ] [ text "Practice mode" ]
         , Html.br [] []
         , button
             [ class buttonTimeLimit
@@ -770,8 +802,9 @@ practiceMode model =
 
 presets : Model -> Html Msg
 presets model =
-    div [ class "container mx-2" ]
-        [ div [ class "container" ] [ text "Presets" ]
+    div [ class "container m-6" ]
+        [ div [ class "container font-bold" ] [ text "Presets" ]
+        , Html.br [] []
         , presetButton Basic model
         , presetButton All model
         , presetButton None model
@@ -781,8 +814,8 @@ presets model =
 
 settingsFor : List a -> List a -> (a -> String) -> (a -> Msg) -> Msg -> String -> Int -> Html Msg
 settingsFor currentItems allItems itemToString toggleSingle toggleAllMsg label divideAt =
-    div [ class "container m-2" ] <|
-        div [ class "container" ] [ button [ onClick toggleAllMsg ] [ text label ] ]
+    div [ class "container m-6" ] <|
+        div [ class "container" ] [ button [ class "font-bold", onClick toggleAllMsg ] [ text label ] ]
             :: showSetting divideAt itemToString allItems currentItems toggleSingle
 
 
@@ -812,7 +845,7 @@ coloredButton color light normal dark =
         ++ String.fromInt light
         ++ " cursor-pointer text-black"
         ++ " font-regular mr-2 mb-2 px-2 border-b-2 border-"
-        ++ String.fromInt ( String.toInt color |> Maybe.withDefault 200 |>  (-) 100)
+        ++ String.fromInt (String.toInt color |> Maybe.withDefault 200 |> (-) 100)
         ++ "-"
         ++ String.fromInt dark
         ++ " hover:border-"
@@ -829,7 +862,7 @@ buttonActive =
 
 buttonPassive : String
 buttonPassive =
-    coloredButton "gray" 100 200 700
+    coloredButton "gray" 400 200 700
 
 
 primaryButton : String
