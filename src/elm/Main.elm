@@ -673,11 +673,14 @@ selectionItem items toString skip label =
                     div [] []
 
                 else
-                    div
-                        [ class "container text-left bg-white mb-1 p-2 border-gray-400 border-b-2 rounded select-none"
+                    div [class "container mb-10"] [
+                        text label 
+                    , Html.span
+                        [ class "text-left bg-white p-1 border-gray-400 border-b-2 rounded select-none"
                         , onClick skip
                         ]
-                        [ text label, text string ]
+                        [ text string ]
+                    ]
            )
 
 
