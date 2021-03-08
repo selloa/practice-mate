@@ -798,13 +798,13 @@ presets model =
         , presetButton None model
         , presetButton Custom model
         , Html.br [] []
-        , div [ class "container m-2" ]
-            [ button
+        , 
+             button
                 [ class <| coloredButton "yellow" 400 500 700
                 , onClick PrintConfiguration
                 ]
                 [ text "EXPORT" ]
-            ]
+            
         ]
 
 
