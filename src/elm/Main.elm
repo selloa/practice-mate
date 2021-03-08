@@ -568,7 +568,7 @@ selection model =
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
-                        [ text "->" ]
+                        [ text "💃" ]
                     ]
                ]
         )
@@ -824,7 +824,7 @@ coloredButton color light normal dark =
 
 buttonActive : String
 buttonActive =
-    coloredButton "green" 400 500 700
+    coloredButton "green" 500 600 800
 
 
 buttonPassive : String
@@ -834,7 +834,7 @@ buttonPassive =
 
 primaryButton : String
 primaryButton =
-    coloredButton "pink" 400 500 700
+    coloredButton "indigo" 300 400 700
 
 
 showRangeSliderSetting model =
