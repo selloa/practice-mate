@@ -412,15 +412,15 @@ update msg model =
             let
                 cmd =
                     -- in order to build, the following code needs to be commented out
-                    Debug.toString
-                        model.configuration
-                        |> String.replace "], " "]\n---\n"
-                        |> String.replace "{ " ""
-                        |> String.replace "}" ""
-                        |> printToConsole
+                    -- Debug.toString
+                    --     model.configuration
+                    --     |> String.replace "], " "]\n---\n"
+                    --     |> String.replace "{ " ""
+                    --     |> String.replace "}" ""
+                    --     |> printToConsole
 
                 -- and this needds to be commented in
-                -- Cmd.none
+                    Cmd.none
             in
             ( model, cmd )
 
@@ -588,7 +588,7 @@ selection model =
                         ]
                         [ text "🚔" ]
                     , button
-                        [ class primaryButton, class "flex-auto m-2", onClick NewExercise ]
+                        [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Done" ]
                     , button
                         [ class <|
@@ -756,13 +756,6 @@ settings model =
                     ]
 
                 -- :: showRangeSliderSetting model
-                , div [ class "container m-2" ]
-                    [ button
-                        [ class <| coloredButton "yellow" 400 500 700
-                        , onClick PrintConfiguration
-                        ]
-                        [ text "EXPORT" ]
-                    ]
                 ]
             ]
 
@@ -809,6 +802,14 @@ presets model =
         , presetButton All model
         , presetButton None model
         , presetButton Custom model
+        , Html.br [] []
+        , div [ class "container m-2" ]
+            [ button
+                [ class <| coloredButton "yellow" 400 500 700
+                , onClick PrintConfiguration
+                ]
+                [ text "EXPORT" ]
+            ]
         ]
 
 
@@ -857,7 +858,7 @@ coloredButton color light normal dark =
 
 buttonActive : String
 buttonActive =
-    coloredButton "green" 500 600 800
+    coloredButton "green" 500 400 800
 
 
 buttonPassive : String
