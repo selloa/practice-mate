@@ -237,6 +237,18 @@ update msg model =
                 , shuffleConfig NewConfigurationGenerated model.configuration
                 )
 
+            else if key == "Enter" then
+                let
+                    newConfiguration =
+                        nextTopic model.configuration
+                in
+                ( { model
+                    | completedExercises = model.completedExercises + 1
+                    , configuration = newConfiguration
+                  }
+                , shuffleConfig NewConfigurationGenerated newConfiguration
+                )
+
             else
                 ( model, Cmd.none )
 
