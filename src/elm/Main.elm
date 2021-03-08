@@ -657,7 +657,7 @@ infoBox message =
     else
         div
             [ class <| "container flex-col mx-auto font-mono justify-center bg-" ++ color ++ " px-4" ]
-            [ div [ class <| "container text-left bg-" ++ color ++ " mb-1 p-2" ]
+            [ div [ class <| "container text-left bg-" ++ color ++ " mt-5 mb-1 p-2" ]
                 [ text content
                 ]
             ]
