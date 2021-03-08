@@ -73,7 +73,7 @@ type Interval
 
 
 type Message
-    = Info String Int
+    = Info String
     | Success String Int
     | Error String Int
 

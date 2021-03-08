@@ -161,6 +161,13 @@ update msg model =
                 newTime =
                     model.elapsedTime + 1
 
+                newExerciseTime =
+                    if model.autoNextExercise then
+                        model.elapsedExerciseTime + 1
+
+                    else
+                        model.elapsedExerciseTime
+
                 timeLimitInSeconds =
                     case model.practiceMode of
                         TimeLimit minutes ->
@@ -171,53 +178,35 @@ update msg model =
             in
             if model.isRunning then
                 ( { model
-                    | elapsedTime = newTime
+                    | isRunning = timeLimitInSeconds /= newTime
+                    , elapsedTime = newTime
                     , elapsedExerciseTime =
-                        if model.autoNextExercise then
-                            model.elapsedExerciseTime + 1
-
-                        else
+                        if newExerciseTime > 59 then
                             0
-                    , message =
-                        if newTime == timeLimitInSeconds // 3 then
-                            Just (Info "One third, amazing! \u{1F973}" 5)
-
-                        else if newTime == timeLimitInSeconds // 2 then
-                            Just (Info "Halftime, keep going! 👯\u{200D}♂️" 5)
-
-                        else if newTime == 2 * (timeLimitInSeconds // 3) then
-                            Just (Info "Two thirds, almost done! 💃" 5)
-
-                        else if newTime == timeLimitInSeconds then
-                            Just (Success "Yay, you're awesome! 🎻" 5)
 
                         else
-                            case model.message of
-                                Just (Info text time) ->
-                                    if time == 0 then
-                                        Nothing
+                            newExerciseTime
+                    , message =
+                        if newTime == timeLimitInSeconds then
+                            Just (Success "Yay, you're awesome! 🎻" 10)
 
-                                    else
-                                        Just (Info text time)
+                        else if newTime > 2 * (timeLimitInSeconds // 3) then
+                            Just (Info "Two thirds, almost done! 💃")
 
-                                Just (Error text time) ->
-                                    if time == 0 then
-                                        Nothing
+                        else if newTime > timeLimitInSeconds // 2 then
+                            Just (Info "Halftime, keep going! 👯\u{200D}♂️")
 
-                                    else
-                                        Just (Error text time)
+                        else if newTime > timeLimitInSeconds // 3 then
+                            Just (Info "One third, amazing! \u{1F973}")
 
-                                Just (Success text time) ->
-                                    if time == 0 then
-                                        Nothing
-
-                                    else
-                                        Just (Success text time)
-
-                                Nothing ->
-                                    Nothing
+                        else
+                            Nothing
                   }
-                , Cmd.none
+                , if newExerciseTime > 59 then
+                    shuffleConfig NewConfigurationGenerated model.configuration
+
+                  else
+                    Cmd.none
                 )
 
             else
@@ -640,7 +629,7 @@ practiceModeSlider model =
     in
     [ input
         [ type_ "range"
-        , A.min "5"
+        , A.min "1"
         , A.max "60"
         , value <| String.fromInt (getValue model.practiceMode)
         , onInput UpdatedSlider
@@ -656,7 +645,7 @@ infoBox message =
     let
         ( color, content ) =
             case message of
-                Just (Info msg _) ->
+                Just (Info msg) ->
                     ( "yellow-300", msg )
 
                 Just (Error msg _) ->
@@ -751,7 +740,13 @@ settings model =
                                             [ text "Scales" ]
                                         , button
                                             [ class "ml-2", onClick ToggleShowScalePattern ]
-                                            [ text <| if model.showScalePattern then "🤫" else "👀" ]
+                                            [ text <|
+                                                if model.showScalePattern then
+                                                    "\u{1F92B}"
+
+                                                else
+                                                    "👀"
+                                            ]
                                         ]
                                         :: showSetting 1 scaleToString allScales configuration.scales ToggleScale
                           in
