@@ -797,7 +797,7 @@ presetButton preset model =
                 buttonPassive
         , onClick (ChangePreset preset)
         ]
-        [ text <| String.toUpper <| presetToString preset ]
+        [ text <| presetToString preset ]
 
 
 coloredButton : String -> Int -> Int -> Int -> String
