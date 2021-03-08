@@ -258,7 +258,7 @@ scaleToString : Scale -> String
 scaleToString scale =
     case scale of
         Ionian ->
-            "Major (Ionian)"
+            "Major"
 
         Dorian ->
             "Dorian"
@@ -273,7 +273,7 @@ scaleToString scale =
             "Mixolydian"
 
         Aeolian ->
-            "Minor (Natural, Aeolian)"
+            "Minor"
 
         Mandalorian ->
             "Mandalorian"

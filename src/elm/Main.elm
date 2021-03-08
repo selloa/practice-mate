@@ -1146,7 +1146,7 @@ decodeScale =
     let
         recover x =
             case x of
-                "Major (Ionian)" ->
+                "Major" ->
                     Decode.succeed Ionian
 
                 "Dorian" ->
@@ -1161,7 +1161,7 @@ decodeScale =
                 "Mixolydian" ->
                     Decode.succeed Mixolydian
 
-                "Minor (Natural, Aeolian)" ->
+                "Minor" ->
                     Decode.succeed Aeolian
 
                 "Mandalorian" ->
