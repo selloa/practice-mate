@@ -180,16 +180,16 @@ update msg model =
                             0
                     , message =
                         if newTime == timeLimitInSeconds // 3 then
-                            Just (Info "Finished 1/3, continue to the next topic if you like" 5)
+                            Just (Info "One third, amazing! 🥳" 5)
 
                         else if newTime == timeLimitInSeconds // 2 then
-                            Just (Info "Halftime, keep going!" 5)
+                            Just (Info "Halftime, keep going! 👯‍♂️" 5)
 
                         else if newTime == 2 * (timeLimitInSeconds // 3) then
-                            Just (Info "Finished 2/3, continue to the next topic if you like" 5)
+                            Just (Info "Two thirds, almost done! 💃" 5)
 
                         else if newTime == timeLimitInSeconds then
-                            Just (Success "Yay, you're awesome!" 5)
+                            Just (Success "Yay, you're awesome! 🎻" 5)
 
                         else
                             case model.message of
@@ -198,21 +198,21 @@ update msg model =
                                         Nothing
 
                                     else
-                                        Just (Info text (time - 1))
+                                        Just (Info text (time))
 
                                 Just (Error text time) ->
                                     if time == 0 then
                                         Nothing
 
                                     else
-                                        Just (Error text (time - 1))
+                                        Just (Error text (time))
 
                                 Just (Success text time) ->
                                     if time == 0 then
                                         Nothing
 
                                     else
-                                        Just (Success text (time - 1))
+                                        Just (Success text (time))
 
                                 Nothing ->
                                     Nothing
@@ -579,10 +579,10 @@ selection model =
                     [ button
                         [ class <|
                             if model.autoNextExercise then
-                                primaryButton
+                                coloredButton "gray" 400 500 800
 
                             else
-                                buttonPassive
+                                coloredButton "gray" 300 400 800
                         , class "m-2"
                         , onClick ToggleAutoNextExercise
                         ]
@@ -591,16 +591,11 @@ selection model =
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Done" ]
                     , button
-                        [ class <|
-                            if List.length configuration.topics < 2 then
-                                buttonPassive
-
-                            else
-                                primaryButton
+                        [ class <| coloredButton "gray" 300 400 800
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
-                        [ text "💃" ]
+                        [ text "→" ]
                     ]
                ]
         )
