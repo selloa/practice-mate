@@ -825,12 +825,12 @@ presets model =
         , presetButton All model
         , presetButton None model
         , presetButton Custom model
-        , Html.br [] []
-        , button
-            [ class <| coloredButton "yellow" 400 500 700
-            , onClick PrintConfiguration
-            ]
-            [ text "EXPORT" ]
+        -- , Html.br [] []
+        -- , button
+        --     [ class <| coloredButton "yellow" 400 500 700
+        --     , onClick PrintConfiguration
+        --     ]
+        --     [ text "EXPORT" ]
         ]
 
 
