@@ -3,7 +3,6 @@ module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Messa
 
 type PracticeMode
     = TimeLimit Int
-    | ExerciseLimit Int
 
 
 type Topic
@@ -182,10 +181,6 @@ practiceModeToString mode =
         TimeLimit _ ->
             "⏲️ "
 
-        --++ String.fromInt duration
-        ExerciseLimit _ ->
-            "📓 "
-
 
 
 --++ String.fromInt exercises
@@ -196,9 +191,6 @@ practiceModeToStringWithoutNumber mode =
     case mode of
         TimeLimit _ ->
             "Time limit"
-
-        ExerciseLimit _ ->
-            "Exercise limit"
 
 
 topicToString : Topic -> String
@@ -304,10 +296,10 @@ bowingToString : Bowing -> String
 bowingToString bowing =
     case bowing of
         Slured n ->
-            String.fromInt n ++ " to a bow"
+            String.fromInt n
 
         Repeated n ->
-            "Play each note " ++ String.fromInt n ++ " times"
+            String.fromInt n
 
 
 intervalToString : Interval -> String
@@ -444,10 +436,10 @@ challengeToString : Challenge -> String
 challengeToString challenge =
     case challenge of
         AString ->
-            "Play on A String"
+            "A String"
 
         DString ->
-            "Play on D String"
+            "D String"
 
 
 allBowings : List Bowing
@@ -460,6 +452,10 @@ allBowings =
     , Slured 6
     , Slured 7
     , Slured 8
+    , Slured 9
+    , Slured 10
+    , Slured 11
+    , Slured 12
     , Repeated 1
     , Repeated 2
     , Repeated 3
@@ -468,4 +464,8 @@ allBowings =
     , Repeated 6
     , Repeated 7
     , Repeated 8
+    , Repeated 9
+    , Repeated 10
+    , Repeated 11
+    , Repeated 12
     ]

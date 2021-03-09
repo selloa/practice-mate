@@ -108,7 +108,6 @@ type Msg
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
-    | SwitchPracticeMode
       --
     | ToggleSettings
     | ToggleTopic Topic
@@ -172,9 +171,6 @@ update msg model =
                     case model.practiceMode of
                         TimeLimit minutes ->
                             minutes * 60
-
-                        ExerciseLimit _ ->
-                            0
             in
             if model.isRunning then
                 ( { model
@@ -318,18 +314,6 @@ update msg model =
         ToggleAutoNextExercise ->
             ( { model | autoNextExercise = not model.autoNextExercise }, Cmd.none )
 
-        SwitchPracticeMode ->
-            let
-                newPracticeMode =
-                    case model.practiceMode of
-                        TimeLimit n ->
-                            ExerciseLimit n
-
-                        ExerciseLimit n ->
-                            TimeLimit n
-            in
-            ( { model | practiceMode = newPracticeMode }, Cmd.none )
-
         ToggleTopic topic ->
             ( { model | configuration = toggleTopic topic model.configuration }, Cmd.none )
                 |> setToCustomPreset
@@ -400,11 +384,6 @@ update msg model =
                             String.toInt newValue
                                 |> Maybe.withDefault 15
                                 |> TimeLimit
-
-                        ExerciseLimit _ ->
-                            String.toInt newValue
-                                |> Maybe.withDefault 15
-                                |> ExerciseLimit
               }
             , Cmd.none
             )
@@ -511,22 +490,22 @@ selection model =
             model.configuration
 
         intervals =
-            selectionItem configuration.intervals intervalToString SkipInterval "Interval: "
+            selectionItem configuration.intervals intervalToString SkipInterval "Interval "
 
         roots =
-            selectionItem configuration.roots rootToString SkipRoot "Root: "
+            selectionItem configuration.roots rootToString SkipRoot "Root "
 
         scales =
-            selectionItem configuration.scales scaleToString SkipScale "Scale: "
+            selectionItem configuration.scales scaleToString SkipScale "Scale "
 
         chords =
-            selectionItem configuration.chords chordToString SkipChord "Chord: "
+            selectionItem configuration.chords chordToString SkipChord "Chord "
 
         challenges =
-            selectionItem configuration.challenges challengeToString SkipChallenge "Extra challenge: "
+            selectionItem configuration.challenges challengeToString SkipChallenge "Challenge "
 
         bowings =
-            selectionItem configuration.bowings bowingToString SkipBowing "Bowings: "
+            selectionItem configuration.bowings bowingToString SkipBowing "Bowing "
 
         scalePatterns =
             if model.showScalePattern then
@@ -539,7 +518,7 @@ selection model =
             selectionItem configuration.scales doublestopPatternToString SkipScale "Doublestop pattern: "
 
         spacing =
-            div [ class "container text-left bg-gray mb-1 p-2" ]
+            div [ class "container bg-gray mb-1 p-2" ]
                 []
 
         showTopic =
@@ -548,12 +527,12 @@ selection model =
                 |> Maybe.withDefault ""
                 |> (\topic ->
                         div
-                            [ class "container text-left text-3xl mb-1 p-2 rounded select-none"
+                            [ class "container text-center text-3xl mb-1 p-2 rounded select-none"
                             ]
                             [ text topic ]
                    )
     in
-    div [ class "container flex-col mx-auto justify-center p-3 bg-gray-200 px-4 rounded" ]
+    div [ class "container flex-col mx-auto text-center justify-center p-3 bg-gray-300 px-4 rounded" ]
         ([ showTopic
          , spacing
          ]
@@ -623,9 +602,6 @@ practiceModeSlider model =
             case mode of
                 TimeLimit number ->
                     number
-
-                ExerciseLimit number ->
-                    number
     in
     [ input
         [ type_ "range"
@@ -646,7 +622,7 @@ infoBox message =
         ( color, content ) =
             case message of
                 Just (Info msg) ->
-                    ( "yellow-300", msg )
+                    ( "indigo-300", msg )
 
                 Just (Error msg _) ->
                     ( "red-300", msg )
@@ -681,7 +657,7 @@ selectionItem items toString skip label =
                 else
                     div [ class "container mb-10" ]
                         [ text label
-                        , Html.span
+                        , button
                             [ class "text-left bg-white p-1 border-gray-400 border-b-2 rounded select-none"
                             , onClick skip
                             ]
@@ -699,82 +675,82 @@ settings model =
     if model.showSettings then
         div [ class "container flex flex-wrap bg-gray-200 px-5 rounded" ]
             [ Html.h1 [ class "text-5xl" ] [ text "Settings" ]
-            , div [ class "container flex flex-wrap bg-gray-200 rounded" ] <|
-                [ div [ class "container rounded flex flex-col md:flex-row" ]
-                    [ div [ class "container flex flex-wrap " ]
-                        [ presets model
-                        , Html.br [] []
-                        , practiceMode model
-                        , settingsFor configuration.topics
-                            allTopics
-                            topicToString
-                            ToggleTopic
-                            ToggleAllTopics
-                            "Topics"
-                            4
-                        ]
-                    , div [ class "container md:pl-10" ]
-                        [ settingsFor configuration.roots
-                            allRoots
-                            rootToString
-                            ToggleRoot
-                            ToggleAllRoots
-                            "Roots"
-                            3
-                        , settingsFor configuration.intervals
-                            allIntervals
-                            intervalToString
-                            ToggleInterval
-                            ToggleAllIntervals
-                            "Intervals"
-                            3
-                        ]
-                    ]
-                , div [ class "container flex flex-col md:flex-row" ]
-                    [ div [ class "container" ]
-                        [ let
-                            scaleSettings =
-                                div [ class "container m-6" ] <|
-                                    div [ class "container" ]
-                                        [ button [ class "font-bold", onClick ToggleAllScales ]
-                                            [ text "Scales" ]
-                                        , button
-                                            [ class "ml-2", onClick ToggleShowScalePattern ]
-                                            [ text <|
-                                                if model.showScalePattern then
-                                                    "\u{1F92B}"
+            , div [ class "container bg-gray-200 rounded" ] <|
+                [ presets model
+                , practiceMode model
+                , settingsFor configuration.topics
+                    allTopics
+                    topicToString
+                    ToggleTopic
+                    ToggleAllTopics
+                    "Topics"
+                    4
+                , settingsFor configuration.roots
+                    allRoots
+                    rootToString
+                    ToggleRoot
+                    ToggleAllRoots
+                    "Roots"
+                    3
+                , settingsFor configuration.intervals
+                    allIntervals
+                    intervalToString
+                    ToggleInterval
+                    ToggleAllIntervals
+                    "Intervals"
+                    3
+                , div [ class "container" ]
+                    [ let
+                        scaleSettings =
+                            div [ class "container m-6" ] <|
+                                div [ class "container" ]
+                                    [ button [ class "font-bold", onClick ToggleAllScales ]
+                                        [ text "Scales" ]
+                                    , button
+                                        [ class "ml-2", onClick ToggleShowScalePattern ]
+                                        [ text <|
+                                            if model.showScalePattern then
+                                                "\u{1F92B}"
 
-                                                else
-                                                    "👀"
-                                            ]
+                                            else
+                                                "👀"
                                         ]
-                                        :: showSetting 1 scaleToString allScales configuration.scales ToggleScale
-                          in
-                          scaleSettings
-                        , settingsFor configuration.challenges
-                            allChallenges
-                            challengeToString
-                            ToggleChallenge
-                            ToggleAllChallenges
-                            "Challenges"
-                            4
-                        ]
-                    , div [ class "container md:pl-10" ]
-                        [ settingsFor configuration.chords
-                            allChords
-                            chordToString
-                            ToggleChord
-                            ToggleAllChords
-                            "Chords"
-                            2
-                        , settingsFor configuration.bowings
-                            allBowings
-                            bowingToString
-                            ToggleBowing
-                            ToggleAllBowings
-                            "Bowings"
-                            2
-                        ]
+                                    ]
+                                    :: showSetting 1 scaleToString allScales configuration.scales ToggleScale
+                      in
+                      scaleSettings
+                    , settingsFor configuration.challenges
+                        allChallenges
+                        challengeToString
+                        ToggleChallenge
+                        ToggleAllChallenges
+                        "Challenges"
+                        4
+                    , settingsFor configuration.chords
+                        allChords
+                        chordToString
+                        ToggleChord
+                        ToggleAllChords
+                        "Chords"
+                        2
+                    , settingsFor
+                        (configuration.bowings
+                            |> List.filter
+                                (\b ->
+                                    case b of
+                                        Slured _ ->
+                                            True
+
+                                        Repeated _ ->
+                                            False
+                                )
+                        )
+                        allBowings
+                        bowingToString
+                        ToggleBowing
+                        ToggleAllBowings
+                        "Bowings"
+                        4
                     ]
 
                 -- :: showRangeSliderSetting model
@@ -792,9 +768,6 @@ practiceMode model =
             case model.practiceMode of
                 TimeLimit _ ->
                     ( buttonActive, buttonPassive )
-
-                ExerciseLimit _ ->
-                    ( buttonPassive, buttonActive )
     in
     div
         [ class "container m-6" ]
@@ -803,14 +776,8 @@ practiceMode model =
         , Html.br [] []
         , button
             [ class buttonTimeLimit
-            , onClick SwitchPracticeMode
             ]
             [ text "Time limit" ]
-        , button
-            [ class buttonExercises
-            , onClick SwitchPracticeMode
-            ]
-            [ text "Exercise limit" ]
         , Html.br [] []
         ]
             ++ practiceModeSlider model
@@ -825,6 +792,7 @@ presets model =
         , presetButton All model
         , presetButton None model
         , presetButton Custom model
+
         -- , Html.br [] []
         -- , button
         --     [ class <| coloredButton "yellow" 400 500 700
@@ -955,22 +923,21 @@ header model =
         elementClass =
             "px-2 mr-2 mb-2 bg-gray-100 rounded border-b-2"
     in
-    div [ class "container inline-flex flex flex-row font-mono" ]
-        [ div [ class "container flex justify-between items-start" ]
-            [ button [ class elementClass, onClick SwitchPracticeMode ] [ text (practiceModeToString model.practiceMode) ]
-            , progressBar model
-            , button [ class buttonPassive, onClick ToggleTimer ]
+    div [ class "container inline-flex flex flex-row" ]
+        [ div [ class "container flex justify-start items-start" ]
+            [ progressBar model
+            , button [ class elementClass, onClick ToggleTimer ]
                 [ text <|
                     if model.isRunning then
-                        "pause"
+                        "||"
 
                     else
-                        "start"
+                        "►"
                 ]
-            , button [ class buttonPassive, onClick ClearProgress ] [ text "■" ]
-            , button [ class buttonPassive, onClick ToggleSettings ]
-                [ text "..."
-                ]
+            , button [ class elementClass, onClick ClearProgress ] [ text "■" ]
+            ]
+        , button [ class elementClass, class "flex-grow", onClick ToggleSettings ]
+            [ text "..."
             ]
         ]
 
@@ -982,9 +949,6 @@ progressBar model =
             (case model.practiceMode of
                 TimeLimit time ->
                     ( time * 60, model.elapsedTime )
-
-                ExerciseLimit exercises ->
-                    ( exercises, model.completedExercises )
             )
                 |> Tuple.mapBoth String.fromInt String.fromInt
     in
@@ -1227,10 +1191,10 @@ decodeChallenge =
     let
         recover x =
             case x of
-                "Play on A String" ->
+                "A String" ->
                     Decode.succeed AString
 
-                "Play on D String" ->
+                "D String" ->
                     Decode.succeed DString
 
                 other ->
