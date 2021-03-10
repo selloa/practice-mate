@@ -10,8 +10,13 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Time
 import Types exposing (..)
+import Material.Icons as Filled
+import Material.Icons.Types exposing (Coloring(..))
 
 
+-- config
+
+buttonSize = 26
 
 -- ports
 
@@ -465,8 +470,8 @@ view : Model -> Html Msg
 view model =
     div [ class "bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
         if model.showSettings then
-            [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20", onClick ToggleSettings ]
-                [ text "back" ]
+            [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20 p-1", onClick ToggleSettings ]
+                [ Filled.arrow_back_ios_new buttonSize Inherit]
             , settings model
             ]
 
@@ -577,10 +582,10 @@ selection model =
 
                             else
                                 coloredButton "gray" 300 400 800
-                        , class "m-2"
+                        , class "m-2 p-2"
                         , onClick ToggleAutoNextExercise
                         ]
-                        [ text "⌛️" ]
+                        [ Filled.timelapse buttonSize Inherit]
                     , button
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Hit me!" ]
@@ -589,7 +594,7 @@ selection model =
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
-                        [ text "→" ]
+                        [ Filled.navigate_next buttonSize Inherit]
                     ]
                ]
         )
@@ -926,18 +931,20 @@ header model =
     div [ class "container inline-flex flex flex-row" ]
         [ div [ class "container flex justify-start items-start" ]
             [ progressBar model
+            , button [ class elementClass, onClick ClearProgress ] [ Filled.skip_previous buttonSize Inherit]
             , button [ class elementClass, onClick ToggleTimer ]
-                [ text <|
+                [ 
                     if model.isRunning then
-                        "||"
+                        Filled.pause buttonSize Inherit
 
                     else
-                        "►"
+                        Filled.play_arrow buttonSize Inherit
+
+                        
                 ]
-            , button [ class elementClass, onClick ClearProgress ] [ text "■" ]
             ]
         , button [ class elementClass, class "flex-grow", onClick ToggleSettings ]
-            [ text "..."
+            [ Filled.tune buttonSize Inherit
             ]
         ]
 
