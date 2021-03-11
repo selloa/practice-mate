@@ -3,8 +3,8 @@ port module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyDown)
 import Configuration exposing (..)
-import Html exposing (Html, button, div, input, progress, text)
-import Html.Attributes as A exposing (class, type_, value)
+import Html exposing (Html, button, div, input, progress, text, label)
+import Html.Attributes as A exposing (class, type_, value, checked)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -711,6 +711,16 @@ settings model =
                                 div [ class "container" ]
                                     [ button [ class "font-bold", onClick ToggleAllScales ]
                                         [ text "Scales" ]
+                                    , Html.br [] []
+                                    , label [ class "checkbox"] [
+                                         input [
+                                            class "m-3"
+                                            , type_ "checkbox"
+                                            , checked model.showScalePattern
+                                            , onClick ToggleShowScalePattern
+                                        ] []
+                                         , text "patterns"
+                                    ]
                                     , button
                                         [ class "ml-2", onClick ToggleShowScalePattern ]
                                         [ text <|
