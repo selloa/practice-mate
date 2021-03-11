@@ -502,7 +502,7 @@ subscriptions _ =
 
 view : Model -> Html Msg
 view model =
-    div [ class "bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
+    div [ class "font-serif bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
         if model.showSettings then
             [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20 p-1", onClick ToggleSettings ]
                 [ Filled.arrow_back_ios_new buttonSize Inherit ]
@@ -575,9 +575,9 @@ selection model =
                 |> Maybe.withDefault ""
                 |> (\t ->
                         div
-                            [ class "italic container text-center text-5xl mb-1 p-2 rounded select-none"
+                            [ class "italic container text-center text-4xl mb-1 p-2 rounded select-none"
                             ]
-                            [ text t 
+                            [ text t
                             ]
                    )
     in
@@ -592,7 +592,7 @@ selection model =
                         , scales
                         , spacing
                         , spacing
-                        , div [ class "text font-mono" ] [ scalePatterns ]
+                        , div [ class "font-sans" ] [ scalePatterns ]
                         , bowings
                         , challenges
                         ]
@@ -630,8 +630,13 @@ selection model =
                         ]
                         [ Filled.navigate_before buttonSize Inherit ]
                     , button
-                        [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
-                        [ text "Hit me!" ]
+                        [ class <| coloredButton "yellow" 400 500 800
+                        , class "display-block flex-auto ml-2 px-16 sm:px-32"
+                        , onClick NewExercise
+                        ]
+                         
+                        --  [ text "refresh" ]
+                         [Filled.auto_fix_high 20 Inherit] 
                     , button
                         [ class <| coloredButton "indigo" 300 200 800
                         , class "flex-end m-2"
@@ -701,7 +706,7 @@ intervalSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 px-4 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipInterval
                         ]
                         [ text string ]
@@ -719,7 +724,7 @@ chordSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 px-4 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipChord
                         ]
                         [ text string ]
@@ -737,7 +742,7 @@ scaleSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 px-4 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipScale
                         ]
                         [ text string ]
@@ -755,7 +760,7 @@ rootSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 border-gray-400 px-4 border-t-2 rounded select-none"
                         , onClick SkipRoot
                         ]
                         [ text string ]
@@ -775,7 +780,7 @@ selectionItem items toString skip label =
                     div [ class "container mb-10" ]
                         [ text label
                         , button
-                            [ class "text-left bg-white p-1 border-gray-400 border-t-2 rounded select-none"
+                            [ class "text-left bg-white p-1 border-gray-400 px-4 border-t-2 rounded select-none"
                             , onClick skip
                             ]
                             [ text string ]
