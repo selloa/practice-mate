@@ -106,7 +106,7 @@ rootToString root =
             "A"
 
         Bb ->
-            "Bb"
+            "B♭"
 
         B ->
             "B"
@@ -115,13 +115,13 @@ rootToString root =
             "C"
 
         Cis ->
-            "Db"
+            "D♭"
 
         D ->
             "D"
 
         Dis ->
-            "Eb"
+            "E♭"
 
         E ->
             "E"
@@ -130,13 +130,13 @@ rootToString root =
             "F"
 
         Fis ->
-            "F#"
+            "F♯"
 
         G ->
             "G"
 
         Gis ->
-            "Ab"
+            "A♭"
 
 
 allScales : List Scale

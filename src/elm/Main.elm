@@ -527,13 +527,13 @@ selection model =
 
         scalePatterns =
             if model.showScalePattern then
-                selectionItem configuration.scales scalePatternToString SkipScale "Scale pattern: "
+                selectionItem configuration.scales scalePatternToString SkipScale "Pattern: "
 
             else
                 div [] []
 
         doublestopPatterns =
-            selectionItem configuration.scales doublestopPatternToString SkipScale "Doublestop pattern: "
+            selectionItem configuration.scales doublestopPatternToString SkipScale "Pattern: "
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
@@ -1247,7 +1247,7 @@ decodeRoot =
                 "A" ->
                     Decode.succeed A
 
-                "Bb" ->
+                "B♭" ->
                     Decode.succeed Bb
 
                 "B" ->
@@ -1256,13 +1256,13 @@ decodeRoot =
                 "C" ->
                     Decode.succeed C
 
-                "Db" ->
+                "D♭" ->
                     Decode.succeed Cis
 
                 "D" ->
                     Decode.succeed D
 
-                "Eb" ->
+                "E♭" ->
                     Decode.succeed Dis
 
                 "E" ->
@@ -1271,13 +1271,13 @@ decodeRoot =
                 "F" ->
                     Decode.succeed F
 
-                "F#" ->
+                "F♯" ->
                     Decode.succeed Fis
 
                 "G" ->
                     Decode.succeed G
 
-                "Ab" ->
+                "A♭" ->
                     Decode.succeed Gis
 
                 other ->
