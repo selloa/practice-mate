@@ -61,6 +61,7 @@ type alias Model =
     , configuration : Configuration
     , showScalePattern : Bool
     , autoNextExercise : Bool
+    , autoNextTimeInMinutes : Int
     , elapsedExerciseTime : Int
     }
 
@@ -96,6 +97,7 @@ initialModel flags =
     , configuration = configuration
     , showScalePattern = False
     , autoNextExercise = False
+    , autoNextTimeInMinutes = 1
     , elapsedExerciseTime = 0
     }
 
@@ -151,6 +153,7 @@ type Msg
     | ChangePreset Preset
     | PrintConfiguration
     | UpdatedSlider String
+    | UpdatedAutoNextSlider String
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
@@ -252,6 +255,7 @@ update msg model =
         NewExercise ->
             ( { model
                 | completedExercises = model.completedExercises + 1
+                , elapsedExerciseTime = 0
               }
             , shuffleConfig NewConfigurationGenerated model.configuration
             )
@@ -259,6 +263,8 @@ update msg model =
         ToggleSettings ->
             ( { model
                 | showSettings = not model.showSettings
+                , isRunning = not model.isRunning
+                , elapsedExerciseTime = 0
               }
             , Cmd.none
             )
@@ -270,6 +276,7 @@ update msg model =
             in
             ( { model
                 | configuration = newConfiguration
+                , elapsedExerciseTime = 0
               }
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
@@ -281,6 +288,7 @@ update msg model =
             in
             ( { model
                 | configuration = newConfiguration
+                , elapsedExerciseTime = 0
               }
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
@@ -398,6 +406,14 @@ update msg model =
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
 
+        UpdatedAutoNextSlider newValue ->
+            ( { model
+                | autoNextTimeInMinutes =
+                            String.toInt newValue
+                                |> Maybe.withDefault 2
+              }
+            , Cmd.none
+            )
         UpdatedSlider newValue ->
             ( { model
                 | practiceMode =
@@ -446,6 +462,7 @@ clearProgress model =
     ( { model
         | isRunning = False
         , elapsedTime = 0
+        , elapsedExerciseTime = 0
         , completedExercises = 0
         , message = Nothing
       }
@@ -634,25 +651,6 @@ selection model =
         )
 
 
-practiceModeSlider : Model -> List (Html Msg)
-practiceModeSlider model =
-    let
-        getValue mode =
-            case mode of
-                TimeLimit number ->
-                    number
-    in
-    [ input
-        [ type_ "range"
-        , A.min "1"
-        , A.max "60"
-        , value <| String.fromInt (getValue model.practiceMode)
-        , onInput UpdatedSlider
-        , class "text-black mr-2 px-2 rounded"
-        ]
-        []
-    , text <| String.fromInt <| getValue model.practiceMode
-    ]
 
 
 infoBox : Maybe Message -> Html msg
@@ -734,7 +732,7 @@ chordSelection configuration =
                         [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
                         , onClick SkipChord
                         ]
-                        [ text string ]
+                        [ text string]
            )
 
 
@@ -807,6 +805,7 @@ settings model =
             , div [ class "container bg-gray-200 rounded" ] <|
                 [ presets model
                 , practiceMode model
+                , autoTimer model
                 , settingsFor configuration.topics
                     allTopics
                     topicToString
@@ -911,6 +910,63 @@ practiceMode model =
         ]
             ++ practiceModeSlider model
 
+practiceModeSlider : Model -> List (Html Msg)
+practiceModeSlider model =
+    let
+        getValue mode =
+            case mode of
+                TimeLimit number ->
+                    number
+    in
+    [ input
+        [ type_ "range"
+        , A.min "1"
+        , A.max "60"
+        , value <| String.fromInt (getValue model.practiceMode)
+        , onInput UpdatedSlider
+        , class "text-black mr-2 ml-1 rounded"
+        ]
+        []
+    , text <| (String.fromInt <| getValue model.practiceMode )++ " min"
+    ]
+
+autoTimer model = 
+    div
+        [ class "container m-6" ]
+    <|
+        [ label [ class "checkbox p-2" ]
+            [ input
+                [ class ""
+                , type_ "checkbox"
+                , checked model.autoNextExercise
+                , onClick ToggleAutoNextExercise
+                ]
+                []
+            , text "Auto show next ex. after"
+            ]
+        ]
+            ++ autoTimerSlider model
+
+autoTimerSlider : Model -> List (Html Msg)
+autoTimerSlider model =
+    let
+        getValue mode =
+            case mode of
+                TimeLimit number ->
+                    number
+    in
+    [ Html.br [] [] ,input
+        [ type_ "range"
+        , A.min "1"
+        , A.max "5"
+        , value <| String.fromInt model.autoNextTimeInMinutes
+        , onInput UpdatedAutoNextSlider
+        , class "text-black m-2 rounded"
+        , A.disabled <| not model.autoNextExercise
+        ]
+        []
+    , text <| String.fromInt model.autoNextTimeInMinutes ++ " min"
+    ]
 
 presets : Model -> Html Msg
 presets model =
@@ -1055,7 +1111,8 @@ header model =
     div [ class "container inline-flex flex flex-row" ]
         [ div [ class "container flex justify-start items-start" ]
             [ progressBar model
-            , button [ class elementClass, onClick ClearProgress ] [ Filled.skip_previous buttonSize Inherit ]
+            , button [ class elementClass, onClick ClearProgress ] 
+            [ Filled.skip_previous buttonSize Inherit ]
             , button [ class elementClass, onClick ToggleTimer ]
                 [ if model.isRunning then
                     Filled.pause buttonSize Inherit
