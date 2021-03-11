@@ -408,11 +408,12 @@ update msg model =
         UpdatedAutoNextSlider newValue ->
             ( { model
                 | autoNextTimeInMinutes =
-                            String.toInt newValue
-                                |> Maybe.withDefault 2
+                    String.toInt newValue
+                        |> Maybe.withDefault 2
               }
             , Cmd.none
             )
+
         UpdatedSlider newValue ->
             ( { model
                 | practiceMode =
@@ -650,8 +651,6 @@ selection model =
         )
 
 
-
-
 infoBox : Maybe Message -> Html msg
 infoBox message =
     let
@@ -731,7 +730,7 @@ chordSelection configuration =
                         [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
                         , onClick SkipChord
                         ]
-                        [ text string]
+                        [ text string ]
            )
 
 
@@ -909,6 +908,7 @@ practiceMode model =
         ]
             ++ practiceModeSlider model
 
+
 practiceModeSlider : Model -> List (Html Msg)
 practiceModeSlider model =
     let
@@ -926,10 +926,11 @@ practiceModeSlider model =
         , class "text-black mr-2 ml-1 rounded"
         ]
         []
-    , text <| (String.fromInt <| getValue model.practiceMode )++ " min"
+    , text <| (String.fromInt <| getValue model.practiceMode) ++ " min"
     ]
 
-autoTimer model = 
+
+autoTimer model =
     div
         [ class "container m-6" ]
     <|
@@ -941,10 +942,11 @@ autoTimer model =
                 , onClick ToggleAutoNextExercise
                 ]
                 []
-            , div [class "pl-2 inline"] [text "auto show next ex. after"]
+            , div [ class "pl-2 inline" ] [ text "auto show next ex. after" ]
             ]
         ]
             ++ autoTimerSlider model
+
 
 autoTimerSlider : Model -> List (Html Msg)
 autoTimerSlider model =
@@ -954,7 +956,8 @@ autoTimerSlider model =
                 TimeLimit number ->
                     number
     in
-    [ Html.br [] [] ,input
+    [ Html.br [] []
+    , input
         [ type_ "range"
         , A.min "1"
         , A.max "5"
@@ -966,6 +969,7 @@ autoTimerSlider model =
         []
     , text <| String.fromInt model.autoNextTimeInMinutes ++ " min"
     ]
+
 
 presets : Model -> Html Msg
 presets model =
@@ -1110,8 +1114,8 @@ header model =
     div [ class "container inline-flex flex flex-row" ]
         [ div [ class "container flex justify-start items-start" ]
             [ progressBar model
-            , button [ class elementClass, onClick ClearProgress ] 
-            [ Filled.skip_previous buttonSize Inherit ]
+            , button [ class elementClass, onClick ClearProgress ]
+                [ Filled.skip_previous buttonSize Inherit ]
             , button [ class elementClass, onClick ToggleTimer ]
                 [ if model.isRunning then
                     Filled.pause buttonSize Inherit
