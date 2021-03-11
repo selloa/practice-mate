@@ -113,6 +113,7 @@ type Msg
     | NewBowingsGenerated (List Bowing)
     | NewChordsGenerated (List Chord)
     | NextTopic
+    | PreviousTopic
       --
     | ToggleSettings
     | ToggleTopic Topic
@@ -262,8 +263,20 @@ update msg model =
                     nextTopic model.configuration
             in
             ( { model
-                | completedExercises = model.completedExercises + 1
-                , configuration = newConfiguration
+                | 
+                 configuration = newConfiguration
+              }
+            , shuffleConfig NewConfigurationGenerated newConfiguration
+            )
+
+        PreviousTopic ->
+            let
+                newConfiguration =
+                    previousTopic model.configuration
+            in
+            ( { model
+                | 
+                 configuration = newConfiguration
               }
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
@@ -576,16 +589,11 @@ selection model =
                )
             ++ [ div [ class "container p-3 flex" ]
                     [ button
-                        [ class <|
-                            if model.autoNextExercise then
-                                coloredButton "gray" 400 500 800
-
-                            else
-                                coloredButton "gray" 300 400 800
-                        , class "m-2 p-2"
-                        , onClick ToggleAutoNextExercise
+                        [ class <| coloredButton "gray" 300 400 800
+                        , class "flex-end m-2"
+                        , onClick PreviousTopic
                         ]
-                        [ Filled.timelapse buttonSize Inherit]
+                        [ Filled.navigate_before buttonSize Inherit]
                     , button
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Hit me!" ]
@@ -952,6 +960,17 @@ header model =
 
                         
                 ]
+
+                    --  , button
+                    --     [ class <|
+                    --         if model.autoNextExercise then
+                    --             coloredButton "gray" 400 500 800
+
+                    --         else
+                    --             coloredButton "gray" 300 400 800
+                    --     , onClick ToggleAutoNextExercise
+                    --     ]
+                    --     [ Filled.timelapse buttonSize Inherit]
             ]
         , button [ class elementClass, class "flex-grow", onClick ToggleSettings ]
             [ Filled.tune buttonSize Inherit
