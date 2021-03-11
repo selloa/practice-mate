@@ -1,4 +1,4 @@
-module Configuration exposing (Configuration, configurationFor, flip, previousTopic, getBowings, getChallenges, getChords, getIntervals, getPreset, getRoots, getScales, getTopics, next, nextBowing, nextChallenge, nextChord, nextInterval, nextRoot, nextScale, nextTopic, shuffleBowings, shuffleChallenges, shuffleChords, shuffleConfig, shuffleIntervals, shuffleList, shuffleRoots, shuffleScales, toggle, toggleAll, toggleBowing, toggleChallenge, toggleChord, toggleInterval, toggleList, toggleRoot, toggleScale, toggleTopic, updateBowings, updateChallenges, updateChords, updateIntervals, updatePreset, updateRoots, updateScales, updateTopics)
+module Configuration exposing (Configuration, configurationFor, flip, getBowings, getChallenges, getChords, getIntervals, getPreset, getRoots, getScales, getTopics, next, nextBowing, nextChallenge, nextChord, nextInterval, nextRoot, nextScale, nextTopic, previousTopic, shuffleBowings, shuffleChallenges, shuffleChords, shuffleConfig, shuffleIntervals, shuffleList, shuffleRoots, shuffleScales, toggle, toggleAll, toggleBowing, toggleChallenge, toggleChord, toggleInterval, toggleList, toggleRoot, toggleScale, toggleTopic, updateBowings, updateChallenges, updateChords, updateIntervals, updatePreset, updateRoots, updateScales, updateTopics)
 
 import Random
 import Random.Extra
@@ -75,15 +75,15 @@ next elements =
         _ ->
             elements
 
+
 previous : List a -> List a
 previous elements =
     case elements of
         first :: second :: third :: [] ->
-        
-            [third, first, second]
+            [ third, first, second ]
 
         first :: second :: [] ->
-            [second,  first]
+            [ second, first ]
 
         _ ->
             elements
@@ -92,6 +92,8 @@ previous elements =
 nextTopic : Configuration -> Configuration
 nextTopic configuration =
     { configuration | topics = next configuration.topics }
+
+
 previousTopic : Configuration -> Configuration
 previousTopic configuration =
     { configuration | topics = previous configuration.topics }

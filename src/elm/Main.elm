@@ -3,20 +3,26 @@ port module Main exposing (main)
 import Browser
 import Browser.Events exposing (onKeyDown)
 import Configuration exposing (..)
-import Html exposing (Html, button, div, input, progress, text, label)
-import Html.Attributes as A exposing (class, type_, value, checked)
+import Html exposing (Html, button, div, input, label, progress, text)
+import Html.Attributes as A exposing (checked, class, style, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Material.Icons as Filled
+import Material.Icons.TwoTone as TwoTone
+import Material.Icons.Types exposing (Coloring(..))
 import Time
 import Types exposing (..)
-import Material.Icons as Filled
-import Material.Icons.Types exposing (Coloring(..))
+
 
 
 -- config
 
-buttonSize = 26
+
+buttonSize =
+    26
+
+
 
 -- ports
 
@@ -263,8 +269,7 @@ update msg model =
                     nextTopic model.configuration
             in
             ( { model
-                | 
-                 configuration = newConfiguration
+                | configuration = newConfiguration
               }
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
@@ -275,8 +280,7 @@ update msg model =
                     previousTopic model.configuration
             in
             ( { model
-                | 
-                 configuration = newConfiguration
+                | configuration = newConfiguration
               }
             , shuffleConfig NewConfigurationGenerated newConfiguration
             )
@@ -484,7 +488,7 @@ view model =
     div [ class "bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
         if model.showSettings then
             [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20 p-1", onClick ToggleSettings ]
-                [ Filled.arrow_back_ios_new buttonSize Inherit]
+                [ Filled.arrow_back_ios_new buttonSize Inherit ]
             , settings model
             ]
 
@@ -511,13 +515,13 @@ selection model =
             selectionItem configuration.intervals intervalToString SkipInterval "Interval "
 
         roots =
-            selectionItem configuration.roots rootToString SkipRoot "Root "
+            rootSelection configuration
 
         scales =
-            selectionItem configuration.scales scaleToString SkipScale "Scale "
+            scaleSelection configuration
 
         chords =
-            selectionItem configuration.chords chordToString SkipChord "Chord "
+            chordSelection configuration
 
         challenges =
             selectionItem configuration.challenges challengeToString SkipChallenge "Challenge "
@@ -540,15 +544,32 @@ selection model =
                 []
 
         showTopic =
-            List.head configuration.topics
-                |> Maybe.map topicToString
-                |> Maybe.withDefault ""
-                |> (\topic ->
-                        div
-                            [ class "container text-center text-3xl mb-1 p-2 rounded select-none"
-                            ]
-                            [ text topic ]
-                   )
+            let
+                topic = List.head configuration.topics |> Maybe.withDefault Scales
+            in
+            div [ class "container flex justify-center p-6" ]
+                [ case topic of
+                    Scales ->
+                        Filled.auto_graph 30 Inherit
+
+                    Intervals ->
+                        Filled.stacked_line_chart 30 Inherit
+
+                    Chords ->
+                        TwoTone.scatter_plot 40 Inherit
+                ]
+
+        -- List.head configuration.topics
+        --     |> Maybe.map topicToString
+        --     |> Maybe.withDefault ""
+        --     |> (\topic ->
+        --             div
+        --                 [ class "container text-center text-3xl mb-1 p-2 rounded select-none"
+        --                 ]
+        --                 [
+        --                     text topic
+        --                     , div [class "inline pl-3"] [Filled.show_chart 30 Inherit]]
+        --    )
     in
     div [ class "container flex-col mx-auto text-center justify-center p-3 bg-gray-300 px-4 rounded" ]
         ([ showTopic
@@ -557,19 +578,22 @@ selection model =
             ++ (case List.head configuration.topics of
                     Just Scales ->
                         [ roots
+                        , div [ class "p-1", style "display" "inline" ] []
                         , scales
+                        , spacing
                         , spacing
                         , scalePatterns
                         , bowings
-                        , spacing
                         , challenges
                         ]
 
                     Just Chords ->
                         [ roots
+                        , div [ class "p-1", style "display" "inline" ] []
                         , chords
-                        , bowings
                         , spacing
+                        , spacing
+                        , bowings
                         , challenges
                         ]
 
@@ -593,7 +617,7 @@ selection model =
                         , class "flex-end m-2"
                         , onClick PreviousTopic
                         ]
-                        [ Filled.navigate_before buttonSize Inherit]
+                        [ Filled.navigate_before buttonSize Inherit ]
                     , button
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Hit me!" ]
@@ -602,7 +626,7 @@ selection model =
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
-                        [ Filled.navigate_next buttonSize Inherit]
+                        [ Filled.navigate_next buttonSize Inherit ]
                     ]
                ]
         )
@@ -656,6 +680,60 @@ infoBox message =
                 [ text content
                 ]
             ]
+
+
+chordSelection : Configuration -> Html Msg
+chordSelection configuration =
+    List.head configuration.chords
+        |> Maybe.map chordToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [] []
+
+                else
+                    button
+                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        , onClick SkipChord
+                        ]
+                        [ text string ]
+           )
+
+
+scaleSelection : Configuration -> Html Msg
+scaleSelection configuration =
+    List.head configuration.scales
+        |> Maybe.map scaleToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [] []
+
+                else
+                    button
+                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        , onClick SkipScale
+                        ]
+                        [ text string ]
+           )
+
+
+rootSelection : Configuration -> Html Msg
+rootSelection configuration =
+    List.head configuration.roots
+        |> Maybe.map rootToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [] []
+
+                else
+                    button
+                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        , onClick SkipRoot
+                        ]
+                        [ text string ]
+           )
 
 
 selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
@@ -720,15 +798,16 @@ settings model =
                                     [ button [ class "font-bold", onClick ToggleAllScales ]
                                         [ text "Scales" ]
                                     , Html.br [] []
-                                    , label [ class "checkbox"] [
-                                         input [
-                                            class "m-3"
+                                    , label [ class "checkbox" ]
+                                        [ input
+                                            [ class "m-3"
                                             , type_ "checkbox"
                                             , checked model.showScalePattern
                                             , onClick ToggleShowScalePattern
-                                        ] []
-                                         , text "patterns"
-                                    ]
+                                            ]
+                                            []
+                                        , text "patterns"
+                                        ]
                                     , button
                                         [ class "ml-2", onClick ToggleShowScalePattern ]
                                         [ text <|
@@ -742,13 +821,6 @@ settings model =
                                     :: showSetting 1 scaleToString allScales configuration.scales ToggleScale
                       in
                       scaleSettings
-                    , settingsFor configuration.challenges
-                        allChallenges
-                        challengeToString
-                        ToggleChallenge
-                        ToggleAllChallenges
-                        "Challenges"
-                        4
                     , settingsFor configuration.chords
                         allChords
                         chordToString
@@ -774,6 +846,13 @@ settings model =
                         ToggleAllBowings
                         "Bowings"
                         4
+                    , settingsFor configuration.challenges
+                        allChallenges
+                        challengeToString
+                        ToggleChallenge
+                        ToggleAllChallenges
+                        "Challenges"
+                        4
                     ]
 
                 -- :: showRangeSliderSetting model
@@ -786,21 +865,10 @@ settings model =
 
 practiceMode : Model -> Html Msg
 practiceMode model =
-    let
-        ( buttonTimeLimit, buttonExercises ) =
-            case model.practiceMode of
-                TimeLimit _ ->
-                    ( buttonActive, buttonPassive )
-    in
     div
         [ class "container m-6" ]
     <|
-        [ div [ class "container font-bold" ] [ text "Practice mode" ]
-        , Html.br [] []
-        , button
-            [ class buttonTimeLimit
-            ]
-            [ text "Time limit" ]
+        [ div [ class "container font-bold" ] [ text "Practice time" ]
         , Html.br [] []
         ]
             ++ practiceModeSlider model
@@ -949,28 +1017,24 @@ header model =
     div [ class "container inline-flex flex flex-row" ]
         [ div [ class "container flex justify-start items-start" ]
             [ progressBar model
-            , button [ class elementClass, onClick ClearProgress ] [ Filled.skip_previous buttonSize Inherit]
+            , button [ class elementClass, onClick ClearProgress ] [ Filled.skip_previous buttonSize Inherit ]
             , button [ class elementClass, onClick ToggleTimer ]
-                [ 
-                    if model.isRunning then
-                        Filled.pause buttonSize Inherit
+                [ if model.isRunning then
+                    Filled.pause buttonSize Inherit
 
-                    else
-                        Filled.play_arrow buttonSize Inherit
-
-                        
+                  else
+                    Filled.play_arrow buttonSize Inherit
                 ]
 
-                    --  , button
-                    --     [ class <|
-                    --         if model.autoNextExercise then
-                    --             coloredButton "gray" 400 500 800
-
-                    --         else
-                    --             coloredButton "gray" 300 400 800
-                    --     , onClick ToggleAutoNextExercise
-                    --     ]
-                    --     [ Filled.timelapse buttonSize Inherit]
+            --  , button
+            --     [ class <|
+            --         if model.autoNextExercise then
+            --             coloredButton "gray" 400 500 800
+            --         else
+            --             coloredButton "gray" 300 400 800
+            --     , onClick ToggleAutoNextExercise
+            --     ]
+            --     [ Filled.timelapse buttonSize Inherit]
             ]
         , button [ class elementClass, class "flex-grow", onClick ToggleSettings ]
             [ Filled.tune buttonSize Inherit
