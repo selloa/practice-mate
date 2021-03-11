@@ -8,7 +8,7 @@ type PracticeMode
 type Topic
     = Scales
     | Chords
-    | Doublestops
+    | Intervals
 
 
 type Root
@@ -96,7 +96,7 @@ allRoots =
 
 allTopics : List Topic
 allTopics =
-    [ Scales, Chords, Doublestops ]
+    [ Scales, Chords, Intervals ]
 
 
 rootToString : Root -> String
@@ -202,8 +202,8 @@ topicToString topic =
         Chords ->
             "Chords"
 
-        Doublestops ->
-            "Doublestops"
+        Intervals ->
+            "Intervals"
 
 
 chordToString : Chord -> String

@@ -560,7 +560,7 @@ selection model =
                         , challenges
                         ]
 
-                    Just Doublestops ->
+                    Just Intervals ->
                         [ intervals
                         , roots
                         , scales
@@ -1278,8 +1278,8 @@ decodeTopic =
                 "Chords" ->
                     Decode.succeed Chords
 
-                "Doublestops" ->
-                    Decode.succeed Doublestops
+                "Intervals" ->
+                    Decode.succeed Intervals
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Topic: " ++ other

@@ -44,7 +44,7 @@ configurationFor preset =
             }
 
         All ->
-            { topics = [ Scales, Chords, Doublestops ]
+            { topics = [ Scales, Chords, Intervals ]
             , roots = allRoots
             , scales = allScales
             , intervals = allIntervals
