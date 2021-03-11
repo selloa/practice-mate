@@ -573,7 +573,7 @@ selection model =
                         Filled.stacked_line_chart 30 Inherit
 
                     Chords ->
-                        TwoTone.scatter_plot 40 Inherit
+                        Filled.scatter_plot 40 Inherit
                 ]
 
         -- List.head configuration.topics
