@@ -515,7 +515,7 @@ view model =
 
 selectionContainer : Model -> Html Msg
 selectionContainer model =
-    div [ class "container bg-gray-200 px-5 py-5 max-w-lg rounded w-screen" ]
+    div [ class "container bg-gray-200 px-5 py-5 max-w-lg h-screen sm:h-auto rounded w-screen" ]
         [ header model
         , infoBox model.message
         , selection model
@@ -548,46 +548,38 @@ selection model =
 
         scalePatterns =
             if model.showScalePattern then
-                selectionItem configuration.scales scalePatternToString SkipScale "Pattern "
+                selectionItem configuration.scales scalePatternToString SkipScale ""
 
             else
                 div [] []
 
         doublestopPatterns =
-            selectionItem configuration.scales doublestopPatternToString SkipScale "Pattern "
+            selectionItem configuration.scales doublestopPatternToString SkipScale ""
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
                 []
 
         showTopic =
-            let
-                topic =
-                    List.head configuration.topics |> Maybe.withDefault Scales
-            in
-            div [ class "container flex justify-center p-6" ]
-                [ case topic of
-                    Scales ->
-                        Filled.auto_graph 30 Inherit
-
-                    Intervals ->
-                        Filled.stacked_line_chart 30 Inherit
-
-                    Chords ->
-                        Filled.scatter_plot 40 Inherit
-                ]
-
-        -- List.head configuration.topics
-        --     |> Maybe.map topicToString
-        --     |> Maybe.withDefault ""
-        --     |> (\topic ->
-        --             div
-        --                 [ class "container text-center text-3xl mb-1 p-2 rounded select-none"
-        --                 ]
-        --                 [
-        --                     text topic
-        --                     , div [class "inline pl-3"] [Filled.show_chart 30 Inherit]]
-        --    )
+            -- div [ class "container flex justify-center p-6" ]
+            -- [ case topic of
+            --     Scales ->
+            --         Filled.auto_graph 40 Inherit
+            --     Intervals ->
+            --         Filled.stacked_line_chart 40 Inherit
+            --     Chords ->
+            --         Filled.scatter_plot 40 Inherit
+            -- ]
+            List.head configuration.topics
+                |> Maybe.map topicToString
+                |> Maybe.withDefault ""
+                |> (\t ->
+                        div
+                            [ class "italic container text-center text-5xl mb-1 p-2 rounded select-none"
+                            ]
+                            [ text t 
+                            ]
+                   )
     in
     div [ class "container flex-col mx-auto text-center justify-center p-3 bg-gray-300 px-4 rounded" ]
         ([ showTopic
@@ -596,7 +588,7 @@ selection model =
             ++ (case List.head configuration.topics of
                     Just Scales ->
                         [ roots
-                        , div [ class "inline p-1" ] []
+                        , div [ class "inline p-2" ] []
                         , scales
                         , spacing
                         , spacing
@@ -632,7 +624,7 @@ selection model =
                )
             ++ [ div [ class "container p-3 flex" ]
                     [ button
-                        [ class <| coloredButton "gray" 300 400 800
+                        [ class <| coloredButton "orange" 300 400 800
                         , class "flex-end m-2"
                         , onClick PreviousTopic
                         ]
@@ -641,7 +633,7 @@ selection model =
                         [ class <| coloredButton "yellow" 400 500 800, class "flex-auto m-2", onClick NewExercise ]
                         [ text "Hit me!" ]
                     , button
-                        [ class <| coloredButton "gray" 300 400 800
+                        [ class <| coloredButton "indigo" 300 200 800
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
@@ -691,7 +683,7 @@ bowingSelection configuration =
 
                 else
                     button
-                        [ class "bg-white p-1 mb-10 border-gray-400 border-b-2 rounded select-none"
+                        [ class "bg-white p-1 mb-10 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipBowing
                         ]
                         [ div [ class "inline flex" ] [ Filled.music_note 20 Inherit, text string ] ]
@@ -709,7 +701,7 @@ intervalSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipInterval
                         ]
                         [ text string ]
@@ -727,7 +719,7 @@ chordSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipChord
                         ]
                         [ text string ]
@@ -745,7 +737,7 @@ scaleSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipScale
                         ]
                         [ text string ]
@@ -763,7 +755,7 @@ rootSelection configuration =
 
                 else
                     button
-                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        [ class "text-left text-2xl bg-white p-1 border-gray-400 border-t-2 rounded select-none"
                         , onClick SkipRoot
                         ]
                         [ text string ]
@@ -783,7 +775,7 @@ selectionItem items toString skip label =
                     div [ class "container mb-10" ]
                         [ text label
                         , button
-                            [ class "text-left bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                            [ class "text-left bg-white p-1 border-gray-400 border-t-2 rounded select-none"
                             , onClick skip
                             ]
                             [ text string ]
@@ -1022,7 +1014,7 @@ coloredButton color light normal dark =
         ++ "-"
         ++ String.fromInt light
         ++ " cursor-pointer text-black"
-        ++ " font-regular mr-2 mb-2 px-2 border-b-2 border-"
+        ++ " font-regular mr-2 mb-2 px-2 border--2 border-"
         ++ String.fromInt (String.toInt color |> Maybe.withDefault 200 |> (-) 100)
         ++ "-"
         ++ String.fromInt dark
