@@ -527,7 +527,7 @@ selection model =
             selectionItem configuration.challenges challengeToString SkipChallenge "Challenge "
 
         bowings =
-            selectionItem configuration.bowings bowingToString SkipBowing "Bowing "
+            bowingSelection configuration
 
         scalePatterns =
             if model.showScalePattern then
@@ -682,6 +682,24 @@ infoBox message =
                 [ text content
                 ]
             ]
+
+
+bowingSelection : Configuration -> Html Msg
+bowingSelection configuration =
+    List.head configuration.bowings
+        |> Maybe.map bowingToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [] []
+
+                else
+                    button
+                        [ class "bg-white p-1 mb-10 border-gray-400 border-b-2 rounded select-none"
+                        , onClick SkipBowing
+                        ]
+                        [ div [ class "inline flex" ] [ Filled.music_note 20 Inherit, text string ] ]
+           )
 
 
 intervalSelection : Configuration -> Html Msg
