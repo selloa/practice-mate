@@ -395,10 +395,10 @@ doublestopPatternToString scale =
             "M M m M - m m M M"
 
         Wholestep ->
-            "m m repeat"
+            "m m m m - m m m m"
 
         Chromatic ->
-            "M M repeat"
+            "M M M M - M M M M"
 
         _ ->
             ""

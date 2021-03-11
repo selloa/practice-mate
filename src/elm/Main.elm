@@ -512,7 +512,7 @@ selection model =
             model.configuration
 
         intervals =
-            selectionItem configuration.intervals intervalToString SkipInterval "Interval "
+            intervalSelection configuration
 
         roots =
             rootSelection configuration
@@ -531,13 +531,13 @@ selection model =
 
         scalePatterns =
             if model.showScalePattern then
-                selectionItem configuration.scales scalePatternToString SkipScale "Pattern: "
+                selectionItem configuration.scales scalePatternToString SkipScale "Pattern "
 
             else
                 div [] []
 
         doublestopPatterns =
-            selectionItem configuration.scales doublestopPatternToString SkipScale "Pattern: "
+            selectionItem configuration.scales doublestopPatternToString SkipScale "Pattern "
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
@@ -578,18 +578,18 @@ selection model =
             ++ (case List.head configuration.topics of
                     Just Scales ->
                         [ roots
-                        , div [ class "p-1", style "display" "inline" ] []
+                        , div [ class "inline p-1"] []
                         , scales
                         , spacing
                         , spacing
-                        , scalePatterns
+                        , div [class "text font-mono"] [scalePatterns]
                         , bowings
                         , challenges
                         ]
 
                     Just Chords ->
                         [ roots
-                        , div [ class "p-1", style "display" "inline" ] []
+                        , div [ class "inline p-1"] []
                         , chords
                         , spacing
                         , spacing
@@ -599,6 +599,7 @@ selection model =
 
                     Just Intervals ->
                         [ intervals
+                        , div [class "inline m-4"] [text "in"]
                         , roots
                         , scales
                         , spacing
@@ -681,6 +682,22 @@ infoBox message =
                 ]
             ]
 
+intervalSelection : Configuration -> Html Msg
+intervalSelection configuration =
+    List.head configuration.intervals
+        |> Maybe.map intervalToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [] []
+
+                else
+                    button
+                        [ class "text-left text-3xl bg-white p-1 border-gray-400 border-b-2 rounded select-none"
+                        , onClick SkipInterval
+                        ]
+                        [ text string ]
+           )
 
 chordSelection : Configuration -> Html Msg
 chordSelection configuration =
@@ -743,7 +760,7 @@ selectionItem items toString skip label =
         |> Maybe.withDefault ""
         |> (\string ->
                 if String.isEmpty string then
-                    div [] []
+                    div [class "container mb-20"] []
 
                 else
                     div [ class "container mb-10" ]
