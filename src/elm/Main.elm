@@ -263,8 +263,7 @@ update msg model =
         ToggleSettings ->
             ( { model
                 | showSettings = not model.showSettings
-                , isRunning = not model.isRunning
-                , elapsedExerciseTime = 0
+                , isRunning = False
               }
             , Cmd.none
             )
@@ -942,7 +941,7 @@ autoTimer model =
                 , onClick ToggleAutoNextExercise
                 ]
                 []
-            , text "Auto show next ex. after"
+            , div [class "pl-2 inline"] [text "auto show next ex. after"]
             ]
         ]
             ++ autoTimerSlider model
