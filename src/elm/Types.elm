@@ -33,6 +33,8 @@ type Scale
     | Lydian
     | Mixolydian
     | Aeolian
+    | MajorScale
+    | MinorScale
     | Mandalorian
     | MelodicMinor
     | HarmonicMinor
@@ -141,16 +143,18 @@ rootToString root =
 
 allScales : List Scale
 allScales =
-    [ Ionian
-    , Aeolian
-    , MelodicMinor
+    [ MajorScale
+    , MajorPentatonic
+    , MinorScale
+    , MinorPentatonic
     , HarmonicMinor
+    , MelodicMinor
+    , Ionian
     , Dorian
     , Phrygian
     , Lydian
     , Mixolydian
-    , MajorPentatonic
-    , MinorPentatonic
+    , Aeolian
     , Chromatic
     , Wholestep
     , Blues
@@ -250,7 +254,7 @@ scaleToString : Scale -> String
 scaleToString scale =
     case scale of
         Ionian ->
-            "Major"
+            "Ionian"
 
         Dorian ->
             "Dorian"
@@ -265,6 +269,12 @@ scaleToString scale =
             "Mixolydian"
 
         Aeolian ->
+            "Aeolian"
+
+        MajorScale ->
+            "Major"
+
+        MinorScale ->
             "Minor"
 
         Mandalorian ->
@@ -340,6 +350,12 @@ scalePatternToString scale =
             "X^X^X 2 2"
 
         Aeolian ->
+            "3 3 X^X^X"
+
+        MajorScale ->
+            "X^X 2 2 3"
+
+        MinorScale ->
             "3 3 X^X^X"
 
         MelodicMinor ->

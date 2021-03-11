@@ -545,7 +545,8 @@ selection model =
 
         showTopic =
             let
-                topic = List.head configuration.topics |> Maybe.withDefault Scales
+                topic =
+                    List.head configuration.topics |> Maybe.withDefault Scales
             in
             div [ class "container flex justify-center p-6" ]
                 [ case topic of
@@ -578,18 +579,18 @@ selection model =
             ++ (case List.head configuration.topics of
                     Just Scales ->
                         [ roots
-                        , div [ class "inline p-1"] []
+                        , div [ class "inline p-1" ] []
                         , scales
                         , spacing
                         , spacing
-                        , div [class "text font-mono"] [scalePatterns]
+                        , div [ class "text font-mono" ] [ scalePatterns ]
                         , bowings
                         , challenges
                         ]
 
                     Just Chords ->
                         [ roots
-                        , div [ class "inline p-1"] []
+                        , div [ class "inline p-1" ] []
                         , chords
                         , spacing
                         , spacing
@@ -599,7 +600,7 @@ selection model =
 
                     Just Intervals ->
                         [ intervals
-                        , div [class "inline m-4"] [text "in"]
+                        , div [ class "inline m-4" ] [ text "in" ]
                         , roots
                         , scales
                         , spacing
@@ -682,6 +683,7 @@ infoBox message =
                 ]
             ]
 
+
 intervalSelection : Configuration -> Html Msg
 intervalSelection configuration =
     List.head configuration.intervals
@@ -698,6 +700,7 @@ intervalSelection configuration =
                         ]
                         [ text string ]
            )
+
 
 chordSelection : Configuration -> Html Msg
 chordSelection configuration =
@@ -760,7 +763,7 @@ selectionItem items toString skip label =
         |> Maybe.withDefault ""
         |> (\string ->
                 if String.isEmpty string then
-                    div [class "container mb-20"] []
+                    div [ class "container mb-20" ] []
 
                 else
                     div [ class "container mb-10" ]
