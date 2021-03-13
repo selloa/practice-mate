@@ -1230,7 +1230,7 @@ encodeRoot : Root -> Encode.Value
 encodeRoot root =
     rootToString root
         |> String.replace "♭" "b"
-        |> String.replace "♯" "#"
+        |> String.replace "♯" "is"
         |> Encode.string
 
 
@@ -1467,7 +1467,7 @@ decodeRoot =
                 "F" ->
                     Decode.succeed F
 
-                "F#" ->
+                "Fis" ->
                     Decode.succeed Fis
 
                 "G" ->
@@ -1520,6 +1520,6 @@ decodePreset =
                     Decode.succeed Custom
 
                 other ->
-                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
+                    Decode.fail <| "Unknown constructor for type Preset: " ++ other
     in
     Decode.string |> Decode.andThen recover
