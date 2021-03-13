@@ -90,7 +90,7 @@ initialModel flags =
                     ( config, "" )
 
                 Err err ->
-                    ( configurationFor Basic, Debug.log "" <| Decode.errorToString err )
+                    ( configurationFor Basic, Decode.errorToString err )
     in
     { elapsedTime = 0
     , completedExercises = 0
