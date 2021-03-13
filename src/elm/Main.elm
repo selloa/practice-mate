@@ -883,7 +883,16 @@ settings model =
                                             False
                                 )
                         )
-                        allBowings
+                        (allBowings |> List.filter 
+                                (\b ->
+                                    case b of
+                                        Slurred _ ->
+                                            True
+
+                                        Repeated _ ->
+                                            False
+                                )
+                        )
                         bowingToString
                         ToggleBowing
                         ToggleAllBowings
