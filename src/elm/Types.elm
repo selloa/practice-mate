@@ -3,13 +3,12 @@ module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Messa
 
 type PracticeMode
     = TimeLimit Int
-    | ExerciseLimit Int
 
 
 type Topic
     = Scales
     | Chords
-    | Doublestops
+    | Intervals
 
 
 type Root
@@ -34,6 +33,8 @@ type Scale
     | Lydian
     | Mixolydian
     | Aeolian
+    | MajorScale
+    | MinorScale
     | Mandalorian
     | MelodicMinor
     | HarmonicMinor
@@ -97,7 +98,7 @@ allRoots =
 
 allTopics : List Topic
 allTopics =
-    [ Scales, Chords, Doublestops ]
+    [ Scales, Chords, Intervals ]
 
 
 rootToString : Root -> String
@@ -107,7 +108,7 @@ rootToString root =
             "A"
 
         Bb ->
-            "Bb"
+            "B♭"
 
         B ->
             "B"
@@ -116,13 +117,13 @@ rootToString root =
             "C"
 
         Cis ->
-            "Db"
+            "D♭"
 
         D ->
             "D"
 
         Dis ->
-            "Eb"
+            "E♭"
 
         E ->
             "E"
@@ -131,27 +132,29 @@ rootToString root =
             "F"
 
         Fis ->
-            "F#"
+            "F♯"
 
         G ->
             "G"
 
         Gis ->
-            "Ab"
+            "A♭"
 
 
 allScales : List Scale
 allScales =
-    [ Ionian
-    , Aeolian
-    , MelodicMinor
+    [ MajorScale
+    , MajorPentatonic
+    , MinorScale
+    , MinorPentatonic
     , HarmonicMinor
+    , MelodicMinor
+    , Ionian
     , Dorian
     , Phrygian
     , Lydian
     , Mixolydian
-    , MajorPentatonic
-    , MinorPentatonic
+    , Aeolian
     , Chromatic
     , Wholestep
     , Blues
@@ -182,10 +185,6 @@ practiceModeToString mode =
         TimeLimit _ ->
             "⏲️ "
 
-        --++ String.fromInt duration
-        ExerciseLimit _ ->
-            "📓 "
-
 
 
 --++ String.fromInt exercises
@@ -197,9 +196,6 @@ practiceModeToStringWithoutNumber mode =
         TimeLimit _ ->
             "Time limit"
 
-        ExerciseLimit _ ->
-            "Exercise limit"
-
 
 topicToString : Topic -> String
 topicToString topic =
@@ -210,8 +206,8 @@ topicToString topic =
         Chords ->
             "Chords"
 
-        Doublestops ->
-            "Doublestops"
+        Intervals ->
+            "Intervals"
 
 
 chordToString : Chord -> String
@@ -258,7 +254,7 @@ scaleToString : Scale -> String
 scaleToString scale =
     case scale of
         Ionian ->
-            "Major"
+            "Ionian"
 
         Dorian ->
             "Dorian"
@@ -273,6 +269,12 @@ scaleToString scale =
             "Mixolydian"
 
         Aeolian ->
+            "Aeolian"
+
+        MajorScale ->
+            "Major"
+
+        MinorScale ->
             "Minor"
 
         Mandalorian ->
@@ -304,10 +306,10 @@ bowingToString : Bowing -> String
 bowingToString bowing =
     case bowing of
         Slured n ->
-            String.fromInt n ++ " to a bow"
+            String.fromInt n
 
         Repeated n ->
-            "Play each note " ++ String.fromInt n ++ " times"
+            String.fromInt n
 
 
 intervalToString : Interval -> String
@@ -348,6 +350,12 @@ scalePatternToString scale =
             "X^X^X 2 2"
 
         Aeolian ->
+            "3 3 X^X^X"
+
+        MajorScale ->
+            "X^X 2 2 3"
+
+        MinorScale ->
             "3 3 X^X^X"
 
         MelodicMinor ->
@@ -403,10 +411,10 @@ doublestopPatternToString scale =
             "M M m M - m m M M"
 
         Wholestep ->
-            "m m repeat"
+            "m m m m - m m m m"
 
         Chromatic ->
-            "M M repeat"
+            "M M M M - M M M M"
 
         _ ->
             ""
@@ -444,10 +452,10 @@ challengeToString : Challenge -> String
 challengeToString challenge =
     case challenge of
         AString ->
-            "Play on A String"
+            "A String"
 
         DString ->
-            "Play on D String"
+            "D String"
 
 
 allBowings : List Bowing
@@ -460,6 +468,10 @@ allBowings =
     , Slured 6
     , Slured 7
     , Slured 8
+    , Slured 9
+    , Slured 10
+    , Slured 11
+    , Slured 12
     , Repeated 1
     , Repeated 2
     , Repeated 3
@@ -468,4 +480,8 @@ allBowings =
     , Repeated 6
     , Repeated 7
     , Repeated 8
+    , Repeated 9
+    , Repeated 10
+    , Repeated 11
+    , Repeated 12
     ]
