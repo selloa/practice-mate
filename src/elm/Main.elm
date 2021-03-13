@@ -883,7 +883,8 @@ settings model =
                                             False
                                 )
                         )
-                        (allBowings |> List.filter 
+                        (allBowings
+                            |> List.filter
                                 (\b ->
                                     case b of
                                         Slurred _ ->
@@ -1317,7 +1318,7 @@ decodeConfiguration : Decode.Decoder Configuration
 decodeConfiguration =
     Decode.map8
         Configuration
-        (Decode.field "topics" (Decode.list decodeTopic |> fallbackTo [Scales]))
+        (Decode.field "topics" (Decode.list decodeTopic |> fallbackTo [ Scales ]))
         (Decode.field "roots" (Decode.list decodeRoot |> fallbackTo allRoots))
         (Decode.field "scales" (Decode.list decodeScale |> fallbackTo []))
         (Decode.field "intervals" (Decode.list decodeInterval |> fallbackTo []))
@@ -1328,7 +1329,7 @@ decodeConfiguration =
 
 
 fallbackTo : List a -> Decode.Decoder (List a) -> Decode.Decoder (List a)
-fallbackTo fallback decoder  =
+fallbackTo fallback decoder =
     Decode.maybe decoder
         |> Decode.map (Maybe.withDefault fallback)
 
