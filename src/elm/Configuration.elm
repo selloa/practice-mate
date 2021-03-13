@@ -33,7 +33,7 @@ configurationFor preset =
             }
 
         Basic ->
-            { bowings = [ Slured 1, Slured 2, Slured 3, Slured 4, Slured 5, Slured 6, Slured 7, Slured 8 ]
+            { bowings = [ Slurred 1, Slurred 2, Slurred 3, Slurred 4, Slurred 5, Slurred 6, Slurred 7, Slurred 8 ]
             , chords = [ Major, Minor ]
             , intervals = [ Sixths, Thirds, Octaves ]
             , scales = [ Ionian, Aeolian, MelodicMinor, HarmonicMinor ]

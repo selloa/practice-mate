@@ -9,7 +9,6 @@ import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Material.Icons as Filled
-import Material.Icons.TwoTone as TwoTone
 import Material.Icons.Types exposing (Coloring(..))
 import Time
 import Types exposing (..)
@@ -66,33 +65,18 @@ type alias Model =
     , autoNextExercise : Bool
     , autoNextTimeInMinutes : Int
     , elapsedExerciseTime : Int
+    , flags : Flags
+    , error : String
     }
 
-type alias Flags = 
-    { storedConfiguration : Encode.Value
-    , urlConfiguration : UrlConfiguration }
 
-type alias UrlConfiguration =
-    {
-        topics : List String
-        , challenges : List String
-        , chords : List String
-        , intervals : List String
-        , roots : List String
-        , scales : List String
-        , bowings : List String
-        , preset : String
-         
-    }
+type alias Flags =
+    Encode.Value
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    let
-        localInitialModel =
-            initialModel flags
-    in
-    ( localInitialModel
+    ( initialModel flags
     , Cmd.none
     )
 
@@ -100,13 +84,13 @@ init flags =
 initialModel : Flags -> Model
 initialModel flags =
     let
-        storedConfiguration =
-            case Decode.decodeValue decodeConfiguration flags.storedConfiguration of
+        ( storedConfiguration, error ) =
+            case Decode.decodeValue decodeConfiguration flags of
                 Ok config ->
-                    config
+                    ( config, "" )
 
-                Err _ ->
-                    configurationFor Basic
+                Err err ->
+                    ( configurationFor Basic, Debug.log "" <| Decode.errorToString err )
     in
     { elapsedTime = 0
     , completedExercises = 0
@@ -119,6 +103,8 @@ initialModel flags =
     , autoNextExercise = False
     , autoNextTimeInMinutes = 1
     , elapsedExerciseTime = 0
+    , flags = flags
+    , error = error
     }
 
 
@@ -890,7 +876,7 @@ settings model =
                             |> List.filter
                                 (\b ->
                                     case b of
-                                        Slured _ ->
+                                        Slurred _ ->
                                             True
 
                                         Repeated _ ->
@@ -1182,9 +1168,9 @@ progressBar model =
 encodeBowing : Bowing -> Encode.Value
 encodeBowing bowing =
     case bowing of
-        Slured times ->
+        Slurred times ->
             Encode.object
-                [ ( "kind", Encode.string "Slured" )
+                [ ( "kind", Encode.string "Slurred" )
                 , ( "times", Encode.int times )
                 ]
 
@@ -1222,8 +1208,8 @@ encodeInterval interval =
 encodeScale : Scale -> Encode.Value
 encodeScale scale =
     scaleToString scale
-    |> String.replace " " ""
-    |> Encode.string 
+        |> String.replace " " ""
+        |> Encode.string
 
 
 encodeChallenge : Challenge -> Encode.Value
@@ -1257,9 +1243,9 @@ decodeBowing =
 decodeBowingHelp : String -> Decode.Decoder Bowing
 decodeBowingHelp kind =
     case kind of
-        "Slured" ->
+        "Slurred" ->
             Decode.map
-                Slured
+                Slurred
                 (Decode.field "times" Decode.int)
 
         "Repeated" ->
@@ -1326,7 +1312,12 @@ decodeConfiguration =
         (Decode.field "roots" (Decode.list decodeRoot))
         (Decode.field "scales" (Decode.list decodeScale))
         (Decode.field "intervals" (Decode.list decodeInterval))
-        (Decode.field "challenges" (Decode.list decodeChallenge))
+        (Decode.field "challenges"
+            (Decode.list decodeChallenge
+                |> Decode.maybe
+                |> Decode.map (Maybe.withDefault [])
+            )
+        )
         (Decode.field "bowings" (Decode.list decodeBowing))
         (Decode.field "chords" (Decode.list decodeChord))
         (Decode.field "preset" decodePreset)
@@ -1384,16 +1375,16 @@ decodeScale =
                 "Mandalorian" ->
                     Decode.succeed Mandalorian
 
-                "Melodic Minor" ->
+                "MelodicMinor" ->
                     Decode.succeed MelodicMinor
 
-                "Harmonic Minor" ->
+                "HarmonicMinor" ->
                     Decode.succeed HarmonicMinor
 
-                "Major Pentatonic" ->
+                "MajorPentatonic" ->
                     Decode.succeed MajorPentatonic
 
-                "Minor Pentatonic" ->
+                "MinorPentatonic" ->
                     Decode.succeed MinorPentatonic
 
                 "Chromatic" ->
@@ -1404,6 +1395,12 @@ decodeScale =
 
                 "Blues" ->
                     Decode.succeed Blues
+
+                "Ionian" ->
+                    Decode.succeed Ionian
+
+                "Aeolian" ->
+                    Decode.succeed Aeolian
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Key: " ++ other

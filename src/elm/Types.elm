@@ -80,7 +80,7 @@ type Message
 
 
 type Bowing
-    = Slured Int
+    = Slurred Int
     | Repeated Int
 
 
@@ -305,7 +305,7 @@ scaleToString scale =
 bowingToString : Bowing -> String
 bowingToString bowing =
     case bowing of
-        Slured n ->
+        Slurred n ->
             String.fromInt n
 
         Repeated n ->
@@ -460,18 +460,18 @@ challengeToString challenge =
 
 allBowings : List Bowing
 allBowings =
-    [ Slured 1
-    , Slured 2
-    , Slured 3
-    , Slured 4
-    , Slured 5
-    , Slured 6
-    , Slured 7
-    , Slured 8
-    , Slured 9
-    , Slured 10
-    , Slured 11
-    , Slured 12
+    [ Slurred 1
+    , Slurred 2
+    , Slurred 3
+    , Slurred 4
+    , Slurred 5
+    , Slurred 6
+    , Slurred 7
+    , Slurred 8
+    , Slurred 9
+    , Slurred 10
+    , Slurred 11
+    , Slurred 12
     , Repeated 1
     , Repeated 2
     , Repeated 3
