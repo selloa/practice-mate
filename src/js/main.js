@@ -19,3 +19,35 @@ app.ports &&
 app.ports.setStorage.subscribe(function (configuration) {
   localStorage.setItem(STORAGE_ID, JSON.stringify(configuration));
 });
+
+app.ports.setLink.subscribe(function (configuration) {
+  console.log(configuration);
+  console.log(configurationToUrlParams(configuration));
+  window.location = `${window.origin}?${configurationToUrlParams(
+    configuration
+  )}`;
+});
+
+function configurationToUrlParams(configuration) {
+  return [configuration]
+    .map((c) => ({
+      ...c,
+      preset: [c.preset],
+      bowings: [c.bowings.map((b) => b.times)],
+    }))
+    .map((c) =>
+      Object.keys(c).map((key) => {
+        console.log(c[key]);
+        return `${key}=${arrayToCSV(c[key])}`;
+      })
+    )[0]
+    .reduce((result, topicString) => (result += `&${topicString}`), "");
+}
+
+function arrayToCSV(array) {
+  return array
+    .reduce((result, el) => {
+      return (result += `,${el}`);
+    }, "")
+    .slice(1);
+}

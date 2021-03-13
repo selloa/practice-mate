@@ -33,6 +33,9 @@ port printToConsole : String -> Cmd msg
 port setStorage : Encode.Value -> Cmd msg
 
 
+port setLink : Encode.Value -> Cmd msg
+
+
 
 -- main
 
@@ -154,6 +157,7 @@ type Msg
     | PrintConfiguration
     | UpdatedSlider String
     | UpdatedAutoNextSlider String
+    | AddConfigToLink
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
@@ -441,6 +445,9 @@ update msg model =
             in
             ( model, cmd )
 
+        AddConfigToLink ->
+            ( model, setLink <| encodeConfiguration model.configuration )
+
 
 
 -- toggleNextExercise (model, cmd) =
@@ -634,9 +641,8 @@ selection model =
                         , class "display-block flex-auto ml-2 px-16 sm:px-32"
                         , onClick NewExercise
                         ]
-                         
                         --  [ text "refresh" ]
-                         [Filled.auto_fix_high 20 Inherit] 
+                        [ Filled.auto_fix_high 20 Inherit ]
                     , button
                         [ class <| coloredButton "indigo" 300 200 800
                         , class "flex-end m-2"
@@ -797,6 +803,8 @@ settings model =
     if model.showSettings then
         div [ class "container flex flex-wrap bg-gray-200 px-5 rounded" ]
             [ Html.h1 [ class "text-5xl" ] [ text "Settings" ]
+            , div [ class "container bg-gray-200 rounded m-6 " ]
+                [ button [ onClick AddConfigToLink ] [ text "get link" ] ]
             , div [ class "container bg-gray-200 rounded" ] <|
                 [ presets model
                 , practiceMode model
@@ -1196,7 +1204,9 @@ encodeInterval interval =
 
 encodeScale : Scale -> Encode.Value
 encodeScale scale =
-    Encode.string <| scaleToString scale
+    scaleToString scale
+    |> String.replace " " ""
+    |> Encode.string 
 
 
 encodeChallenge : Challenge -> Encode.Value
@@ -1206,7 +1216,10 @@ encodeChallenge challenge =
 
 encodeRoot : Root -> Encode.Value
 encodeRoot root =
-    Encode.string <| rootToString root
+    rootToString root
+        |> String.replace "♭" "b"
+        |> String.replace "♯" "#"
+        |> Encode.string
 
 
 encodeTopic : Topic -> Encode.Value
@@ -1406,7 +1419,7 @@ decodeRoot =
                 "A" ->
                     Decode.succeed A
 
-                "B♭" ->
+                "Bb" ->
                     Decode.succeed Bb
 
                 "B" ->
@@ -1415,13 +1428,13 @@ decodeRoot =
                 "C" ->
                     Decode.succeed C
 
-                "D♭" ->
+                "Db" ->
                     Decode.succeed Cis
 
                 "D" ->
                     Decode.succeed D
 
-                "E♭" ->
+                "Eb" ->
                     Decode.succeed Dis
 
                 "E" ->
@@ -1430,13 +1443,13 @@ decodeRoot =
                 "F" ->
                     Decode.succeed F
 
-                "F♯" ->
+                "F#" ->
                     Decode.succeed Fis
 
                 "G" ->
                     Decode.succeed G
 
-                "A♭" ->
+                "Ab" ->
                     Decode.succeed Gis
 
                 other ->
