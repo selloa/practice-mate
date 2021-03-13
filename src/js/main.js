@@ -50,7 +50,7 @@ function urlParamsToConfiguration(sp) {
   return [
     {
       ...CONFIGURATION_KEYS.map((key) => {
-        const elements = sp.has(key) ? sp.get(key).split(",") : [];
+        const elements = sp.has(key) ? sp.get(key).split(",") : [""];
 
         return { [key]: elements };
       }).reduce((config, category) => ({ ...config, ...category }), {}),

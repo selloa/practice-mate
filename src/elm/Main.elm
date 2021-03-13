@@ -1308,19 +1308,20 @@ decodeConfiguration : Decode.Decoder Configuration
 decodeConfiguration =
     Decode.map8
         Configuration
-        (Decode.field "topics" (Decode.list decodeTopic))
-        (Decode.field "roots" (Decode.list decodeRoot))
-        (Decode.field "scales" (Decode.list decodeScale))
-        (Decode.field "intervals" (Decode.list decodeInterval))
-        (Decode.field "challenges"
-            (Decode.list decodeChallenge
-                |> Decode.maybe
-                |> Decode.map (Maybe.withDefault [])
-            )
-        )
-        (Decode.field "bowings" (Decode.list decodeBowing))
-        (Decode.field "chords" (Decode.list decodeChord))
+        (Decode.field "topics" (Decode.list decodeTopic |> fallbackTo [Scales]))
+        (Decode.field "roots" (Decode.list decodeRoot |> fallbackTo allRoots))
+        (Decode.field "scales" (Decode.list decodeScale |> fallbackTo []))
+        (Decode.field "intervals" (Decode.list decodeInterval |> fallbackTo []))
+        (Decode.field "challenges" (Decode.list decodeChallenge |> fallbackTo []))
+        (Decode.field "bowings" (Decode.list decodeBowing |> fallbackTo []))
+        (Decode.field "chords" (Decode.list decodeChord |> fallbackTo []))
         (Decode.field "preset" decodePreset)
+
+
+fallbackTo : List a -> Decode.Decoder (List a) -> Decode.Decoder (List a)
+fallbackTo fallback decoder  =
+    Decode.maybe decoder
+        |> Decode.map (Maybe.withDefault fallback)
 
 
 decodeInterval : Decode.Decoder Interval
