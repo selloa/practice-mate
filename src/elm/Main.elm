@@ -40,7 +40,7 @@ port setLink : Encode.Value -> Cmd msg
 -- main
 
 
-main : Program Encode.Value Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { init = init
@@ -68,8 +68,25 @@ type alias Model =
     , elapsedExerciseTime : Int
     }
 
+type alias Flags = 
+    { storedConfiguration : Encode.Value
+    , urlConfiguration : UrlConfiguration }
 
-init : Encode.Value -> ( Model, Cmd Msg )
+type alias UrlConfiguration =
+    {
+        topics : List String
+        , challenges : List String
+        , chords : List String
+        , intervals : List String
+        , roots : List String
+        , scales : List String
+        , bowings : List String
+        , preset : String
+         
+    }
+
+
+init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
         localInitialModel =
@@ -80,11 +97,11 @@ init flags =
     )
 
 
-initialModel : Encode.Value -> Model
+initialModel : Flags -> Model
 initialModel flags =
     let
-        configuration =
-            case Decode.decodeValue decodeConfiguration flags of
+        storedConfiguration =
+            case Decode.decodeValue decodeConfiguration flags.storedConfiguration of
                 Ok config ->
                     config
 
@@ -97,7 +114,7 @@ initialModel flags =
     , showSettings = False
     , message = Nothing
     , practiceMode = TimeLimit 30
-    , configuration = configuration
+    , configuration = storedConfiguration
     , showScalePattern = False
     , autoNextExercise = False
     , autoNextTimeInMinutes = 1

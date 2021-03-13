@@ -3,7 +3,13 @@ import { Elm } from "../elm/Main.elm";
 const STORAGE_ID = "configuration";
 
 const storedData = localStorage.getItem(STORAGE_ID);
-const flags = storedData ? JSON.parse(storedData) : null;
+
+console.log(urlParamsToConfiguration(window.location.href));
+
+const flags = {
+  storedConfiguration: storedData ? JSON.parse(storedData) : null,
+  urlConfiguration: urlParamsToConfiguration(window.location.href),
+};
 
 const app = Elm.Main.init({
   node: document.getElementById("root"),
@@ -28,6 +34,32 @@ app.ports.setLink.subscribe(function (configuration) {
   )}`;
 });
 
+function urlParamsToConfiguration(location) {
+  const url = new URL(location);
+  const sp = new URLSearchParams(url.search);
+
+  // todo preset removed so always custom
+  const CONFIGURATION_KEYS = [
+    "topics",
+    "roots",
+    "scales",
+    "intervals",
+    "challenges",
+    "bowings",
+    "chords",
+    "preset",
+  ];
+
+  return {
+    ...CONFIGURATION_KEYS.map((key) => {
+      const elements = sp.has(key) ? sp.get(key).split(",") : [];
+
+      return { [key]: elements };
+    }).reduce((config, category) => ({ ...config, ...category }), {}),
+    preset: sp.get("preset") || "",
+  };
+}
+
 function configurationToUrlParams(configuration) {
   return [configuration]
     .map((c) => ({
@@ -41,7 +73,8 @@ function configurationToUrlParams(configuration) {
         return `${key}=${arrayToCSV(c[key])}`;
       })
     )[0]
-    .reduce((result, topicString) => (result += `&${topicString}`), "");
+    .reduce((result, topicString) => (result += `&${topicString}`), "")
+    .slice(1);
 }
 
 function arrayToCSV(array) {
