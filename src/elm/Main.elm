@@ -77,9 +77,9 @@ type alias Flags =
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
-        model = initialModel flags
+        model =
+            initialModel flags
     in
-    
     ( model
     , shuffleConfig NewConfigurationGenerated model.configuration
     )
@@ -201,7 +201,12 @@ update msg model =
             if model.isRunning then
                 ( { model
                     | isRunning = timeLimitInSeconds /= newTime
-                    , elapsedTime = newTime
+                    , elapsedTime =
+                        if newTime >= timeLimitInSeconds then
+                            0
+
+                        else
+                            newTime
                     , elapsedExerciseTime =
                         if newExerciseTime > 59 then
                             0
@@ -225,7 +230,7 @@ update msg model =
                             Nothing
                   }
                 , if newExerciseTime > 59 then
-                     shuffleConfig NewConfigurationGenerated model.configuration
+                    shuffleConfig NewConfigurationGenerated model.configuration
 
                   else
                     Cmd.none
