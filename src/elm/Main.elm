@@ -851,7 +851,7 @@ settings model =
                                             , onClick ToggleShowScalePattern
                                             ]
                                             []
-                                        , text "patterns"
+                                        , text "show fingerings"
                                         ]
                                     , button
                                         [ class "ml-2", onClick ToggleShowScalePattern ]
