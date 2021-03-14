@@ -80,13 +80,13 @@ configurationFor preset =
             }
 
         Basic ->
-            { bowings = [ Slurred 1, Slurred 2, Slurred 3, Slurred 4, Slurred 5, Slurred 6, Slurred 7, Slurred 8 ]
-            , chords = [ Major, Minor ]
-            , intervals = [ Sixths, Thirds, Octaves ]
-            , scales = [ Ionian, Aeolian, MelodicMinor, HarmonicMinor ]
+            { topics = [ Scales, Chords ]
+            , roots = [ C, Bb, F, D, G ]
+            , scales = [ MelodicMinor, MajorScale, MinorScale ]
+            , intervals = [ Sixths, Octaves ]
             , challenges = []
-            , roots = [ A, Bb, Dis, C, D, F, G ]
-            , topics = [ Scales, Chords ]
+            , bowings = [ Slurred 1, Slurred 2, Slurred 3, Slurred 4 ]
+            , chords = [ Minor, Major ]
             , preset = Basic
             }
 
