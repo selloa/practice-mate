@@ -1,4 +1,4 @@
-module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Message(..), PracticeMode(..), Preset(..), Root(..), Scale(..), Topic(..), allBowings, allChallenges, allChords, allIntervals, allRoots, allScales, allTopics, bowingToString, challengeToString, chordToString, doublestopPatternToString, intervalToString, practiceModeToString, practiceModeToStringWithoutNumber, presetToString, rootToString, scalePatternToString, scaleToString, topicToString)
+module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Message(..), PracticeMode(..), Preset(..), Root(..), Scale(..), Topic(..), allBowings, allChallenges, allChords, allIntervals, allRoots, allScales, allTopics, bowingToString, challengeToString, chordToString, intervalPatternToString, intervalToString, practiceModeToString, practiceModeToStringWithoutNumber, presetToString, rootToString, scalePatternToString, scaleToString, topicToString)
 
 
 type PracticeMode
@@ -385,8 +385,8 @@ scalePatternToString scale =
             "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
 
 
-doublestopPatternToString : Scale -> String
-doublestopPatternToString scale =
+intervalPatternToString : Scale -> String
+intervalPatternToString scale =
     case scale of
         Ionian ->
             "m M M m - m M M m"

@@ -563,8 +563,8 @@ selection model =
             else
                 div [] []
 
-        doublestopPatterns =
-            selectionItem configuration.scales doublestopPatternToString SkipScale ""
+        intervalPatterns =
+            selectionItem configuration.scales intervalPatternToString SkipScale ""
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
@@ -623,7 +623,7 @@ selection model =
                         , roots
                         , scales
                         , spacing
-                        , doublestopPatterns
+                        , intervalPatterns
                         , bowings
                         , spacing
                         , challenges
