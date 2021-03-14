@@ -1430,6 +1430,12 @@ decodeChallenge =
                 "D String" ->
                     Decode.succeed DString
 
+                "G String" ->
+                    Decode.succeed GString
+
+                "C String" ->
+                    Decode.succeed CString
+
                 other ->
                     Decode.fail <| "Unknown constructor for type Challenge: " ++ other
     in

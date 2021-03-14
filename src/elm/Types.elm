@@ -63,6 +63,8 @@ type Chord
 type Challenge
     = AString
     | DString
+    | GString
+    | CString
 
 
 type Interval
@@ -429,6 +431,8 @@ allChallenges : List Challenge
 allChallenges =
     [ AString
     , DString
+    , CString
+    , GString
     ]
 
 
@@ -456,6 +460,12 @@ challengeToString challenge =
 
         DString ->
             "D String"
+
+        GString ->
+            "G String"
+
+        CString ->
+            "C String"
 
 
 allBowings : List Bowing
