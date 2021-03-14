@@ -558,7 +558,7 @@ selection model =
 
         scalePatterns =
             if model.showScalePattern then
-                selectionItem configuration.scales scalePatternToString SkipScale ""
+                scalePatternSelection model.configuration
 
             else
                 div [] []
@@ -777,6 +777,25 @@ rootSelection configuration =
                         [ text string ]
            )
 
+scalePatternSelection : Configuration -> Html Msg
+scalePatternSelection configuration = 
+    List.head configuration.scales
+        |> Maybe.map scalePatternToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container mb-20" ] []
+
+                else
+                    div [ class "container mb-10" ]
+                        [ text ""
+                        , button
+                            [ class "text-left bg-gray-200 p-1 border-gray-400 px-4 border-t-0 rounded select-none"
+                            , onClick SkipScale
+                            ]
+                            [ text string ]
+                        ]
+           )
 
 selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
 selectionItem items toString skip label =
