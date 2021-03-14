@@ -270,7 +270,6 @@ update msg model =
         ToggleSettings ->
             ( { model
                 | showSettings = not model.showSettings
-                , isRunning = False
               }
             , Cmd.none
             )
