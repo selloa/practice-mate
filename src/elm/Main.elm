@@ -9,7 +9,6 @@ import Html.Events exposing (onClick, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Material.Icons as Filled
-import Material.Icons.TwoTone as TwoTone
 import Material.Icons.Types exposing (Coloring(..))
 import Time
 import Types exposing (..)
@@ -33,11 +32,14 @@ port printToConsole : String -> Cmd msg
 port setStorage : Encode.Value -> Cmd msg
 
 
+port setLink : Encode.Value -> Cmd msg
+
+
 
 -- main
 
 
-main : Program Encode.Value Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { init = init
@@ -63,30 +65,36 @@ type alias Model =
     , autoNextExercise : Bool
     , autoNextTimeInMinutes : Int
     , elapsedExerciseTime : Int
+    , flags : Flags
+    , error : String
     }
 
 
-init : Encode.Value -> ( Model, Cmd Msg )
+type alias Flags =
+    Encode.Value
+
+
+init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
-        localInitialModel =
+        model =
             initialModel flags
     in
-    ( localInitialModel
-    , Cmd.none
+    ( model
+    , shuffleConfig NewConfigurationGenerated model.configuration
     )
 
 
-initialModel : Encode.Value -> Model
+initialModel : Flags -> Model
 initialModel flags =
     let
-        configuration =
+        ( storedConfiguration, error ) =
             case Decode.decodeValue decodeConfiguration flags of
                 Ok config ->
-                    config
+                    ( config, "" )
 
-                Err _ ->
-                    configurationFor Basic
+                Err err ->
+                    ( configurationFor Basic, Decode.errorToString err )
     in
     { elapsedTime = 0
     , completedExercises = 0
@@ -94,11 +102,13 @@ initialModel flags =
     , showSettings = False
     , message = Nothing
     , practiceMode = TimeLimit 30
-    , configuration = configuration
+    , configuration = storedConfiguration
     , showScalePattern = False
     , autoNextExercise = False
     , autoNextTimeInMinutes = 1
     , elapsedExerciseTime = 0
+    , flags = flags
+    , error = error
     }
 
 
@@ -154,6 +164,7 @@ type Msg
     | PrintConfiguration
     | UpdatedSlider String
     | UpdatedAutoNextSlider String
+    | AddConfigToLink
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
@@ -190,7 +201,12 @@ update msg model =
             if model.isRunning then
                 ( { model
                     | isRunning = timeLimitInSeconds /= newTime
-                    , elapsedTime = newTime
+                    , elapsedTime =
+                        if newTime >= timeLimitInSeconds then
+                            0
+
+                        else
+                            newTime
                     , elapsedExerciseTime =
                         if newExerciseTime > 59 then
                             0
@@ -263,7 +279,6 @@ update msg model =
         ToggleSettings ->
             ( { model
                 | showSettings = not model.showSettings
-                , isRunning = False
               }
             , Cmd.none
             )
@@ -441,6 +456,9 @@ update msg model =
             in
             ( model, cmd )
 
+        AddConfigToLink ->
+            ( model, setLink <| encodeConfiguration model.configuration )
+
 
 
 -- toggleNextExercise (model, cmd) =
@@ -504,7 +522,7 @@ view : Model -> Html Msg
 view model =
     div [ class "font-serif bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
         if model.showSettings then
-            [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20 p-1", onClick ToggleSettings ]
+            [ button [ class "fixed bg-white sm:bg-gray-200 top-0 right-0  p-4 sm:left-0 sm:pl-5 sm:mt-5 ", onClick ToggleSettings ]
                 [ Filled.arrow_back_ios_new buttonSize Inherit ]
             , settings model
             ]
@@ -548,13 +566,19 @@ selection model =
 
         scalePatterns =
             if model.showScalePattern then
-                selectionItem configuration.scales scalePatternToString SkipScale ""
+                scalePatternSelection model.configuration
 
             else
                 div [] []
 
-        doublestopPatterns =
-            selectionItem configuration.scales doublestopPatternToString SkipScale ""
+        intervalPatterns =
+            selectionItem configuration.scales
+                (List.head configuration.intervals
+                    |> Maybe.withDefault Octaves
+                    |> intervalPatternToString
+                )
+                SkipScale
+                ""
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
@@ -613,7 +637,7 @@ selection model =
                         , roots
                         , scales
                         , spacing
-                        , doublestopPatterns
+                        , intervalPatterns
                         , bowings
                         , spacing
                         , challenges
@@ -623,26 +647,33 @@ selection model =
                         []
                )
             ++ [ div [ class "container p-3 flex" ]
-                    [ button
-                        [ class <| coloredButton "orange" 300 400 800
-                        , class "flex-end m-2"
-                        , onClick PreviousTopic
-                        ]
-                        [ Filled.navigate_before buttonSize Inherit ]
+                    [ if List.length model.configuration.topics > 1 then
+                        button
+                            [ class <| coloredButton "orange" 300 400 800
+                            , class "flex-end m-2"
+                            , onClick PreviousTopic
+                            ]
+                            [ Filled.navigate_before buttonSize Inherit ]
+
+                      else
+                        div [] []
                     , button
                         [ class <| coloredButton "yellow" 400 500 800
-                        , class "display-block flex-auto ml-2 px-16 sm:px-32"
+                        , class "display-block flex-auto ml-2 p-2 sm:px-32"
                         , onClick NewExercise
                         ]
-                         
                         --  [ text "refresh" ]
-                         [Filled.auto_fix_high 20 Inherit] 
-                    , button
-                        [ class <| coloredButton "indigo" 300 200 800
-                        , class "flex-end m-2"
-                        , onClick NextTopic
-                        ]
-                        [ Filled.navigate_next buttonSize Inherit ]
+                        [ Filled.auto_fix_high 20 Inherit ]
+                    , if List.length model.configuration.topics > 1 then
+                        button
+                            [ class <| coloredButton "indigo" 300 200 800
+                            , class "flex-end m-2"
+                            , onClick NextTopic
+                            ]
+                            [ Filled.navigate_next buttonSize Inherit ]
+
+                      else
+                        div [] []
                     ]
                ]
         )
@@ -767,6 +798,27 @@ rootSelection configuration =
            )
 
 
+scalePatternSelection : Configuration -> Html Msg
+scalePatternSelection configuration =
+    List.head configuration.scales
+        |> Maybe.map scalePatternToString
+        |> Maybe.withDefault ""
+        |> (\string ->
+                if String.isEmpty string then
+                    div [ class "container mb-20" ] []
+
+                else
+                    div [ class "container mb-10" ]
+                        [ text ""
+                        , button
+                            [ class "text-left bg-gray-200 p-1 border-gray-400 px-4 border-t-0 rounded select-none"
+                            , onClick SkipScale
+                            ]
+                            [ text string ]
+                        ]
+           )
+
+
 selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
 selectionItem items toString skip label =
     List.head items
@@ -797,6 +849,8 @@ settings model =
     if model.showSettings then
         div [ class "container flex flex-wrap bg-gray-200 px-5 rounded" ]
             [ Html.h1 [ class "text-5xl" ] [ text "Settings" ]
+            , div [ class "container bg-gray-200 rounded m-6 " ]
+                [ button [ onClick AddConfigToLink ] [ text "get link" ] ]
             , div [ class "container bg-gray-200 rounded" ] <|
                 [ presets model
                 , practiceMode model
@@ -838,7 +892,7 @@ settings model =
                                             , onClick ToggleShowScalePattern
                                             ]
                                             []
-                                        , text "patterns"
+                                        , text "show fingerings"
                                         ]
                                     , button
                                         [ class "ml-2", onClick ToggleShowScalePattern ]
@@ -865,14 +919,24 @@ settings model =
                             |> List.filter
                                 (\b ->
                                     case b of
-                                        Slured _ ->
+                                        Slurred _ ->
                                             True
 
                                         Repeated _ ->
                                             False
                                 )
                         )
-                        allBowings
+                        (allBowings
+                            |> List.filter
+                                (\b ->
+                                    case b of
+                                        Slurred _ ->
+                                            True
+
+                                        Repeated _ ->
+                                            False
+                                )
+                        )
                         bowingToString
                         ToggleBowing
                         ToggleAllBowings
@@ -1157,9 +1221,9 @@ progressBar model =
 encodeBowing : Bowing -> Encode.Value
 encodeBowing bowing =
     case bowing of
-        Slured times ->
+        Slurred times ->
             Encode.object
-                [ ( "kind", Encode.string "Slured" )
+                [ ( "kind", Encode.string "Slurred" )
                 , ( "times", Encode.int times )
                 ]
 
@@ -1196,7 +1260,9 @@ encodeInterval interval =
 
 encodeScale : Scale -> Encode.Value
 encodeScale scale =
-    Encode.string <| scaleToString scale
+    scaleToString scale
+        |> String.replace " " ""
+        |> Encode.string
 
 
 encodeChallenge : Challenge -> Encode.Value
@@ -1206,7 +1272,10 @@ encodeChallenge challenge =
 
 encodeRoot : Root -> Encode.Value
 encodeRoot root =
-    Encode.string <| rootToString root
+    rootToString root
+        |> String.replace "♭" "b"
+        |> String.replace "♯" "is"
+        |> Encode.string
 
 
 encodeTopic : Topic -> Encode.Value
@@ -1227,9 +1296,9 @@ decodeBowing =
 decodeBowingHelp : String -> Decode.Decoder Bowing
 decodeBowingHelp kind =
     case kind of
-        "Slured" ->
+        "Slurred" ->
             Decode.map
-                Slured
+                Slurred
                 (Decode.field "times" Decode.int)
 
         "Repeated" ->
@@ -1292,14 +1361,20 @@ decodeConfiguration : Decode.Decoder Configuration
 decodeConfiguration =
     Decode.map8
         Configuration
-        (Decode.field "topics" (Decode.list decodeTopic))
-        (Decode.field "roots" (Decode.list decodeRoot))
-        (Decode.field "scales" (Decode.list decodeScale))
-        (Decode.field "intervals" (Decode.list decodeInterval))
-        (Decode.field "challenges" (Decode.list decodeChallenge))
-        (Decode.field "bowings" (Decode.list decodeBowing))
-        (Decode.field "chords" (Decode.list decodeChord))
+        (Decode.field "topics" (Decode.list decodeTopic |> fallbackTo [ Scales ]))
+        (Decode.field "roots" (Decode.list decodeRoot |> fallbackTo allRoots))
+        (Decode.field "scales" (Decode.list decodeScale |> fallbackTo []))
+        (Decode.field "intervals" (Decode.list decodeInterval |> fallbackTo []))
+        (Decode.field "challenges" (Decode.list decodeChallenge |> fallbackTo []))
+        (Decode.field "bowings" (Decode.list decodeBowing |> fallbackTo []))
+        (Decode.field "chords" (Decode.list decodeChord |> fallbackTo []))
         (Decode.field "preset" decodePreset)
+
+
+fallbackTo : List a -> Decode.Decoder (List a) -> Decode.Decoder (List a)
+fallbackTo fallback decoder =
+    Decode.maybe decoder
+        |> Decode.map (Maybe.withDefault fallback)
 
 
 decodeInterval : Decode.Decoder Interval
@@ -1334,7 +1409,7 @@ decodeScale =
         recover x =
             case x of
                 "Major" ->
-                    Decode.succeed Ionian
+                    Decode.succeed MajorScale
 
                 "Dorian" ->
                     Decode.succeed Dorian
@@ -1349,21 +1424,21 @@ decodeScale =
                     Decode.succeed Mixolydian
 
                 "Minor" ->
-                    Decode.succeed Aeolian
+                    Decode.succeed MinorScale
 
                 "Mandalorian" ->
                     Decode.succeed Mandalorian
 
-                "Melodic Minor" ->
+                "MelodicMinor" ->
                     Decode.succeed MelodicMinor
 
-                "Harmonic Minor" ->
+                "HarmonicMinor" ->
                     Decode.succeed HarmonicMinor
 
-                "Major Pentatonic" ->
+                "MajorPentatonic" ->
                     Decode.succeed MajorPentatonic
 
-                "Minor Pentatonic" ->
+                "MinorPentatonic" ->
                     Decode.succeed MinorPentatonic
 
                 "Chromatic" ->
@@ -1374,6 +1449,12 @@ decodeScale =
 
                 "Blues" ->
                     Decode.succeed Blues
+
+                "Ionian" ->
+                    Decode.succeed Ionian
+
+                "Aeolian" ->
+                    Decode.succeed Aeolian
 
                 other ->
                     Decode.fail <| "Unknown constructor for type Key: " ++ other
@@ -1392,6 +1473,12 @@ decodeChallenge =
                 "D String" ->
                     Decode.succeed DString
 
+                "G String" ->
+                    Decode.succeed GString
+
+                "C String" ->
+                    Decode.succeed CString
+
                 other ->
                     Decode.fail <| "Unknown constructor for type Challenge: " ++ other
     in
@@ -1406,7 +1493,7 @@ decodeRoot =
                 "A" ->
                     Decode.succeed A
 
-                "B♭" ->
+                "Bb" ->
                     Decode.succeed Bb
 
                 "B" ->
@@ -1415,13 +1502,13 @@ decodeRoot =
                 "C" ->
                     Decode.succeed C
 
-                "D♭" ->
+                "Db" ->
                     Decode.succeed Cis
 
                 "D" ->
                     Decode.succeed D
 
-                "E♭" ->
+                "Eb" ->
                     Decode.succeed Dis
 
                 "E" ->
@@ -1430,13 +1517,13 @@ decodeRoot =
                 "F" ->
                     Decode.succeed F
 
-                "F♯" ->
+                "Fis" ->
                     Decode.succeed Fis
 
                 "G" ->
                     Decode.succeed G
 
-                "A♭" ->
+                "Ab" ->
                     Decode.succeed Gis
 
                 other ->
@@ -1483,6 +1570,6 @@ decodePreset =
                     Decode.succeed Custom
 
                 other ->
-                    Decode.fail <| "Unknown constructor for type Topic: " ++ other
+                    Decode.fail <| "Unknown constructor for type Preset: " ++ other
     in
     Decode.string |> Decode.andThen recover

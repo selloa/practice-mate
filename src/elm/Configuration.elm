@@ -1,4 +1,51 @@
-module Configuration exposing (Configuration, configurationFor, flip, getBowings, getChallenges, getChords, getIntervals, getPreset, getRoots, getScales, getTopics, next, nextBowing, nextChallenge, nextChord, nextInterval, nextRoot, nextScale, nextTopic, previousTopic, shuffleBowings, shuffleChallenges, shuffleChords, shuffleConfig, shuffleIntervals, shuffleList, shuffleRoots, shuffleScales, toggle, toggleAll, toggleBowing, toggleChallenge, toggleChord, toggleInterval, toggleList, toggleRoot, toggleScale, toggleTopic, updateBowings, updateChallenges, updateChords, updateIntervals, updatePreset, updateRoots, updateScales, updateTopics)
+module Configuration exposing
+    ( Configuration
+    , configurationFor
+    , flip
+    , getBowings
+    , getChallenges
+    , getChords
+    , getIntervals
+    , getPreset
+    , getRoots
+    , getScales
+    , getTopics
+    , next
+    , nextBowing
+    , nextChallenge
+    , nextChord
+    , nextInterval
+    , nextRoot
+    , nextScale
+    , nextTopic
+    , previousTopic
+    , shuffleBowings
+    , shuffleChallenges
+    , shuffleChords
+    , shuffleConfig
+    , shuffleIntervals
+    , shuffleList
+    , shuffleRoots
+    , shuffleScales
+    , toggle
+    , toggleAll
+    , toggleBowing
+    , toggleChallenge
+    , toggleChord
+    , toggleInterval
+    , toggleList
+    , toggleRoot
+    , toggleScale
+    , toggleTopic
+    , updateBowings
+    , updateChallenges
+    , updateChords
+    , updateIntervals
+    , updatePreset
+    , updateRoots
+    , updateScales
+    , updateTopics
+    )
 
 import Random
 import Random.Extra
@@ -33,13 +80,13 @@ configurationFor preset =
             }
 
         Basic ->
-            { bowings = [ Slured 1, Slured 2, Slured 3, Slured 4, Slured 5, Slured 6, Slured 7, Slured 8 ]
-            , chords = [ Major, Minor ]
-            , intervals = [ Sixths, Thirds, Octaves ]
-            , scales = [ Ionian, Aeolian, MelodicMinor, HarmonicMinor ]
+            { topics = [ Scales, Chords ]
+            , roots = [ C, Bb, F, D, G ]
+            , scales = [ MelodicMinor, MajorScale, MinorScale ]
+            , intervals = [ Sixths, Octaves ]
             , challenges = []
-            , roots = [ A, Bb, Dis, C, D, F, G ]
-            , topics = [ Scales, Chords ]
+            , bowings = [ Slurred 1, Slurred 2, Slurred 3, Slurred 4 ]
+            , chords = [ Minor, Major ]
             , preset = Basic
             }
 

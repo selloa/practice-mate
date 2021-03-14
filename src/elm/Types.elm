@@ -1,4 +1,4 @@
-module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Message(..), PracticeMode(..), Preset(..), Root(..), Scale(..), Topic(..), allBowings, allChallenges, allChords, allIntervals, allRoots, allScales, allTopics, bowingToString, challengeToString, chordToString, doublestopPatternToString, intervalToString, practiceModeToString, practiceModeToStringWithoutNumber, presetToString, rootToString, scalePatternToString, scaleToString, topicToString)
+module Types exposing (Bowing(..), Challenge(..), Chord(..), Interval(..), Message(..), PracticeMode(..), Preset(..), Root(..), Scale(..), Topic(..), allBowings, allChallenges, allChords, allIntervals, allRoots, allScales, allTopics, bowingToString, challengeToString, chordToString, intervalPatternToString, intervalToString, practiceModeToString, practiceModeToStringWithoutNumber, presetToString, rootToString, scalePatternToString, scaleToString, topicToString)
 
 
 type PracticeMode
@@ -63,6 +63,8 @@ type Chord
 type Challenge
     = AString
     | DString
+    | GString
+    | CString
 
 
 type Interval
@@ -80,7 +82,7 @@ type Message
 
 
 type Bowing
-    = Slured Int
+    = Slurred Int
     | Repeated Int
 
 
@@ -305,7 +307,7 @@ scaleToString scale =
 bowingToString : Bowing -> String
 bowingToString bowing =
     case bowing of
-        Slured n ->
+        Slurred n ->
             String.fromInt n
 
         Repeated n ->
@@ -362,7 +364,7 @@ scalePatternToString scale =
             "3 X 2^X 3"
 
         HarmonicMinor ->
-            "3 3 2^X 141"
+            "3 3 2^X 1x34"
 
         Wholestep ->
             "X X repeat"
@@ -383,40 +385,73 @@ scalePatternToString scale =
             "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
 
 
-doublestopPatternToString : Scale -> String
-doublestopPatternToString scale =
-    case scale of
-        Ionian ->
-            "m M M m - m M M m"
+intervalPatternToString : Interval -> Scale -> String
+intervalPatternToString interval scale =
+    let
+        getPattern =
+            case scale of
+                Ionian ->
+                    "m M M m - m M M m"
 
-        Dorian ->
-            "M M m m - M M m M"
+                MajorScale ->
+                    "m M M m - m M M m"
 
-        Phrygian ->
-            "M m m M - M m M M"
+                Dorian ->
+                    "M M m m - M M m M"
 
-        Lydian ->
-            "m m M M - m M M m"
+                Phrygian ->
+                    "M m m M - M m M M"
 
-        Mixolydian ->
-            "m M M m - M M m m"
+                Lydian ->
+                    "m m M M - m M M m"
 
-        Aeolian ->
-            "M M m M - M m m M"
+                Mixolydian ->
+                    "m M M m - M M m m"
 
-        MelodicMinor ->
-            "M M m M - m M M M"
+                Aeolian ->
+                    "M M m M - M m m M"
 
-        HarmonicMinor ->
-            "M M m M - m m M M"
+                MinorScale ->
+                    "M M m M - M m m M"
 
-        Wholestep ->
-            "m m m m - m m m m"
+                MelodicMinor ->
+                    "M M m M - m M M M"
 
-        Chromatic ->
-            "M M M M - M M M M"
+                HarmonicMinor ->
+                    "M M m M - m m M M"
 
-        _ ->
+                Wholestep ->
+                    "m m m m - m m m m"
+
+                Chromatic ->
+                    "M M M M - M M M M"
+
+                Mandalorian ->
+                    ""
+
+                MajorPentatonic ->
+                    ""
+
+                MinorPentatonic ->
+                    ""
+
+                Blues ->
+                    ""
+    in
+    case interval of
+        Thirds ->
+            getPattern
+
+        Sixths ->
+            getPattern
+
+        Octaves ->
+            ""
+
+        Fourths ->
+            ""
+
+        Fifths ->
             ""
 
 
@@ -429,6 +464,8 @@ allChallenges : List Challenge
 allChallenges =
     [ AString
     , DString
+    , CString
+    , GString
     ]
 
 
@@ -457,21 +494,27 @@ challengeToString challenge =
         DString ->
             "D String"
 
+        GString ->
+            "G String"
+
+        CString ->
+            "C String"
+
 
 allBowings : List Bowing
 allBowings =
-    [ Slured 1
-    , Slured 2
-    , Slured 3
-    , Slured 4
-    , Slured 5
-    , Slured 6
-    , Slured 7
-    , Slured 8
-    , Slured 9
-    , Slured 10
-    , Slured 11
-    , Slured 12
+    [ Slurred 1
+    , Slurred 2
+    , Slurred 3
+    , Slurred 4
+    , Slurred 5
+    , Slurred 6
+    , Slurred 7
+    , Slurred 8
+    , Slurred 9
+    , Slurred 10
+    , Slurred 11
+    , Slurred 12
     , Repeated 1
     , Repeated 2
     , Repeated 3
