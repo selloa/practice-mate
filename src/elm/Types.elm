@@ -362,7 +362,7 @@ scalePatternToString scale =
             "3 X 2^X 3"
 
         HarmonicMinor ->
-            "3 3 2^X 141"
+            "3 3 2^X 1x34"
 
         Wholestep ->
             "X X repeat"
