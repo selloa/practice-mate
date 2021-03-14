@@ -513,7 +513,7 @@ view : Model -> Html Msg
 view model =
     div [ class "font-serif bg-gray-100 md:px-5 md:py-5 min-h-screen w-screen flex flex-col md:flex-row items-start md:justify-center" ] <|
         if model.showSettings then
-            [ button [ class buttonPassive, class "ml-1 md:ml-0 mt-1 md:my-20 p-1", onClick ToggleSettings ]
+            [ button [ class "fixed bg-white sm:bg-gray-200 top-0 right-0  p-4 sm:left-0 sm:pl-5 sm:mt-5 ", onClick ToggleSettings ]
                 [ Filled.arrow_back_ios_new buttonSize Inherit ]
             , settings model
             ]
