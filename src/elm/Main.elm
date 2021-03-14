@@ -633,25 +633,27 @@ selection model =
                         []
                )
             ++ [ div [ class "container p-3 flex" ]
-                    [ button
+                    [ if List.length model.configuration.topics > 1 then button
                         [ class <| coloredButton "orange" 300 400 800
                         , class "flex-end m-2"
                         , onClick PreviousTopic
                         ]
                         [ Filled.navigate_before buttonSize Inherit ]
+                        else div [] []
                     , button
                         [ class <| coloredButton "yellow" 400 500 800
-                        , class "display-block flex-auto ml-2 px-16 sm:px-32"
+                        , class "display-block flex-auto ml-2 p-2 sm:px-32"
                         , onClick NewExercise
                         ]
                         --  [ text "refresh" ]
                         [ Filled.auto_fix_high 20 Inherit ]
-                    , button
+                    , if List.length model.configuration.topics > 1 then button
                         [ class <| coloredButton "indigo" 300 200 800
                         , class "flex-end m-2"
                         , onClick NextTopic
                         ]
                         [ Filled.navigate_next buttonSize Inherit ]
+                        else div [] []
                     ]
                ]
         )
