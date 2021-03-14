@@ -1366,7 +1366,7 @@ decodeScale =
         recover x =
             case x of
                 "Major" ->
-                    Decode.succeed Ionian
+                    Decode.succeed MajorScale
 
                 "Dorian" ->
                     Decode.succeed Dorian
@@ -1381,7 +1381,7 @@ decodeScale =
                     Decode.succeed Mixolydian
 
                 "Minor" ->
-                    Decode.succeed Aeolian
+                    Decode.succeed MinorScale
 
                 "Mandalorian" ->
                     Decode.succeed Mandalorian
