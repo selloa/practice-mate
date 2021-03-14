@@ -564,7 +564,13 @@ selection model =
                 div [] []
 
         intervalPatterns =
-            selectionItem configuration.scales intervalPatternToString SkipScale ""
+            selectionItem configuration.scales
+                (List.head configuration.intervals
+                    |> Maybe.withDefault Octaves
+                    |> intervalPatternToString
+                )
+                SkipScale
+                ""
 
         spacing =
             div [ class "container bg-gray mb-1 p-2" ]
@@ -633,13 +639,16 @@ selection model =
                         []
                )
             ++ [ div [ class "container p-3 flex" ]
-                    [ if List.length model.configuration.topics > 1 then button
-                        [ class <| coloredButton "orange" 300 400 800
-                        , class "flex-end m-2"
-                        , onClick PreviousTopic
-                        ]
-                        [ Filled.navigate_before buttonSize Inherit ]
-                        else div [] []
+                    [ if List.length model.configuration.topics > 1 then
+                        button
+                            [ class <| coloredButton "orange" 300 400 800
+                            , class "flex-end m-2"
+                            , onClick PreviousTopic
+                            ]
+                            [ Filled.navigate_before buttonSize Inherit ]
+
+                      else
+                        div [] []
                     , button
                         [ class <| coloredButton "yellow" 400 500 800
                         , class "display-block flex-auto ml-2 p-2 sm:px-32"
@@ -647,13 +656,16 @@ selection model =
                         ]
                         --  [ text "refresh" ]
                         [ Filled.auto_fix_high 20 Inherit ]
-                    , if List.length model.configuration.topics > 1 then button
-                        [ class <| coloredButton "indigo" 300 200 800
-                        , class "flex-end m-2"
-                        , onClick NextTopic
-                        ]
-                        [ Filled.navigate_next buttonSize Inherit ]
-                        else div [] []
+                    , if List.length model.configuration.topics > 1 then
+                        button
+                            [ class <| coloredButton "indigo" 300 200 800
+                            , class "flex-end m-2"
+                            , onClick NextTopic
+                            ]
+                            [ Filled.navigate_next buttonSize Inherit ]
+
+                      else
+                        div [] []
                     ]
                ]
         )
@@ -777,8 +789,9 @@ rootSelection configuration =
                         [ text string ]
            )
 
+
 scalePatternSelection : Configuration -> Html Msg
-scalePatternSelection configuration = 
+scalePatternSelection configuration =
     List.head configuration.scales
         |> Maybe.map scalePatternToString
         |> Maybe.withDefault ""
@@ -796,6 +809,7 @@ scalePatternSelection configuration =
                             [ text string ]
                         ]
            )
+
 
 selectionItem : List a -> (a -> String) -> Msg -> String -> Html Msg
 selectionItem items toString skip label =

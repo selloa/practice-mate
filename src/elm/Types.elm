@@ -385,55 +385,73 @@ scalePatternToString scale =
             "J∆ƒƒ∆ - Ǥ∆ʓ∆ɲ - I∆ɳ"
 
 
-intervalPatternToString : Scale -> String
-intervalPatternToString scale =
-    case scale of
-        Ionian ->
-            "m M M m - m M M m"
+intervalPatternToString : Interval -> Scale -> String
+intervalPatternToString interval scale =
+    let
+        getPattern =
+            case scale of
+                Ionian ->
+                    "m M M m - m M M m"
 
-        MajorScale ->
-            "m M M m - m M M m"
+                MajorScale ->
+                    "m M M m - m M M m"
 
-        Dorian ->
-            "M M m m - M M m M"
+                Dorian ->
+                    "M M m m - M M m M"
 
-        Phrygian ->
-            "M m m M - M m M M"
+                Phrygian ->
+                    "M m m M - M m M M"
 
-        Lydian ->
-            "m m M M - m M M m"
+                Lydian ->
+                    "m m M M - m M M m"
 
-        Mixolydian ->
-            "m M M m - M M m m"
+                Mixolydian ->
+                    "m M M m - M M m m"
 
-        Aeolian ->
-            "M M m M - M m m M"
+                Aeolian ->
+                    "M M m M - M m m M"
 
-        MinorScale ->
-            "M M m M - M m m M"
+                MinorScale ->
+                    "M M m M - M m m M"
 
-        MelodicMinor ->
-            "M M m M - m M M M"
+                MelodicMinor ->
+                    "M M m M - m M M M"
 
-        HarmonicMinor ->
-            "M M m M - m m M M"
+                HarmonicMinor ->
+                    "M M m M - m m M M"
 
-        Wholestep ->
-            "m m m m - m m m m"
+                Wholestep ->
+                    "m m m m - m m m m"
 
-        Chromatic ->
-            "M M M M - M M M M"
+                Chromatic ->
+                    "M M M M - M M M M"
 
-        Mandalorian ->
+                Mandalorian ->
+                    ""
+
+                MajorPentatonic ->
+                    ""
+
+                MinorPentatonic ->
+                    ""
+
+                Blues ->
+                    ""
+    in
+    case interval of
+        Thirds ->
+            getPattern
+
+        Sixths ->
+            getPattern
+
+        Octaves ->
             ""
 
-        MajorPentatonic ->
+        Fourths ->
             ""
 
-        MinorPentatonic ->
-            ""
-
-        Blues ->
+        Fifths ->
             ""
 
 
