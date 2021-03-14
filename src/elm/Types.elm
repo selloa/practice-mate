@@ -391,6 +391,9 @@ intervalPatternToString scale =
         Ionian ->
             "m M M m - m M M m"
 
+        MajorScale ->
+            "m M M m - m M M m"
+
         Dorian ->
             "M M m m - M M m M"
 
@@ -406,6 +409,9 @@ intervalPatternToString scale =
         Aeolian ->
             "M M m M - M m m M"
 
+        MinorScale ->
+            "M M m M - M m m M"
+
         MelodicMinor ->
             "M M m M - m M M M"
 
@@ -418,7 +424,16 @@ intervalPatternToString scale =
         Chromatic ->
             "M M M M - M M M M"
 
-        _ ->
+        Mandalorian ->
+            ""
+
+        MajorPentatonic ->
+            ""
+
+        MinorPentatonic ->
+            ""
+
+        Blues ->
             ""
 
 
