@@ -1,10 +1,10 @@
-# rueben
+# practice-mate
 
 a practice session companion for musicians. helps you structure and track your practice time with customizable exercises.
 
 ## what it does
 
-rueben is a web app built with elm that helps musicians organize their practice sessions. it's designed to be simple, distraction-free, and focused on what matters: getting better at your instrument.
+practice-mate is a web app built with elm that helps musicians organize their practice sessions. it's designed to be simple, distraction-free, and focused on what matters: getting better at your instrument.
 
 ### core features
 
@@ -16,7 +16,7 @@ rueben is a web app built with elm that helps musicians organize their practice 
 
 ## practice topics
 
-rueben supports three main practice areas:
+practice-mate supports three main practice areas:
 
 ### scales
 - major, minor, melodic minor, harmonic minor
@@ -88,7 +88,7 @@ src/
 └── index.html           # main html file
 ```
 
-## why "rueben"?
+## why "practice-mate"?
 
 named after the practice companion that helps you stay focused and make the most of your practice time. no distractions, just music.
 
