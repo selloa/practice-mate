@@ -25,9 +25,20 @@ jobs:
         cp -r src/css compiled/
         cp -r src/js compiled/
       
+    - name: Verify deployment files
+      run: |
+        echo "Deployment files:"
+        ls -la compiled/
+        echo "CSS files:"
+        ls -la compiled/css/
+        echo "JS files:"
+        ls -la compiled/js/
+      
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./compiled
+        publish_branch: gh-pages
+        force_orphan: true
