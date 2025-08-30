@@ -7,7 +7,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "rm -rf compiled && parcel build src/index.html --out-dir compiled --public-url ./",
+    "clean": "rimraf compiled",
+    "build": "npm run clean && parcel build src/index.html --out-dir compiled --public-url ./",
     "dev": "parcel --out-dir dev-temp src/index.html"
   },
   "dependencies": {},
@@ -17,6 +18,7 @@
     "node-elm-compiler": "^5.0.4",
     "parcel-bundler": "^1.12.4",
     "prettier": "^2.0.5",
-    "prettier-plugin-elm": "^0.7.0"
+    "prettier-plugin-elm": "^0.7.0",
+    "rimraf": "^3.0.2"
   }
 }
